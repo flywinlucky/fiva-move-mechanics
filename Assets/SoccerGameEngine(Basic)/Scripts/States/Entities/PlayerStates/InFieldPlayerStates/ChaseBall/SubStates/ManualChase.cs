@@ -38,6 +38,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (Owner.IconUserControlled != null)
                 Owner.IconUserControlled.SetActive(true);
 
+            // enable the ball-control indicator on the owner
+            if (Owner.IconCanPassPlayer != null)
+                Owner.IconCanPassPlayer.SetActive(true);
+
             //get the steering target
             SteeringTarget = Ball.Instance.NormalizedPosition;
 
@@ -115,6 +119,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             // disable the user controlled icon
             if (Owner.IconUserControlled != null)
                 Owner.IconUserControlled.SetActive(false);
+
+            // disable the ball-control indicator
+            if (Owner.IconCanPassPlayer != null)
+                Owner.IconCanPassPlayer.SetActive(false);
 
             //set the steering to on
             Owner.RPGMovement.SetSteeringOff();

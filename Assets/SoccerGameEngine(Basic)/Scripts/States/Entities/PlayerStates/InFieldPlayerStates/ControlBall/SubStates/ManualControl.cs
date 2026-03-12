@@ -18,6 +18,31 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         float _nextPreviewScanTime;
         bool _hasCachedPassTarget;
 
+        bool IsUserControlIconVisible()
+        {
+            return Owner.IconUserControlled == null || Owner.IconUserControlled.activeSelf;
+        }
+
+        void SyncPreviewVisibilityWithControlIcon()
+        {
+            if (_previewPassReceiver == null)
+                return;
+
+            _previewPassReceiver.SetCanPassPreviewVisible(IsUserControlIconVisible());
+        }
+
+        void SetUserControlIconVisible(bool visible)
+        {
+            if (Owner.IconUserControlled != null)
+                Owner.IconUserControlled.SetActive(visible);
+
+            // Also activate/deactivate the ball-control indicator on the owner
+            if (Owner.IconCanPassPlayer != null)
+                Owner.IconCanPassPlayer.SetActive(visible);
+
+            SyncPreviewVisibilityWithControlIcon();
+        }
+
         void SetPreviewPassReceiver(Player receiver)
         {
             if (_previewPassReceiver == receiver)
@@ -29,7 +54,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             _previewPassReceiver = receiver;
 
             if (_previewPassReceiver != null)
-                _previewPassReceiver.SetCanPassPreviewVisible(true);
+                _previewPassReceiver.SetCanPassPreviewVisible(IsUserControlIconVisible());
         }
 
         void ClearPreviewPassReceiver()
@@ -66,8 +91,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.Enter();
 
             // enable the user controlled icon
-            if (Owner.IconUserControlled != null)
-                Owner.IconUserControlled.SetActive(true);
+            SetUserControlIconVisible(true);
 
             // set the ref object
             EnsureReferenceObject();
@@ -90,6 +114,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             //ensure we always have a valid movement reference
             EnsureReferenceObject();
+
+            // keep receiver preview visibility in sync with user-control icon state.
+            SyncPreviewVisibilityWithControlIcon();
 
             // calculate camera relative direction to move:
             RefObjectForward = Vector3.Scale(_refObject.forward, new Vector3(1, 0, 1)).normalized;
@@ -179,8 +206,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             _hasCachedPassTarget = false;
 
             // disable the user controlled icon
-            if (Owner.IconUserControlled != null)
-                Owner.IconUserControlled.SetActive(false);
+            SetUserControlIconVisible(false);
         }
 
         public Player Owner
