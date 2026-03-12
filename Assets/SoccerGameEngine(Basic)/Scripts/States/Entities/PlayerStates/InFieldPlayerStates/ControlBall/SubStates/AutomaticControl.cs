@@ -18,6 +18,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             base.Enter();
 
+            // AI with ball: show only the can-pass icon as possession indicator.
+            Owner.SetCanPassPreviewVisible(true);
+
             //set the range
             maxNumOfTries = Random.Range(1, 5);
             maxPassTime = Random.Range(rangePassTime.Min, rangePassTime.Max);
@@ -102,6 +105,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         public override void Exit()
         {
             base.Exit();
+
+            Owner.SetCanPassPreviewVisible(false);
 
             //stop steering
             Owner.RPGMovement.SetSteeringOff();

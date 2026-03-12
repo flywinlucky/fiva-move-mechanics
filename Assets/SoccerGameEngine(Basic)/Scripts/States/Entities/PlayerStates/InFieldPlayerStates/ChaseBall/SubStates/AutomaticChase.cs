@@ -83,6 +83,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             _difficultyProfile = GetDifficultyProfile();
 
+            Owner.SetCanPassPreviewVisible(false);
+
             //get the steering target
             SteeringTarget = Ball.Instance.NormalizedPosition;
 
@@ -107,6 +109,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (hasBallCarrier && !isOpponentCarrier)
             {
                 // teammate has possession; stop chasing and reposition
+                Owner.SetCanPassPreviewVisible(false);
                 SuperMachine.ChangeState<GoToHomeMainState>();
                 return;
             }
@@ -114,9 +117,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (isOpponentCarrier && isGoalkeeperCarrier)
             {
                 // do not press a keeper that has the ball in hand
+                Owner.SetCanPassPreviewVisible(false);
                 SuperMachine.ChangeState<GoToHomeMainState>();
                 return;
             }
+
+            bool shouldShowAiBallIndicator = Ball.Instance.Owner == Owner || Owner.IsBallWithinControlableDistance();
+            Owner.SetCanPassPreviewVisible(shouldShowAiBallIndicator);
 
             bool isDirectlyBehindCarrier = false;
             float carrierDistance = 0f;
@@ -161,6 +168,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         public override void Exit()
         {
             base.Exit();
+
+            Owner.SetCanPassPreviewVisible(false);
 
             //restore default chase speed
             Owner.RPGMovement.Speed = Owner.ActualSpeed;
