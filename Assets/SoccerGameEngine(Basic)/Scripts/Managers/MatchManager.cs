@@ -10,9 +10,81 @@ using UnityEngine;
 
 namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 {
+    public enum MatchDifficulty
+    {
+        Casual,
+        Normal,
+        Hard
+    }
+
+    [Serializable]
+    public struct MatchDifficultyProfile
+    {
+        [Range(0.8f, 2.0f)]
+        public float PassMaxMultiplier;
+
+        [Range(0.4f, 1.2f)]
+        public float PassMinMultiplier;
+
+        [Range(0.05f, 1.2f)]
+        public float AICarrierLeadTime;
+
+        [Range(0.25f, 3.0f)]
+        public float AICarrierSideStepDistance;
+
+        [Range(-1.0f, 0.0f)]
+        public float AIBehindDotThreshold;
+
+        [Range(0.25f, 3.0f)]
+        public float AIBehindStickBreakDistance;
+
+        [Range(0.6f, 1.0f)]
+        public float AIChaseSlowdownWhenBehind;
+    }
+
     [RequireComponent(typeof(MatchManagerFSM))]
     public class MatchManager : Singleton<MatchManager>
     {
+        [Header("Difficulty")]
+        [SerializeField]
+        MatchDifficulty _difficulty = MatchDifficulty.Casual;
+
+        [SerializeField]
+        MatchDifficultyProfile _casualProfile = new MatchDifficultyProfile
+        {
+            PassMaxMultiplier = 1.35f,
+            PassMinMultiplier = 0.70f,
+            AICarrierLeadTime = 0.20f,
+            AICarrierSideStepDistance = 1.50f,
+            AIBehindDotThreshold = -0.35f,
+            AIBehindStickBreakDistance = 1.80f,
+            AIChaseSlowdownWhenBehind = 0.87f
+        };
+
+        [SerializeField]
+        MatchDifficultyProfile _normalProfile = new MatchDifficultyProfile
+        {
+            PassMaxMultiplier = 1.15f,
+            PassMinMultiplier = 0.85f,
+            AICarrierLeadTime = 0.32f,
+            AICarrierSideStepDistance = 1.15f,
+            AIBehindDotThreshold = -0.30f,
+            AIBehindStickBreakDistance = 1.25f,
+            AIChaseSlowdownWhenBehind = 0.93f
+        };
+
+        [SerializeField]
+        MatchDifficultyProfile _hardProfile = new MatchDifficultyProfile
+        {
+            PassMaxMultiplier = 1.00f,
+            PassMinMultiplier = 1.00f,
+            AICarrierLeadTime = 0.50f,
+            AICarrierSideStepDistance = 0.85f,
+            AIBehindDotThreshold = -0.20f,
+            AIBehindStickBreakDistance = 0.90f,
+            AIChaseSlowdownWhenBehind = 0.98f
+        };
+
         [SerializeField]
         float _distancePassMax = 15f;
 
@@ -252,6 +324,89 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             FSM = GetComponent<MatchManagerFSM>();
         }
 
+        private void OnValidate()
+        {
+            ClampDifficultyProfile(ref _casualProfile);
+            ClampDifficultyProfile(ref _normalProfile);
+            ClampDifficultyProfile(ref _hardProfile);
+
+            if (Application.isPlaying)
+                ApplyDifficultyToActiveTeams();
+        }
+
+        void ClampDifficultyProfile(ref MatchDifficultyProfile profile)
+        {
+            profile.PassMaxMultiplier = Mathf.Max(0.1f, profile.PassMaxMultiplier);
+            profile.PassMinMultiplier = Mathf.Max(0.1f, profile.PassMinMultiplier);
+            profile.AICarrierLeadTime = Mathf.Max(0.01f, profile.AICarrierLeadTime);
+            profile.AICarrierSideStepDistance = Mathf.Max(0.1f, profile.AICarrierSideStepDistance);
+            profile.AIBehindDotThreshold = Mathf.Clamp(profile.AIBehindDotThreshold, -1f, 0f);
+            profile.AIBehindStickBreakDistance = Mathf.Max(0.1f, profile.AIBehindStickBreakDistance);
+            profile.AIChaseSlowdownWhenBehind = Mathf.Clamp(profile.AIChaseSlowdownWhenBehind, 0.6f, 1f);
+        }
+
+        void ApplyDifficultyToActiveTeams()
+        {
+            float passMax = DifficultyDistancePassMax;
+            float passMin = DifficultyDistancePassMin;
+
+            ApplyDifficultyToTeam(_teamAway, passMax, passMin);
+            ApplyDifficultyToTeam(_teamHome, passMax, passMin);
+        }
+
+        void ApplyDifficultyToTeam(Team team, float passMax, float passMin)
+        {
+            if (team == null)
+                return;
+
+            team.DistancePassMax = passMax;
+            team.DistancePassMin = passMin;
+
+            if (team.Players == null)
+                return;
+
+            foreach (TeamPlayer teamPlayer in team.Players)
+            {
+                if (teamPlayer == null || teamPlayer.Player == null)
+                    continue;
+
+                teamPlayer.Player.DistancePassMax = passMax;
+                teamPlayer.Player.DistancePassMin = passMin;
+            }
+        }
+
+        public MatchDifficultyProfile CurrentDifficultyProfile
+        {
+            get
+            {
+                if (_difficulty == MatchDifficulty.Hard)
+                    return _hardProfile;
+
+                if (_difficulty == MatchDifficulty.Normal)
+                    return _normalProfile;
+
+                return _casualProfile;
+            }
+        }
+
+        public float DifficultyDistancePassMax
+        {
+            get
+            {
+                MatchDifficultyProfile profile = CurrentDifficultyProfile;
+                return _distancePassMax * profile.PassMaxMultiplier;
+            }
+        }
+
+        public float DifficultyDistancePassMin
+        {
+            get
+            {
+                MatchDifficultyProfile profile = CurrentDifficultyProfile;
+                return _distancePassMin * profile.PassMinMultiplier;
+            }
+        }
+
         private void Update()
         {
 #if UNITY_EDITOR
@@ -306,6 +461,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         public Transform RootTeam { get => _rootTeam; }
         public float DistancePassMax { get => _distancePassMax; set => _distancePassMax = value; }
         public float DistancePassMin { get => _distancePassMin; set => _distancePassMin = value; }
+        public MatchDifficulty Difficulty { get => _difficulty; set => _difficulty = value; }
         public Transform TransformCentreSpot { get => _transformCentreSpot; set => _transformCentreSpot = value; }
         public float DistanceWonderMax { get => _distanceWonderMax; set => _distanceWonderMax = value; }
         public float DistanceShotValidMax { get => _distanceShotValidMax; set => _distanceShotValidMax = value; }

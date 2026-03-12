@@ -57,12 +57,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
         {
             // get the current closest player to ball
             TeamPlayer currClosestPlayerToPoint = Owner.GetClosestPlayerToPoint(Ball.Instance.NormalizedPosition);
+            if (currClosestPlayerToPoint == null || currClosestPlayerToPoint.Player == null)
+                return;
 
             //update new player to attack ball
             if (currClosestPlayerToPoint != _closestPlayerToBall)
             {
                 // message the closest player to go out of chaseball
-                if (_closestPlayerToBall != null)
+                if (_closestPlayerToBall != null && _closestPlayerToBall.Player != null)
                     _closestPlayerToBall.Player.Invoke_OnIsNoLongerTheClosestPlayerToBall();
 
                 // update to new closest player
@@ -75,7 +77,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
                 && currClosestPlayerToPoint.Player.InFieldPlayerFSM.IsCurrentState<ChaseBallMainState>() == false)
             {
                 // raise the new player to say he is now the new closest player to ball
-                _closestPlayerToBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
+                if (_closestPlayerToBall != null && _closestPlayerToBall.Player != null)
+                    _closestPlayerToBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
             }
         }
 

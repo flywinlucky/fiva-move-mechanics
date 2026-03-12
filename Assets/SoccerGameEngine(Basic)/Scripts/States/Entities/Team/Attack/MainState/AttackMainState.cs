@@ -1,6 +1,7 @@
 ﻿using System;
 using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.ChaseBall.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Wait.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities;
@@ -16,10 +17,33 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
     public class AttackMainState : BState
     {
         float _lengthPitch = 90;
+        TeamPlayer _closestPlayerToLooseBall;
+
+        void TriggerPlayerToChaseLooseBall()
+        {
+            TeamPlayer currClosestPlayerToPoint = Owner.GetClosestPlayerToPoint(Ball.Instance.NormalizedPosition);
+            if (currClosestPlayerToPoint == null || currClosestPlayerToPoint.Player == null)
+                return;
+
+            if (currClosestPlayerToPoint != _closestPlayerToLooseBall)
+            {
+                if (_closestPlayerToLooseBall != null && _closestPlayerToLooseBall.Player != null)
+                    _closestPlayerToLooseBall.Player.Invoke_OnIsNoLongerTheClosestPlayerToBall();
+
+                _closestPlayerToLooseBall = currClosestPlayerToPoint;
+                _closestPlayerToLooseBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
+            }
+            else if (_closestPlayerToLooseBall.Player.InFieldPlayerFSM.IsCurrentState<ChaseBallMainState>() == false)
+            {
+                _closestPlayerToLooseBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
+            }
+        }
 
         public override void Enter()
         {
             base.Enter();
+
+            _closestPlayerToLooseBall = null;
 
             // enable the support spots root
             Owner.PlayerSupportSpots.gameObject.SetActive(true);
@@ -35,6 +59,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
         public override void ManualExecute()
         {
             base.ManualExecute();
+
+            // When ball is free, actively send the nearest attacker to recover it.
+            if (Ball.Instance.Owner == null)
+            {
+                TriggerPlayerToChaseLooseBall();
+            }
+            else if (_closestPlayerToLooseBall != null
+                && _closestPlayerToLooseBall.Player != null
+                && Ball.Instance.Owner != _closestPlayerToLooseBall.Player)
+            {
+                _closestPlayerToLooseBall.Player.Invoke_OnIsNoLongerTheClosestPlayerToBall();
+                _closestPlayerToLooseBall = null;
+            }
 
             //loop through each player and update it's position
             foreach(TeamPlayer teamPlayer in Owner.Players)
@@ -57,6 +94,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
         public override void Exit()
         {
             base.Exit();
+
+            if (_closestPlayerToLooseBall != null && _closestPlayerToLooseBall.Player != null)
+                _closestPlayerToLooseBall.Player.Invoke_OnIsNoLongerTheClosestPlayerToBall();
+
+            _closestPlayerToLooseBall = null;
 
             // enable the support spots root
             Owner.PlayerSupportSpots.gameObject.SetActive(false);

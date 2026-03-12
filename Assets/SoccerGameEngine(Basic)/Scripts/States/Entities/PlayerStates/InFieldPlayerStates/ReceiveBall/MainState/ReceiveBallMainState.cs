@@ -40,6 +40,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             // Ball.Instance.Owner = Owner;
 
             //register to some player events
+            Owner.OnBecameTheClosestPlayerToBall += Instance_OnBecameTheClosestPlayerToBall;
             Owner.OnTeamLostControl += Instance_OnTeamLostControl;
         }
 
@@ -70,7 +71,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.Exit();
 
             //stop listing to some player events
+            Owner.OnBecameTheClosestPlayerToBall -= Instance_OnBecameTheClosestPlayerToBall;
             Owner.OnTeamLostControl -= Instance_OnTeamLostControl;
+        }
+
+        private void Instance_OnBecameTheClosestPlayerToBall()
+        {
+            Machine.ChangeState<ChaseBallMainState>();
         }
 
         private void Instance_OnTeamLostControl()
