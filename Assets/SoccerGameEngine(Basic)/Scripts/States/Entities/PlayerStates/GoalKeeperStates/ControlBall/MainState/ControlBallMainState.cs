@@ -205,6 +205,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             if (movement.sqrMagnitude > 1f)
                 movement.Normalize();
 
+            movement = Owner.ConstrainGoalKeeperMoveDirection(movement);
+
             Vector3 passDirection = movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : movement;
             passDirection.y = 0f;
             if (passDirection.sqrMagnitude <= 0.0001f)

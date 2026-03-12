@@ -35,6 +35,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
            _steerTarget = Owner.GetPointOrthogonalToLine(BallInitialPosition, 
                ShotTarget, 
                Owner.Position);
+           _steerTarget = Owner.ClampGoalKeeperTargetToHomeRadius(_steerTarget);
 
             // calculate time of ball to intercept point
             timeOfBallToInterceptPoint = Owner.TimeToTarget(BallInitialPosition,
@@ -64,6 +65,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             UpdateGoalKeeperControlIcons(isNearOrHasBall);
 
             // keep steering to target
+            _steerTarget = Owner.ClampGoalKeeperTargetToHomeRadius(_steerTarget);
             Owner.RPGMovement.SetMoveTarget(_steerTarget);
 
             // decrement ball time

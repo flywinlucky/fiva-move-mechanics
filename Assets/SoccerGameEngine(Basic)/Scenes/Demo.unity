@@ -6233,7 +6233,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _difficulty: 0
-  _enableGoalkeeperDebug: 0
+  _enableGoalkeeperDebug: 1
   _casualProfile:
     PassMaxMultiplier: 1.35
     PassMinMultiplier: 0.7

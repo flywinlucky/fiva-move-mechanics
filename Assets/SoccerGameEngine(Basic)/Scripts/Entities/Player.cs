@@ -54,6 +54,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _tendGoalDistance = 1f;
 
         [SerializeField]
+        float _goalKeeperMovementRadius = 15f;
+
+        [SerializeField]
+        float _goalKeeperMovementRadiusSlowdown = 2f;
+
+        [SerializeField]
         Goal _oppGoal;
 
         [SerializeField]
@@ -1170,6 +1176,69 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 _iconCanPassPlayer.SetActive(visible);
         }
 
+        public Vector3 GoalKeeperHomeCenter
+        {
+            get
+            {
+                Vector3 center = HomeRegion != null ? HomeRegion.position : Position;
+                center.y = 0f;
+                return center;
+            }
+        }
+
+        public Vector3 ClampGoalKeeperTargetToHomeRadius(Vector3 target)
+        {
+            Vector3 center = GoalKeeperHomeCenter;
+            Vector3 offset = target - center;
+            offset.y = 0f;
+
+            float radius = GoalKeeperMovementRadius;
+            float sqrRadius = radius * radius;
+            if (offset.sqrMagnitude > sqrRadius)
+                target = center + offset.normalized * radius;
+
+            target.y = 0f;
+            return target;
+        }
+
+        public Vector3 ConstrainGoalKeeperMoveDirection(Vector3 desiredDirection)
+        {
+            desiredDirection.y = 0f;
+            if (desiredDirection.sqrMagnitude <= 0.0001f)
+                return Vector3.zero;
+
+            Vector3 center = GoalKeeperHomeCenter;
+            Vector3 toPlayer = Position - center;
+            toPlayer.y = 0f;
+
+            float distance = toPlayer.magnitude;
+            float radius = GoalKeeperMovementRadius;
+            float slowdownStart = Mathf.Max(0f, radius - GoalKeeperMovementRadiusSlowdown);
+
+            if (distance < slowdownStart)
+                return desiredDirection;
+
+            if (distance <= 0.0001f)
+                return desiredDirection;
+
+            Vector3 outward = toPlayer / distance;
+            float outwardVelocity = Vector3.Dot(desiredDirection, outward);
+            if (outwardVelocity <= 0f)
+                return desiredDirection;
+
+            // Remove outward drift at boundary and fade speed near the edge to avoid abrupt stops.
+            Vector3 constrained = desiredDirection - outward * outwardVelocity;
+            float edgeT = Mathf.InverseLerp(slowdownStart, radius, distance);
+            float speedScale = Mathf.Lerp(1f, 0.15f, edgeT);
+
+            if (distance >= radius)
+                speedScale = 0f;
+
+            constrained *= speedScale;
+
+            return constrained;
+        }
+
         public Quaternion Rotation
         {
             get
@@ -1249,6 +1318,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public float GoalKeeping { get => _goalKeeping; set => _goalKeeping = value; }
         public float DistanceShotMaxValid { get => _distanceShotMaxValid; set => _distanceShotMaxValid = value; }
         public float DistancePassMax { get => _distancePassMax; set => _distancePassMax = value; }
+        public float GoalKeeperMovementRadius
+        {
+            get => Mathf.Max(1f, _goalKeeperMovementRadius);
+            set => _goalKeeperMovementRadius = Mathf.Max(1f, value);
+        }
+        public float GoalKeeperMovementRadiusSlowdown
+        {
+            get => Mathf.Max(0.1f, _goalKeeperMovementRadiusSlowdown);
+            set => _goalKeeperMovementRadiusSlowdown = Mathf.Max(0.1f, value);
+        }
         public float GoalKeeperPickupBlockedUntil { get; set; }
         public Player PrevPassReceiver { get => _prevPassReceiver; set => _prevPassReceiver = value; }
         public GameObject IconUserControlled { get => _iconUserControlled; set => _iconUserControlled = value; }

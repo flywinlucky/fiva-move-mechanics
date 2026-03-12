@@ -9,7 +9,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 {
     public class WaitMainState : BState
     {
-        const float LooseBallAutoCollectDistance = 5f;
+        const float LooseBallAutoCollectDistance = 10f;
 
         bool IsLooseBallNearKeeper()
         {

@@ -76,8 +76,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             if (shouldAutoCollectLooseBall)
             {
                 Owner.RPGMovement.SetRotateFacePosition(ballPosition);
-                Owner.RPGMovement.SetMoveTarget(ballPosition);
-                Owner.RPGMovement.Steer = distanceToBall >= 0.2f;
+                Vector3 collectTarget = Owner.ClampGoalKeeperTargetToHomeRadius(ballPosition);
+                Owner.RPGMovement.SetMoveTarget(collectTarget);
+                Owner.RPGMovement.Steer = Vector3.Distance(Owner.Position, collectTarget) >= 0.2f;
 
                 if (isBallInPickupRange && canPickupNow)
                 {
@@ -134,6 +135,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                     ballRelativePosToGoal.x /= 3f;
                     ballRelativePosToGoal.x = Mathf.Clamp(ballRelativePosToGoal.x, -2.14f, 2.14f);
                     _steeringTarget = Owner.TeamGoal.transform.TransformPoint(ballRelativePosToGoal);
+                    _steeringTarget = Owner.ClampGoalKeeperTargetToHomeRadius(_steeringTarget);
 
                     //add some noise to the target
                     float limit = 1f - Owner.GoalKeeping;
@@ -152,7 +154,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             //set the ability to steer here
             Owner.RPGMovement.Steer = Vector3.Distance(Owner.Position, _steeringTarget) >= 1f;
-            Owner.RPGMovement.SetMoveTarget(_steeringTarget);
+            Owner.RPGMovement.SetMoveTarget(Owner.ClampGoalKeeperTargetToHomeRadius(_steeringTarget));
         }
 
         public override void ManualExecute()
