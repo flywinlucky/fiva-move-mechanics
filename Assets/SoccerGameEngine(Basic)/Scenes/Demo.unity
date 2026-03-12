@@ -6232,7 +6232,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c674e39cc4b6b2840be1dda753cbd786, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _difficulty: 1
+  _difficulty: 0
   _enableGoalkeeperDebug: 0
   _casualProfile:
     PassMaxMultiplier: 1.35

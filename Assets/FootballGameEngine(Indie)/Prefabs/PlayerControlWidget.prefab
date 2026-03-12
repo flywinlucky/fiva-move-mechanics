@@ -93,6 +93,7 @@ GameObject:
   - component: {fileID: 5021583222701741379}
   - component: {fileID: 7470533789743742592}
   - component: {fileID: 9024144207281725470}
+  - component: {fileID: 7095356281188555065}
   m_Layer: 14
   m_Name: PlayerControlWidget
   m_TagString: Untagged
@@ -166,7 +167,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!114 &7470533789743742592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -196,6 +197,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62e6b12ac02cdf2459a5578f23cac96f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &7095356281188555065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4751522756732143351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f29617572097ba4889ef94cd9b88d20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  duration: 0.25
+  bounceForce: 1.15
 --- !u!1 &6976165206570829195
 GameObject:
   m_ObjectHideFlags: 0
