@@ -21,6 +21,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         Vector3 _steeringTarget;
         Vector3 _prevBallPosition;
 
+        void UpdateGoalKeeperControlIcons(bool isNearOrHasBall)
+        {
+            Owner.SetCanPassPreviewVisible(isNearOrHasBall);
+
+            if (Owner.IconUserControlled != null)
+                Owner.IconUserControlled.SetActive(Owner.IsUserControlled && isNearOrHasBall);
+        }
+
         public override void Enter()
         {
             base.Enter();
@@ -36,6 +44,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             Owner.RPGMovement.SetSteeringOn();
             Owner.RPGMovement.Speed = Owner.TendGoalSpeed;
 
+            UpdateGoalKeeperControlIcons(false);
+
             //register to some events
             Owner.OnShotTaken += Instance_OnShotTaken;
 
@@ -45,6 +55,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Execute()
         {
             base.Execute();
+
+            bool isNearOrHasBall = Ball.Instance.Owner == Owner || Owner.IsBallWithinControlableDistance();
+            UpdateGoalKeeperControlIcons(isNearOrHasBall);
 
             // catch any loose ball that enters keeper control radius
             bool isBallLoose = Ball.Instance.Owner == null;
@@ -125,6 +138,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Exit()
         {
             base.Exit();
+
+            UpdateGoalKeeperControlIcons(false);
 
             //deregister to some events
             Owner.OnShotTaken -= Instance_OnShotTaken;

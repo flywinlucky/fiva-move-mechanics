@@ -104,6 +104,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 if (Owner.IconUserControlled != null)
                     Owner.IconUserControlled.SetActive(true);
 
+                Owner.SetCanPassPreviewVisible(true);
+
                 Owner.RPGMovement.Speed = Owner.ActualSpeed;
                 Owner.RPGMovement.SetMoveDirection(Vector3.zero);
                 Owner.RPGMovement.SetSteeringOff();
@@ -120,6 +122,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 LogGoalKeeperDebug("Enter ControlBall -> manual enabled");
                 return;
             }
+
+            if (Owner.IconUserControlled != null)
+                Owner.IconUserControlled.SetActive(false);
+
+            Owner.SetCanPassPreviewVisible(true);
 
             Owner.RPGMovement.SetSteeringOn();
             Owner.RPGMovement.SetTrackingOn();
@@ -743,7 +750,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             ClearPreviewPassReceiver();
             _hasCachedManualPassTarget = false;
 
-            if (_manualControlEnabled && Owner.IconUserControlled != null)
+            Owner.SetCanPassPreviewVisible(false);
+
+            if (Owner.IconUserControlled != null)
                 Owner.IconUserControlled.SetActive(false);
 
             // safety reset if we leave state before distribution happened

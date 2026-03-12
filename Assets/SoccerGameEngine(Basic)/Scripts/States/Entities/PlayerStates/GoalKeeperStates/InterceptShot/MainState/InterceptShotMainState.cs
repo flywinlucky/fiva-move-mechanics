@@ -13,6 +13,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         float timeOfBallToInterceptPoint;
         Vector3 _steerTarget;
 
+        void UpdateGoalKeeperControlIcons(bool isNearOrHasBall)
+        {
+            Owner.SetCanPassPreviewVisible(isNearOrHasBall);
+
+            if (Owner.IconUserControlled != null)
+                Owner.IconUserControlled.SetActive(Owner.IsUserControlled && isNearOrHasBall);
+        }
+
         public float  BallInitialVelocity { get; set; }
         public Vector3 BallInitialPosition { get; set; }
         public Vector3 ShotTarget { get; set; }
@@ -20,6 +28,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Enter()
         {
             base.Enter();
+
+            UpdateGoalKeeperControlIcons(false);
 
             //find the point on the ball path to target that is orthogonal to player position
            _steerTarget = Owner.GetPointOrthogonalToLine(BallInitialPosition, 
@@ -49,6 +59,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Execute()
         {
             base.Execute();
+
+            bool isNearOrHasBall = Ball.Instance.Owner == Owner || Owner.IsBallWithinControlableDistance();
+            UpdateGoalKeeperControlIcons(isNearOrHasBall);
 
             // keep steering to target
             Owner.RPGMovement.SetMoveTarget(_steerTarget);
@@ -81,6 +94,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Exit()
         {
             base.Exit();
+
+            UpdateGoalKeeperControlIcons(false);
 
             // reset steering
             Owner.RPGMovement.SetSteeringOff();
