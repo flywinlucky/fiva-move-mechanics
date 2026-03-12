@@ -5010,7 +5010,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88ea3c5728654d44496dcc5231060f1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _distanceMaxDisplacement: 20
+  _distanceMaxDisplacement: 30
   _speedFollow: 1
   target: {fileID: 546599439}
   distanceMaxZ: 0
@@ -6227,6 +6227,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c674e39cc4b6b2840be1dda753cbd786, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _difficulty: 1
+  _enableGoalkeeperDebug: 0
+  _casualProfile:
+    PassMaxMultiplier: 1.35
+    PassMinMultiplier: 0.7
+    AICarrierLeadTime: 0.2
+    AICarrierSideStepDistance: 1.5
+    AIBehindDotThreshold: -0.35
+    AIBehindStickBreakDistance: 1.8
+    AIChaseSlowdownWhenBehind: 0.87
+  _normalProfile:
+    PassMaxMultiplier: 1.15
+    PassMinMultiplier: 0.85
+    AICarrierLeadTime: 0.32
+    AICarrierSideStepDistance: 1.15
+    AIBehindDotThreshold: -0.3
+    AIBehindStickBreakDistance: 1.25
+    AIChaseSlowdownWhenBehind: 0.93
+  _hardProfile:
+    PassMaxMultiplier: 1
+    PassMinMultiplier: 1
+    AICarrierLeadTime: 0.5
+    AICarrierSideStepDistance: 0.85
+    AIBehindDotThreshold: -0.2
+    AIBehindStickBreakDistance: 0.9
+    AIChaseSlowdownWhenBehind: 0.98
   _distancePassMax: 25
   _distancePassMin: 8
   _distanceShotValidMax: 30

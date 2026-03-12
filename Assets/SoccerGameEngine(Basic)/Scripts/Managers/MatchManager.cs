@@ -49,6 +49,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [SerializeField]
         MatchDifficulty _difficulty = MatchDifficulty.Casual;
 
+        [Header("Debug")]
+        [SerializeField]
+        bool _enableGoalkeeperDebug;
+
         [SerializeField]
         MatchDifficultyProfile _casualProfile = new MatchDifficultyProfile
         {
@@ -462,6 +466,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         public float DistancePassMax { get => _distancePassMax; set => _distancePassMax = value; }
         public float DistancePassMin { get => _distancePassMin; set => _distancePassMin = value; }
         public MatchDifficulty Difficulty { get => _difficulty; set => _difficulty = value; }
+        public bool EnableGoalkeeperDebug { get => _enableGoalkeeperDebug; set => _enableGoalkeeperDebug = value; }
         public Transform TransformCentreSpot { get => _transformCentreSpot; set => _transformCentreSpot = value; }
         public float DistanceWonderMax { get => _distanceWonderMax; set => _distanceWonderMax = value; }
         public float DistanceShotValidMax { get => _distanceShotValidMax; set => _distanceShotValidMax = value; }

@@ -419,9 +419,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                     power,
                     out time);
 
-                // if ball can't reach target then return false
-                if (time < 0)
-                    return false;
+                // keep searching other shot options if this one is not reachable
+                if (!canBallReachPoint || time <= 0f)
+                    continue;
 
                 //check if shot to target is possible
                 bool isShotPossible = false;
@@ -1233,7 +1233,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public float TendGoalSpeed { get => _tendGoalSpeed; set => _tendGoalSpeed = value; }
         public float TendGoalDistance { get => _tendGoalDistance; set => _tendGoalDistance = value; }
         public float GoalKeeping { get => _goalKeeping; set => _goalKeeping = value; }
+        public float DistanceShotMaxValid { get => _distanceShotMaxValid; set => _distanceShotMaxValid = value; }
         public float DistancePassMax { get => _distancePassMax; set => _distancePassMax = value; }
+        public float GoalKeeperPickupBlockedUntil { get; set; }
         public Player PrevPassReceiver { get => _prevPassReceiver; set => _prevPassReceiver = value; }
         public GameObject IconUserControlled { get => _iconUserControlled; set => _iconUserControlled = value; }
     }

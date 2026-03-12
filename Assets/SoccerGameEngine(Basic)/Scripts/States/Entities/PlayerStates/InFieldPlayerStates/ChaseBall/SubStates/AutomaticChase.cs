@@ -2,7 +2,9 @@
 using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.ControlBall.MainState;
+using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.GoToHome.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.TacklePlayer.MainState;
+using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
 using RobustFSM.Base;
 using UnityEngine;
 
@@ -100,6 +102,21 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             Player ballOwner = Ball.Instance.Owner;
             bool hasBallCarrier = ballOwner != null && ballOwner != Owner;
             bool isOpponentCarrier = hasBallCarrier && ballOwner.IsTeamInControl != Owner.IsTeamInControl;
+            bool isGoalkeeperCarrier = hasBallCarrier && ballOwner.PlayerType == PlayerTypes.Goalkeeper;
+
+            if (hasBallCarrier && !isOpponentCarrier)
+            {
+                // teammate has possession; stop chasing and reposition
+                SuperMachine.ChangeState<GoToHomeMainState>();
+                return;
+            }
+
+            if (isOpponentCarrier && isGoalkeeperCarrier)
+            {
+                // do not press a keeper that has the ball in hand
+                SuperMachine.ChangeState<GoToHomeMainState>();
+                return;
+            }
 
             bool isDirectlyBehindCarrier = false;
             float carrierDistance = 0f;

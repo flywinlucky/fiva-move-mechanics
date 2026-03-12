@@ -54,7 +54,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (Movement.sqrMagnitude > 1f)
                 Movement.Normalize();
 
-            if (Input.GetButtonDown("Pass/Press"))
+            bool passPressed = Input.GetButtonDown("Pass/Press") || Input.GetKeyDown(KeyCode.N);
+            if (passPressed)
             {
                 // set the direction of movement
                 Vector3 direction = Movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : Movement;

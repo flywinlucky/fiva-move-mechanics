@@ -1,4 +1,6 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
+using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.GoalKeeperStates.ControlBall.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.GoalKeeperStates.InterceptShot.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.Triggers;
@@ -15,6 +17,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
     {
         int _goalLayerMask;
         float _timeSinceLastUpdate;
+        float _lastPickupBlockedLogTime;
         Vector3 _steeringTarget;
         Vector3 _prevBallPosition;
 
@@ -27,6 +30,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             //set some data
             _prevBallPosition = 1000 * Vector3.one;
             _timeSinceLastUpdate = 0f;
+            _lastPickupBlockedLogTime = -10f;
 
             //set the rpg movement
             Owner.RPGMovement.SetSteeringOn();
@@ -34,11 +38,35 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             //register to some events
             Owner.OnShotTaken += Instance_OnShotTaken;
+
+            LogGoalKeeperDebug("Enter TendGoal");
         }
 
         public override void Execute()
         {
             base.Execute();
+
+            // catch any loose ball that enters keeper control radius
+            bool isBallLoose = Ball.Instance.Owner == null;
+            bool isBallInPickupRange = Owner.IsBallWithinControlableDistance();
+            bool canPickupNow = Time.time >= Owner.GoalKeeperPickupBlockedUntil;
+
+            if (isBallLoose && isBallInPickupRange && canPickupNow)
+            {
+                LogGoalKeeperDebug("Loose ball within control distance -> ControlBall");
+                Machine.ChangeState<ControlBallMainState>();
+                return;
+            }
+
+            if (isBallLoose && isBallInPickupRange && !canPickupNow)
+            {
+                if (Time.time - _lastPickupBlockedLogTime >= 0.2f)
+                {
+                    float remaining = Owner.GoalKeeperPickupBlockedUntil - Time.time;
+                    LogGoalKeeperDebug("Pickup temporarily blocked after pass release: " + Mathf.Max(0f, remaining).ToString("0.00") + "s");
+                    _lastPickupBlockedLogTime = Time.time;
+                }
+            }
 
             //get the entity positions
             Vector3 ballPosition = Ball.Instance.NormalizedPosition;
@@ -88,7 +116,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             // run logic depending on whether team is in control or not
             if (Owner.IsTeamInControl == true)
+            {
+                LogGoalKeeperDebug("Team in control while TendGoal -> GoToHome");
                 SuperMachine.ChangeState<GoToHomeMainState>();
+            }
         }
 
         public override void Exit()
@@ -112,6 +143,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                         out hitInfo,
                         300,
                         _goalLayerMask);
+
+            LogGoalKeeperDebug("OnShotTaken event -> willHitGoal: " + willBallHitAGoal);
             
             // get the goal from the goal trigger
             if (willBallHitAGoal)
@@ -121,6 +154,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
                 // check if shot is on target
                 bool isShotOnTarget = goal == Owner.TeamGoal;
+                LogGoalKeeperDebug("Shot goal test -> isShotOnTarget: " + isShotOnTarget);
 
                 if (isShotOnTarget == true)
                 {
@@ -131,9 +165,18 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                     interceptShotState.ShotTarget = target;
 
                     // trigger state change
+                    LogGoalKeeperDebug("Transition -> InterceptShot");
                     Machine.ChangeState<InterceptShotMainState>();
                 }
             }
+        }
+
+        void LogGoalKeeperDebug(string message)
+        {
+            if (MatchManager.Instance == null || !MatchManager.Instance.EnableGoalkeeperDebug)
+                return;
+
+            Debug.Log("[GK DEBUG] " + Owner.name + " :: " + message);
         }
 
         public Player Owner

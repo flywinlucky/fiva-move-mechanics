@@ -52,7 +52,29 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 Owner.KickType = KickType.Shot;
                 SuperMachine.ChangeState<KickBallMainState>();
             }
-            else if (maxPassTime <= 0 || Owner.IsThreatened())  //try passing if threatened or depleted wait time
+            else
+            {
+                // occasional long-range shots to make AI attack less linear
+                float distanceToGoal = Vector3.Distance(Owner.OppGoal.Position, Owner.Position);
+                bool isWithinLongShotRange = distanceToGoal <= Owner.DistanceShotMaxValid * 1.6f;
+                if (isWithinLongShotRange)
+                {
+                    float longShotChance = distanceToGoal <= Owner.DistanceShotMaxValid ? 0.22f : 0.12f;
+                    bool shouldTryLongShot = Random.value <= longShotChance;
+
+                    if (shouldTryLongShot && Owner.CanScore(false, false))
+                    {
+                        Owner.KickType = KickType.Shot;
+                        SuperMachine.ChangeState<KickBallMainState>();
+                        return;
+                    }
+                }
+            }
+
+            if (SuperMachine.IsCurrentState<KickBallMainState>())
+                return;
+
+            if (maxPassTime <= 0 || Owner.IsThreatened())  //try passing if threatened or depleted wait time
             {
                 // check if I still should consider pass safety
                 bool considerPassSafety = true;// maxNumOfTries > 0;

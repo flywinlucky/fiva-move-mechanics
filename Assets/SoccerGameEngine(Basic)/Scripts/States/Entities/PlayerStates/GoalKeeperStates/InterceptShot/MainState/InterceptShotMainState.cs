@@ -1,5 +1,7 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.GoalKeeperStates.ControlBall.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.GoalKeeperStates.GoToHome.MainState;
 using RobustFSM.Base;
 using UnityEngine;
@@ -40,6 +42,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             Owner.RPGMovement.SetMoveTarget(_steerTarget);
             Owner.RPGMovement.SetRotateFacePosition(BallInitialPosition);
             Owner.RPGMovement.SetTrackingOn();
+
+            LogGoalKeeperDebug("Enter InterceptShot -> target: " + _steerTarget + ", time: " + timeOfBallToInterceptPoint);
         }
 
         public override void Execute()
@@ -61,22 +65,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             // if time is exhausted then go to tend goal
             // if ball within control distance te deflect its path
             if (timeOfBallToInterceptPoint <= 0f)
-                SuperMachine.ChangeState<TendGoalMainState>();
-            else if(Owner.IsBallWithinControlableDistance())
             {
-                // find direction to deflect ball to
-                Vector3 localPoint = Owner.TeamGoal.transform.InverseTransformPoint(Owner.Position);
-                localPoint.y = localPoint.z = 0f;
-
-                // find the direction in world space
-                Vector3 direction = Owner.TeamGoal.transform.TransformPoint(localPoint);
-
-                // deflect ball
-                Ball.Instance.Kick(Owner.Position + direction.normalized,
-                    Ball.Instance.Rigidbody.velocity.magnitude);
-                
-                // go to tend goal
+                LogGoalKeeperDebug("Intercept timeout -> TendGoal");
                 SuperMachine.ChangeState<TendGoalMainState>();
+            }
+            else if (Owner.IsBallWithinControlableDistance()
+                && Time.time >= Owner.GoalKeeperPickupBlockedUntil)
+            {
+                // keeper catches the ball and starts controlled distribution flow
+                LogGoalKeeperDebug("Ball reached keeper control distance -> ControlBall");
+                Machine.ChangeState<ControlBallMainState>();
             }
         }
 
@@ -87,6 +85,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             // reset steering
             Owner.RPGMovement.SetSteeringOff();
             Owner.RPGMovement.SetTrackingOff();
+
+            LogGoalKeeperDebug("Exit InterceptShot");
+        }
+
+        void LogGoalKeeperDebug(string message)
+        {
+            if (MatchManager.Instance == null || !MatchManager.Instance.EnableGoalkeeperDebug)
+                return;
+
+            Debug.Log("[GK DEBUG] " + Owner.name + " :: " + message);
         }
 
         public Player Owner

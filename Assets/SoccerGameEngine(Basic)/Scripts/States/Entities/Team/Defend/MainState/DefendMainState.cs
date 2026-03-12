@@ -5,6 +5,7 @@ using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFiel
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Wait.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
 using RobustFSM.Base;
 using RobustFSM.Interfaces;
 using UnityEngine;
@@ -19,10 +20,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
     {
         float _lengthPitch = 90;
         TeamPlayer _closestPlayerToBall;
+        bool _isHoldingShapeAgainstGoalkeeper;
 
         public override void Enter()
         {
             base.Enter();
+
+            _isHoldingShapeAgainstGoalkeeper = false;
 
             //listen to some team events
             //Owner.OnBallLaunched += Instance_OnBallLaunched;
@@ -55,6 +59,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
 
         private void TriggerPlayerToChaseBall()
         {
+            if (IsGoalkeeperHoldingBall())
+            {
+                CancelCurrentChaser();
+                return;
+            }
+
             // get the current closest player to ball
             TeamPlayer currClosestPlayerToPoint = Owner.GetClosestPlayerToPoint(Ball.Instance.NormalizedPosition);
             if (currClosestPlayerToPoint == null || currClosestPlayerToPoint.Player == null)
@@ -82,9 +92,37 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
             }
         }
 
+        bool IsGoalkeeperHoldingBall()
+        {
+            Player ballOwner = Ball.Instance.Owner;
+            return ballOwner != null && ballOwner.PlayerType == PlayerTypes.Goalkeeper;
+        }
+
+        void CancelCurrentChaser()
+        {
+            if (_closestPlayerToBall != null && _closestPlayerToBall.Player != null)
+                _closestPlayerToBall.Player.Invoke_OnIsNoLongerTheClosestPlayerToBall();
+
+            _closestPlayerToBall = null;
+        }
+
         public override void ManualExecute()
         {
             base.ManualExecute();
+
+            bool isGoalkeeperHoldingBall = IsGoalkeeperHoldingBall();
+            if (isGoalkeeperHoldingBall)
+            {
+                if (_isHoldingShapeAgainstGoalkeeper == false)
+                {
+                    Owner.Players.ForEach(tM => ActionUtility.Invoke_Action(tM.Player.OnInstructedToGoToHome));
+                    _isHoldingShapeAgainstGoalkeeper = true;
+                }
+            }
+            else
+            {
+                _isHoldingShapeAgainstGoalkeeper = false;
+            }
 
             // trigger closest player to ball to chase ball
             TriggerPlayerToChaseBall();
@@ -110,6 +148,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
         public override void Exit()
         {
             base.Exit();
+
+            _isHoldingShapeAgainstGoalkeeper = false;
 
             //stop listening to some team events
             //Owner.OnBallLaunched -= Instance_OnBallLaunched;

@@ -298,6 +298,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             if (chasingPlayer == null)
                 return;
 
+            Player ballOwner = Ball.Instance.Owner;
+            bool isTeamMateInPossession = ballOwner != null
+                && ballOwner.IsTeamInControl == chasingPlayer.IsTeamInControl;
+            if (isTeamMateInPossession)
+            {
+                chasingPlayer.Invoke_OnIsNoLongerTheClosestPlayerToBall();
+                return;
+            }
+
             // get the current closest player to ball
             TeamPlayer currClosestPlayerToPoint = GetClosestPlayerToPoint(Ball.Instance.NormalizedPosition);
 
