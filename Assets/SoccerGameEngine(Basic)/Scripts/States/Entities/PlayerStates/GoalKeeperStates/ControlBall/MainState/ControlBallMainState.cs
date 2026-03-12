@@ -28,12 +28,42 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         const float ManualForwardPassArrivalVelocityMultiplier = 2.2f;
         const float ManualPassSafetyDistance = 10f;
         const float AutoPassDirectionJitterAngle = 25f;
+        const float PassPreviewScanInterval = 0.5f;
 
         float _distributionTimer;
+        float _nextPreviewScanTime;
         bool _isSettledAtHome;
         bool _manualControlEnabled;
+        bool _hasCachedManualPassTarget;
+        float _cachedManualPassPower;
+        float _cachedManualPassTime;
+        Player _cachedManualPassReceiver;
+        Player _previewPassReceiver;
+        Vector3 _cachedManualPassTarget;
         Vector3 _distributionLookTarget;
         Transform _refObject;
+
+        void SetPreviewPassReceiver(Player receiver)
+        {
+            if (_previewPassReceiver == receiver)
+                return;
+
+            if (_previewPassReceiver != null)
+                _previewPassReceiver.SetCanPassPreviewVisible(false);
+
+            _previewPassReceiver = receiver;
+
+            if (_previewPassReceiver != null)
+                _previewPassReceiver.SetCanPassPreviewVisible(true);
+        }
+
+        void ClearPreviewPassReceiver()
+        {
+            if (_previewPassReceiver != null)
+                _previewPassReceiver.SetCanPassPreviewVisible(false);
+
+            _previewPassReceiver = null;
+        }
 
         public override void Enter()
         {
@@ -78,6 +108,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 Owner.RPGMovement.SetMoveDirection(Vector3.zero);
                 Owner.RPGMovement.SetSteeringOff();
                 Owner.RPGMovement.SetTrackingOff();
+
+                ClearPreviewPassReceiver();
+                _nextPreviewScanTime = 0f;
+                _hasCachedManualPassTarget = false;
+                _cachedManualPassReceiver = null;
+                _cachedManualPassTarget = Owner.Position;
+                _cachedManualPassPower = 0f;
+                _cachedManualPassTime = 0f;
 
                 LogGoalKeeperDebug("Enter ControlBall -> manual enabled");
                 return;
@@ -160,35 +198,27 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             if (movement.sqrMagnitude > 1f)
                 movement.Normalize();
 
-            bool passPressed = Input.GetButtonDown("Pass/Press") || Input.GetKeyDown(KeyCode.N);
-            if (passPressed)
-            {
-                Vector3 passDirection = movement.sqrMagnitude <= 0.0001f
-                    ? Owner.transform.forward
-                    : movement;
-
-                passDirection.y = 0f;
-                if (passDirection.sqrMagnitude <= 0.0001f)
-                    passDirection = GetUpfieldDirection();
+            Vector3 passDirection = movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : movement;
+            passDirection.y = 0f;
+            if (passDirection.sqrMagnitude <= 0.0001f)
+                passDirection = GetUpfieldDirection();
+            else
                 passDirection.Normalize();
 
-                bool canPass = TryFindLongForwardManualPass(passDirection,
-                    out Player receiver,
-                    out Vector3 target,
-                    out float power,
-                    out float ballTime);
+            bool passPressed = Input.GetButtonDown("Pass/Press") || Input.GetKeyDown(KeyCode.N);
+            bool canPass = UpdateManualPassPreview(passDirection, false);
 
-                if (!canPass)
-                {
-                    canPass = TryFindClosestTeamMateEmergencyPass(passDirection,
-                        out receiver,
-                        out target,
-                        out power,
-                        out ballTime);
-                }
+            if (passPressed)
+            {
+                canPass = UpdateManualPassPreview(passDirection, true);
 
                 if (canPass)
                 {
+                    Vector3 target = _cachedManualPassTarget;
+                    Player receiver = _cachedManualPassReceiver;
+                    float power = _cachedManualPassPower;
+                    float ballTime = _cachedManualPassTime;
+
                     PrepareBallReleaseForPass(target);
                     Ball.Instance.Owner = null;
                     Ball.Instance.Rigidbody.isKinematic = false;
@@ -233,6 +263,33 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 if (!Owner.RPGMovement.Track)
                     Owner.RPGMovement.SetTrackingOn();
             }
+        }
+
+        bool UpdateManualPassPreview(Vector3 passDirection, bool forceScan)
+        {
+            if (!forceScan && Time.time < _nextPreviewScanTime)
+                return _hasCachedManualPassTarget;
+
+            _nextPreviewScanTime = Time.time + PassPreviewScanInterval;
+
+            _hasCachedManualPassTarget = TryFindLongForwardManualPass(passDirection,
+                out _cachedManualPassReceiver,
+                out _cachedManualPassTarget,
+                out _cachedManualPassPower,
+                out _cachedManualPassTime);
+
+            if (!_hasCachedManualPassTarget)
+            {
+                _hasCachedManualPassTarget = TryFindClosestTeamMateEmergencyPass(passDirection,
+                    out _cachedManualPassReceiver,
+                    out _cachedManualPassTarget,
+                    out _cachedManualPassPower,
+                    out _cachedManualPassTime);
+            }
+
+            SetPreviewPassReceiver(_hasCachedManualPassTarget ? _cachedManualPassReceiver : null);
+
+            return _hasCachedManualPassTarget;
         }
 
         void DistributeBallUpField()
@@ -682,6 +739,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Exit()
         {
             base.Exit();
+
+            ClearPreviewPassReceiver();
+            _hasCachedManualPassTarget = false;
 
             if (_manualControlEnabled && Owner.IconUserControlled != null)
                 Owner.IconUserControlled.SetActive(false);

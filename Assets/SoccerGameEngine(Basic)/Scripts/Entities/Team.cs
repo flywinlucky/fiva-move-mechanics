@@ -15,6 +15,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
     [RequireComponent(typeof(TeamFSM))]
     public class Team : MonoBehaviour
     {
+        const float ClosestPlayerSwitchCooldown = 1f;
+
         [Header("Control Variables")]
 
         [SerializeField]
@@ -97,6 +99,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public Action OnTakeKickOff;
         public Action OnMessagedToTakeKickOff;
 
+        float _nextClosestPlayerSwitchTime;
+
         public delegate void BallLaunched(float flightTime, float velocity, Vector3 initial, Vector3 target);
 
         public BallLaunched OnBallLaunched;
@@ -108,6 +112,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             //set-up some variables
             HasKickOff = HasInitialKickOff;
+            _nextClosestPlayerSwitchTime = 0f;
         }
 
         public void Init(float distancePassMax, 
@@ -304,6 +309,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             if (isTeamMateInPossession)
             {
                 chasingPlayer.Invoke_OnIsNoLongerTheClosestPlayerToBall();
+                _nextClosestPlayerSwitchTime = 0f;
                 return;
             }
 
@@ -315,11 +321,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             if(chasingPlayer != currClosestPlayerToPoint.Player)
             {
+                if (Time.time < _nextClosestPlayerSwitchTime)
+                    return;
+
                 // message the previous chaser to stop chasing
                 chasingPlayer.Invoke_OnIsNoLongerTheClosestPlayerToBall();
 
                 // make the current closet player chase the ball
                 currClosestPlayerToPoint.Player.Invoke_OnBecameTheClosestPlayerToBall();
+                _nextClosestPlayerSwitchTime = Time.time + ClosestPlayerSwitchCooldown;
 
             }
         }

@@ -10,8 +10,48 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 {
     public class ManualControl : BState
     {
+        const float PassPreviewScanInterval = 0.5f;
+
         Vector3 RefObjectForward;             // The current forward direction of the camera
         Transform _refObject;                 // A reference to the main camera in the scenes transform
+        Player _previewPassReceiver;
+        float _nextPreviewScanTime;
+        bool _hasCachedPassTarget;
+
+        void SetPreviewPassReceiver(Player receiver)
+        {
+            if (_previewPassReceiver == receiver)
+                return;
+
+            if (_previewPassReceiver != null)
+                _previewPassReceiver.SetCanPassPreviewVisible(false);
+
+            _previewPassReceiver = receiver;
+
+            if (_previewPassReceiver != null)
+                _previewPassReceiver.SetCanPassPreviewVisible(true);
+        }
+
+        void ClearPreviewPassReceiver()
+        {
+            if (_previewPassReceiver != null)
+                _previewPassReceiver.SetCanPassPreviewVisible(false);
+
+            _previewPassReceiver = null;
+        }
+
+        bool ScanPassPreview(Vector3 direction, bool forceScan)
+        {
+            if (!forceScan && Time.time < _nextPreviewScanTime)
+                return _hasCachedPassTarget;
+
+            _nextPreviewScanTime = Time.time + PassPreviewScanInterval;
+
+            _hasCachedPassTarget = Owner.CanPassInDirection(direction, false);
+            SetPreviewPassReceiver(_hasCachedPassTarget ? Owner.PassReceiver : null);
+
+            return _hasCachedPassTarget;
+        }
 
         private void EnsureReferenceObject()
         {
@@ -31,6 +71,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             // set the ref object
             EnsureReferenceObject();
+
+            ClearPreviewPassReceiver();
+            _nextPreviewScanTime = 0f;
+            _hasCachedPassTarget = false;
         }
 
         public override void Execute()
@@ -54,17 +98,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (Movement.sqrMagnitude > 1f)
                 Movement.Normalize();
 
+            Vector3 direction = Movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : Movement;
+            bool canPassInDirection = ScanPassPreview(direction, false);
+
             bool passPressed = Input.GetButtonDown("Pass/Press") || Input.GetKeyDown(KeyCode.N);
             if (passPressed)
             {
-                // set the direction of movement
-                Vector3 direction = Movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : Movement;
-
-                // find pass in direction
-                bool canPass = Owner.CanPassInDirection(direction);
+                canPassInDirection = ScanPassPreview(direction, true);
 
                 // go to kick ball if can pass
-                if(canPass)
+                if(canPassInDirection)
                 {
                     //go to kick-ball state
                     Owner.KickType = KickType.Pass;
@@ -131,6 +174,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         public override void Exit()
         {
             base.Exit();
+
+            ClearPreviewPassReceiver();
+            _hasCachedPassTarget = false;
 
             // disable the user controlled icon
             if (Owner.IconUserControlled != null)

@@ -16,8 +16,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
     /// </summary>
     public class AttackMainState : BState
     {
+        const float LooseBallSwitchCooldown = 1f;
+
         float _lengthPitch = 90;
         TeamPlayer _closestPlayerToLooseBall;
+        float _nextClosestPlayerSwitchTime;
 
         void TriggerPlayerToChaseLooseBall()
         {
@@ -27,11 +30,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
 
             if (currClosestPlayerToPoint != _closestPlayerToLooseBall)
             {
+                bool hasCurrentChaser = _closestPlayerToLooseBall != null && _closestPlayerToLooseBall.Player != null;
+                if (hasCurrentChaser && Time.time < _nextClosestPlayerSwitchTime)
+                    return;
+
                 if (_closestPlayerToLooseBall != null && _closestPlayerToLooseBall.Player != null)
                     _closestPlayerToLooseBall.Player.Invoke_OnIsNoLongerTheClosestPlayerToBall();
 
                 _closestPlayerToLooseBall = currClosestPlayerToPoint;
                 _closestPlayerToLooseBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
+                _nextClosestPlayerSwitchTime = Time.time + LooseBallSwitchCooldown;
             }
             else if (_closestPlayerToLooseBall.Player.InFieldPlayerFSM.IsCurrentState<ChaseBallMainState>() == false)
             {
@@ -44,6 +52,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
             base.Enter();
 
             _closestPlayerToLooseBall = null;
+            _nextClosestPlayerSwitchTime = 0f;
 
             // enable the support spots root
             Owner.PlayerSupportSpots.gameObject.SetActive(true);
@@ -71,6 +80,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
             {
                 _closestPlayerToLooseBall.Player.Invoke_OnIsNoLongerTheClosestPlayerToBall();
                 _closestPlayerToLooseBall = null;
+                _nextClosestPlayerSwitchTime = 0f;
             }
 
             //loop through each player and update it's position
@@ -99,6 +109,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
                 _closestPlayerToLooseBall.Player.Invoke_OnIsNoLongerTheClosestPlayerToBall();
 
             _closestPlayerToLooseBall = null;
+            _nextClosestPlayerSwitchTime = 0f;
 
             // enable the support spots root
             Owner.PlayerSupportSpots.gameObject.SetActive(false);

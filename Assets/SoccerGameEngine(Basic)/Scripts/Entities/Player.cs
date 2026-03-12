@@ -104,6 +104,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         [SerializeField]
         GameObject _iconUserControlled;
+        [SerializeField]
+        GameObject _iconCanPassPlayer;
 
         float _radius;
 
@@ -184,6 +186,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _goalKeeping = Mathf.Clamp(Random.value, 0.6f, 0.9f);
             _power = Mathf.Clamp(Random.value, 0.6f, 0.9f);
             _speed = Mathf.Clamp(Random.value, 0.8f, 0.9f);
+
+            // keep preview icon hidden until a valid manual pass target is selected
+            SetCanPassPreviewVisible(false);
         }
 
         public bool CanBallReachPoint(Vector3 position, float power, out float time)
@@ -412,7 +417,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
                 //clamp the power
                 power = Mathf.Clamp(power, 0f, ActualPower);
-              
+
                 //check if ball can reach the target
                 float time = 0f;
                 bool canBallReachPoint = CanBallReachPoint(randomGoalTarget,
@@ -435,7 +440,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 }
 
                 //if shot is possible set the data
-                if(isShotPossible == false && considerShotSafety == false
+                if (isShotPossible == false && considerShotSafety == false
                     || isShotPossible && considerShotSafety)
                 {
                     //set the data
@@ -458,7 +463,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 player002.Position);
         }
 
-        public bool CanPassInDirection(Vector3 direction)
+        public bool CanPassInDirection(Vector3 direction, bool allowAnyDirectionFallback = true)
         {
             if (TeamMembers == null || TeamMembers.Count == 0)
                 return false;
@@ -510,7 +515,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             }
 
             // Final fallback: ignore pass direction so user pass input never feels stuck.
-            if (KickTarget == null)
+            if (KickTarget == null && allowAnyDirectionFallback)
                 CanPass(false);
 
             //return result
@@ -522,7 +527,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public bool IsPassSafeFromAllOpponents(Vector3 initialPosition, Vector3 receiverPosition, Vector3 target, float initialBallVelocity, float time)
         {
             //look for a player threatening the pass
-            foreach(Player player in OppositionMembers)
+            foreach (Player player in OppositionMembers)
             {
                 bool isPassSafeFromOpponent = IsPassSafeFromOpponent(initialPosition,
                     target,
@@ -833,9 +838,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             ActualSpeed *= _speed;
 
             //Init the RPGMovement
-            RPGMovement.Init(ActualSpeed, 
-                ActualSpeed, 
-                _rotationSpeed * _speed, 
+            RPGMovement.Init(ActualSpeed,
+                ActualSpeed,
+                _rotationSpeed * _speed,
                 ActualSpeed);
         }
 
@@ -901,7 +906,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             return dot > 0;
             ////transfrom point to local
             //Vector3 localDirection = transform.InverseTransformDirection(direction);
- 
+
             ////return result
             //return localDirection.z >= 1;
         }
@@ -993,7 +998,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             float minTeamSeparation = Mathf.Max(0.75f, _distancePassMin * 0.75f);
 
-           foreach(Player tM in _teamMembers)
+            foreach (Player tM in _teamMembers)
             {
                 if (tM != this && IsWithinDistance(position, tM.transform.position, minTeamSeparation))
                     return true;
@@ -1005,7 +1010,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public bool IsThreatened()
         {
             //search for threatening player
-            foreach(Player player in OppositionMembers)
+            foreach (Player player in OppositionMembers)
             {
                 if (IsPlayerAThreat(player))
                     return true;
@@ -1137,7 +1142,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 return new List<Player>();
 
             //get the players
-            List<Player> result = _teamMembers.FindAll(tM => Vector3.Distance(this.Position, tM.Position) <= radius 
+            List<Player> result = _teamMembers.FindAll(tM => Vector3.Distance(this.Position, tM.Position) <= radius
             && this != tM);
 
             //retur result
@@ -1154,6 +1159,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 return null;
             else
                 return players[Random.Range(0, players.Count)];
+        }
+
+        public void SetCanPassPreviewVisible(bool visible)
+        {
+            if (_iconCanPassPlayer == null)
+                return;
+
+            if (_iconCanPassPlayer.activeSelf != visible)
+                _iconCanPassPlayer.SetActive(visible);
         }
 
         public Quaternion Rotation
@@ -1238,5 +1252,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public float GoalKeeperPickupBlockedUntil { get; set; }
         public Player PrevPassReceiver { get => _prevPassReceiver; set => _prevPassReceiver = value; }
         public GameObject IconUserControlled { get => _iconUserControlled; set => _iconUserControlled = value; }
+        public GameObject IconCanPassPlayer { get => _iconCanPassPlayer; set => _iconCanPassPlayer = value; }
     }
 }

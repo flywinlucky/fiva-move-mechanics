@@ -94,6 +94,7 @@ MonoBehaviour:
   _ballTacklableDistance: 3
   _playerType: 0
   _iconUserControlled: {fileID: 7363217310203470874}
+  _iconCanPassPlayer: {fileID: 3973144619716014223}
   IsTeamInControl: 0
   PassReceiver: {fileID: 0}
 --- !u!114 &-731324859167567875
@@ -456,6 +457,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5021583222701741379, guid: e5794df09c1c82b46a0915561f52aec7,
+        type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6789620463532976867, guid: e5794df09c1c82b46a0915561f52aec7,
         type: 3}
       propertyPath: m_Pivot.x
@@ -586,6 +592,12 @@ PrefabInstance:
 --- !u!224 &2948220481557372059 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6789620463532976867, guid: e5794df09c1c82b46a0915561f52aec7,
+    type: 3}
+  m_PrefabInstance: {fileID: 8562395394478782072}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &3973144619716014223 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4751522756732143351, guid: e5794df09c1c82b46a0915561f52aec7,
     type: 3}
   m_PrefabInstance: {fileID: 8562395394478782072}
   m_PrefabAsset: {fileID: 0}
