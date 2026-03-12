@@ -14,7 +14,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 {
     public class ManualChase : BState
     {
-        bool updateLogic;
+        Vector3 refObjectForward;
+        Transform _refObject;
+
+        private void EnsureReferenceObject()
+        {
+            if (_refObject == null)
+            {
+                _refObject = Camera.main != null ? Camera.main.transform : Owner.transform;
+            }
+        }
 
         /// <summary>
         /// The steering target
@@ -26,68 +35,76 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.Enter();
 
             // enable the user controlled icon
-            Owner.IconUserControlled.SetActive(true);
-
-            // set update logic
-            updateLogic = false;
+            if (Owner.IconUserControlled != null)
+                Owner.IconUserControlled.SetActive(true);
 
             //get the steering target
             SteeringTarget = Ball.Instance.NormalizedPosition;
 
-            //set the steering to on
-            Owner.RPGMovement.SetMoveTarget(SteeringTarget);
-            Owner.RPGMovement.SetRotateFacePosition(SteeringTarget);
+            // set the ref object
+            EnsureReferenceObject();
+
+            //reset move/tracking from previous state
+            Owner.RPGMovement.SetSteeringOff();
+            Owner.RPGMovement.SetTrackingOff();
+            Owner.RPGMovement.SetMoveDirection(Vector3.zero);
         }
 
         public override void Execute()
         {
             base.Execute();
 
-            // update logic
-            if(updateLogic)
+            //check if ball is within control distance
+            if (Ball.Instance.Owner != null
+                && Ball.Instance.Owner != Owner
+                && Owner.IsBallWithinControlableDistance())
             {
-                //check if ball is within control distance
-                if (Ball.Instance.Owner != null
-                    && Owner.IsBallWithinControlableDistance())
-                {
-                    //tackle player
-                    SuperMachine.ChangeState<TackleMainState>();
-                }
-                else if (Owner.IsBallWithinControlableDistance())
-                {
-                    // control ball
-                    SuperMachine.ChangeState<ControlBallMainState>();
-                }
-
-                //get the steering target
-                SteeringTarget = Ball.Instance.NormalizedPosition;
-
-                //set the steering to on
-                Owner.RPGMovement.SetMoveTarget(SteeringTarget);
-                Owner.RPGMovement.SetRotateFacePosition(SteeringTarget);
+                //tackle player
+                SuperMachine.ChangeState<TackleMainState>();
+                return;
+            }
+            else if (Owner.IsBallWithinControlableDistance())
+            {
+                // control ball
+                SuperMachine.ChangeState<ControlBallMainState>();
+                return;
             }
 
-            // listen to key events
-            if(Input.GetButton("Pass/Press"))
-            {
-                // set update logic
-                if(updateLogic == false)
-                    updateLogic = true;
+            //capture input
+            float horizontal = Input.GetAxisRaw("Horizontal");
+            float vertical = Input.GetAxisRaw("Vertical");
+            Vector3 input = new Vector3(horizontal, 0f, vertical);
 
-                // set steering
-                if(Owner.RPGMovement.Steer == false)
+            //ensure we always have a valid movement reference
+            EnsureReferenceObject();
+
+            //calculate camera relative movement
+            refObjectForward = Vector3.Scale(_refObject.forward, new Vector3(1f, 0f, 1f)).normalized;
+            Vector3 refObjectRight = Vector3.Scale(_refObject.right, new Vector3(1f, 0f, 1f)).normalized;
+            Vector3 movement = input.z * refObjectForward + input.x * refObjectRight;
+            if (movement.sqrMagnitude > 1f)
+                movement.Normalize();
+
+            if (input == Vector3.zero)
+            {
+                Owner.RPGMovement.SetMoveDirection(Vector3.zero);
+
+                if (Owner.RPGMovement.Steer)
+                    Owner.RPGMovement.SetSteeringOff();
+
+                if (Owner.RPGMovement.Track)
+                    Owner.RPGMovement.SetTrackingOff();
+            }
+            else
+            {
+                Owner.RPGMovement.SetMoveDirection(movement);
+                Owner.RPGMovement.SetRotateFaceDirection(movement);
+
+                if (!Owner.RPGMovement.Steer)
                     Owner.RPGMovement.SetSteeringOn();
-                if(Owner.RPGMovement.Track == false)
-                    Owner.RPGMovement.SetTrackingOn();
-            }
-            else if(Input.GetButtonUp("Pass/Press"))
-            {
-                // set update logic
-                updateLogic = false;
 
-                // set steering
-                Owner.RPGMovement.SetSteeringOff();
-                Owner.RPGMovement.SetTrackingOff();
+                if (!Owner.RPGMovement.Track)
+                    Owner.RPGMovement.SetTrackingOn();
             }
         }
 
@@ -96,7 +113,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.Exit();
 
             // disable the user controlled icon
-            Owner.IconUserControlled.SetActive(false);
+            if (Owner.IconUserControlled != null)
+                Owner.IconUserControlled.SetActive(false);
 
             //set the steering to on
             Owner.RPGMovement.SetSteeringOff();

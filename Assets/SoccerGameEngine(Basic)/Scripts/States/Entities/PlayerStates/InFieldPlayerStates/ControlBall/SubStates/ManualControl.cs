@@ -13,15 +13,24 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         Vector3 RefObjectForward;             // The current forward direction of the camera
         Transform _refObject;                 // A reference to the main camera in the scenes transform
 
+        private void EnsureReferenceObject()
+        {
+            if (_refObject == null)
+            {
+                _refObject = Camera.main != null ? Camera.main.transform : Owner.transform;
+            }
+        }
+
         public override void Enter()
         {
             base.Enter();
 
             // enable the user controlled icon
-            Owner.IconUserControlled.SetActive(true);
+            if (Owner.IconUserControlled != null)
+                Owner.IconUserControlled.SetActive(true);
 
             // set the ref object
-            _refObject = Camera.main.transform;
+            EnsureReferenceObject();
         }
 
         public override void Execute()
@@ -35,14 +44,20 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             //calculate the direction to rotate to
             Vector3 input = new Vector3(horizontalRot, 0f, verticalRot);
 
+            //ensure we always have a valid movement reference
+            EnsureReferenceObject();
+
             // calculate camera relative direction to move:
             RefObjectForward = Vector3.Scale(_refObject.forward, new Vector3(1, 0, 1)).normalized;
-            Vector3 Movement = input.z * RefObjectForward + input.x * _refObject.right;
+            Vector3 refObjectRight = Vector3.Scale(_refObject.right, new Vector3(1, 0, 1)).normalized;
+            Vector3 Movement = input.z * RefObjectForward + input.x * refObjectRight;
+            if (Movement.sqrMagnitude > 1f)
+                Movement.Normalize();
 
             if (Input.GetButtonDown("Pass/Press"))
             {
                 // set the direction of movement
-                Vector3 direction = Movement == Vector3.zero ? Owner.transform.forward : Movement;
+                Vector3 direction = Movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : Movement;
 
                 // find pass in direction
                 bool canPass = Owner.CanPassInDirection(direction);
@@ -87,6 +102,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 //process if any key down
                 if (input == Vector3.zero)
                 {
+                    Owner.RPGMovement.SetMoveDirection(Vector3.zero);
+
                     if (Owner.RPGMovement.Steer == true)
                         Owner.RPGMovement.SetSteeringOff();
 
@@ -96,7 +113,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 else
                 {
                     // set the movement
-                    Vector3 moveDirection = Movement == Vector3.zero ? Vector3.zero : Owner.transform.forward;
+                    Vector3 moveDirection = Movement.sqrMagnitude <= 0.0001f ? Vector3.zero : Movement;
                     Owner.RPGMovement.SetMoveDirection(moveDirection);
                     Owner.RPGMovement.SetRotateFaceDirection(Movement);
 
@@ -115,7 +132,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.Exit();
 
             // disable the user controlled icon
-            Owner.IconUserControlled.SetActive(false);
+            if (Owner.IconUserControlled != null)
+                Owner.IconUserControlled.SetActive(false);
         }
 
         public Player Owner

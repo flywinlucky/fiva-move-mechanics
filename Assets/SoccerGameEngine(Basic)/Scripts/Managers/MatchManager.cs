@@ -254,7 +254,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         private void Update()
         {
-            if(Input.GetMouseButtonDown(0))
+#if UNITY_EDITOR
+            // Editor-only debug shortcut for quickly toggling possession.
+            if (Input.GetKeyDown(KeyCode.P))
             {
                 if(TeamAway.FSM.IsCurrentState<AttackMainState>())
                 {
@@ -265,6 +267,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                     ActionUtility.Invoke_Action(TeamAway.OnGainPossession);
                 }
             }
+#endif
         }
         public void Instance_OnContinueToSecondHalf()
         {
