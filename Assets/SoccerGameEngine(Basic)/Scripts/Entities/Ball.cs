@@ -13,7 +13,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [SerializeField]
         [Min(0)]
         float _gravity = 9.11f;
-
+      [SerializeField]
+        GameObject _iconBallControlled;
         [SerializeField]
         string _groundMaskName;
 
@@ -31,7 +32,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public float Friction { get => -_friction; set => _friction = value; }
 
-        public Player Owner { get; set; }
+        Player _owner;
+        public Player Owner
+        {
+            get => _owner;
+            set
+            {
+                _owner = value;
+                if (_iconBallControlled != null)
+                    _iconBallControlled.SetActive(_owner == null);
+            }
+        }
 
         public Rigidbody Rigidbody { get; set; }
         public SphereCollider SphereCollider { get; set; }
@@ -45,6 +56,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             SphereCollider = GetComponent<SphereCollider>();
 
             //init some variables
+            if (_iconBallControlled != null)
+                _iconBallControlled.SetActive(true);
             _groundMask = LayerMask.GetMask(_groundMaskName);
             _rayCastDistance = SphereCollider.radius + 0.05f;
         }
