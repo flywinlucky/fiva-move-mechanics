@@ -12,16 +12,25 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         /// </summary>
         public Vector3 SteeringTarget { get; set; }
 
+        void UpdateMoveHomeAndFaceBall()
+        {
+            SteeringTarget = Owner.HomeRegion.position;
+
+            Owner.RPGMovement.SetMoveTarget(SteeringTarget);
+
+            Vector3 faceTarget = Ball.Instance != null
+                ? Ball.Instance.NormalizedPosition
+                : SteeringTarget;
+
+            Owner.RPGMovement.SetRotateFacePosition(faceTarget);
+        }
+
         public override void Enter()
         {
             base.Enter();
 
-            //get the steering target
-            SteeringTarget = Owner.HomeRegion.position;
-
-            //set the steering to on
-            Owner.RPGMovement.SetMoveTarget(SteeringTarget);
-            Owner.RPGMovement.SetRotateFacePosition(SteeringTarget);
+            // move home but keep head/body facing the ball while travelling.
+            UpdateMoveHomeAndFaceBall();
             Owner.RPGMovement.SetSteeringOn();
             Owner.RPGMovement.SetTrackingOn();
         }
@@ -30,6 +39,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Execute()
         {
             base.Execute();
+
+            UpdateMoveHomeAndFaceBall();
 
             //check if now at target and switch to wait for ball
             if (Owner.IsAtTarget(SteeringTarget))
@@ -40,12 +51,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         {
             base.ManualExecute();
 
-            //update the steering target
-            SteeringTarget = Owner.HomeRegion.position;
-
-            //update the rpg movement
-            Owner.RPGMovement.SetMoveTarget(SteeringTarget);
-            Owner.RPGMovement.SetRotateFacePosition(SteeringTarget);
+            UpdateMoveHomeAndFaceBall();
         }
 
         public Player Owner

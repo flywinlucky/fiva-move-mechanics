@@ -44,6 +44,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             //set the rpg movement
             Owner.RPGMovement.SetSteeringOn();
+            Owner.RPGMovement.SetTrackingOn();
             Owner.RPGMovement.Speed = Owner.TendGoalSpeed;
 
             UpdateGoalKeeperControlIcons(false);
@@ -174,6 +175,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             base.Exit();
 
             UpdateGoalKeeperControlIcons(false);
+
+            Owner.RPGMovement.SetTrackingOff();
 
             //deregister to some events
             Owner.OnShotTaken -= Instance_OnShotTaken;

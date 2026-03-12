@@ -28,7 +28,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             // stop steering
             Owner.RPGMovement.SetSteeringOff();
-            Owner.RPGMovement.SetTrackingOff();
+            Owner.RPGMovement.SetTrackingOn();
 
             //listen to variaus events
             Owner.OnInstructedToGoToHome += Instance_OnInstructedToGoToHome;
@@ -40,6 +40,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         {
             base.Execute();
 
+            // keep the keeper facing the ball while waiting.
+            Owner.RPGMovement.SetRotateFacePosition(Ball.Instance.NormalizedPosition);
+
             if (IsLooseBallNearKeeper())
             {
                 LogGoalKeeperDebug("Wait -> TendGoal (loose ball near keeper)");
@@ -50,6 +53,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Exit()
         {
             base.Exit();
+
+            Owner.RPGMovement.SetTrackingOff();
 
             //stop listening to variaus events
             Owner.OnInstructedToGoToHome -= Instance_OnInstructedToGoToHome;
