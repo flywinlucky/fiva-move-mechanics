@@ -26,11 +26,21 @@ namespace Assets.SimpleSteering.Scripts.Movement
 
         public Vector3 RotationDirection { get; set; }
 
+        private bool EnsureReferences()
+        {
+            if (CapsuleCollider == null)
+                CapsuleCollider = GetComponent<CapsuleCollider>();
+
+            if (RigidBody == null)
+                RigidBody = GetComponent<Rigidbody>();
+
+            return RigidBody != null;
+        }
+
         private void Awake()
         {
             //intialize 
-            CapsuleCollider = GetComponent<CapsuleCollider>();
-            RigidBody = GetComponent<Rigidbody>();
+            EnsureReferences();
             CurrentSpeed = 0f;
         }
 
@@ -49,7 +59,11 @@ namespace Assets.SimpleSteering.Scripts.Movement
         /// </summary>
         public void Reset()
         {
+            if (!EnsureReferences())
+                return;
+
             Velocity = Vector3.zero;
+            CurrentSpeed = 0f;
         }
 
         /// <summary>
@@ -128,6 +142,9 @@ namespace Assets.SimpleSteering.Scripts.Movement
         /// <param name="direction">direction of movement</param>
         public void Move(Vector3 direction)
         {
+            if (!EnsureReferences())
+                return;
+
             //accelerate
             CurrentSpeed = Mathf.MoveTowards(CurrentSpeed, Speed, Acceleration * Time.time);
 
@@ -165,6 +182,9 @@ namespace Assets.SimpleSteering.Scripts.Movement
         /// <param name="direction">direction to rotate to</param>
         public void Rotate(Vector3 direction)
         {
+            if (!EnsureReferences())
+                return;
+
             //rotate if we have direction
             if (direction.magnitude >= 0.01f)
             {
@@ -188,11 +208,17 @@ namespace Assets.SimpleSteering.Scripts.Movement
         {
             get
             {
+                if (!EnsureReferences())
+                    return Vector3.zero;
+
                 return RigidBody.velocity;
             }
 
             set
             {
+                if (!EnsureReferences())
+                    return;
+
                 RigidBody.velocity = value;
             }
         }
