@@ -203,11 +203,33 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         {
             // get the closest player to point
             TeamPlayer player = Players
-                .Where(tm => tm.Player.PlayerType == PlayerTypes.InFieldPlayer
+                .Where(tm => tm != null
+                && tm.Player != null
+                && tm.Player.PlayerType == PlayerTypes.InFieldPlayer
                 && tm.Player.InFieldPlayerFSM.IsCurrentState<TackledMainState>() == false)
                 .OrderBy(tm => Vector3.Distance(tm.Player.Position,
                 position))
-                .First();
+                .FirstOrDefault();
+
+            if (player == null)
+            {
+                player = Players
+                    .Where(tm => tm != null
+                    && tm.Player != null
+                    && tm.Player.PlayerType == PlayerTypes.InFieldPlayer)
+                    .OrderBy(tm => Vector3.Distance(tm.Player.Position,
+                    position))
+                    .FirstOrDefault();
+            }
+
+            if (player == null)
+            {
+                player = Players
+                    .Where(tm => tm != null && tm.Player != null)
+                    .OrderBy(tm => Vector3.Distance(tm.Player.Position,
+                    position))
+                    .FirstOrDefault();
+            }
 
             // return player
             return player;
@@ -273,14 +295,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public void Invoke_OnPlayerChaseBall(Player chasingPlayer)
         {
+            if (chasingPlayer == null)
+                return;
+
             // get the current closest player to ball
             TeamPlayer currClosestPlayerToPoint = GetClosestPlayerToPoint(Ball.Instance.NormalizedPosition);
 
+            if (currClosestPlayerToPoint == null || currClosestPlayerToPoint.Player == null)
+                return;
+
             if(chasingPlayer != currClosestPlayerToPoint.Player)
             {
-                // message the closest player to go out of chaseball
-                if (currClosestPlayerToPoint != null)
-                    chasingPlayer.Invoke_OnIsNoLongerTheClosestPlayerToBall();
+                // message the previous chaser to stop chasing
+                chasingPlayer.Invoke_OnIsNoLongerTheClosestPlayerToBall();
 
                 // make the current closet player chase the ball
                 currClosestPlayerToPoint.Player.Invoke_OnBecameTheClosestPlayerToBall();

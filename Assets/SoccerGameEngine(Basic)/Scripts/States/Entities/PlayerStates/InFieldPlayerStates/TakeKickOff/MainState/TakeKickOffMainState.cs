@@ -17,7 +17,18 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.Enter();
 
             //get a player to pass to
-            Player receiver = Owner.GetRandomTeamMemberInRadius(20f);
+            float kickoffPassRadius = Mathf.Max(20f, Owner.DistancePassMax * 1.5f);
+            Player receiver = Owner.GetRandomTeamMemberInRadius(kickoffPassRadius);
+
+            if (receiver == null)
+            {
+                //broadcast that I have taken kick-off
+                ActionUtility.Invoke_Action(Owner.OnTakeKickOff);
+
+                //go to home state
+                Machine.ChangeState<GoToHomeMainState>();
+                return;
+            }
 
             //find the power to target
             float power = Owner.FindPower(Ball.Instance.NormalizedPosition,
@@ -32,6 +43,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 receiver.Position,
                 power,
                 Ball.Instance.Friction);
+
+            if (time <= 0f)
+                time = 0.5f;
 
             //make a normal pass to the player
             Owner.MakePass(Ball.Instance.NormalizedPosition,

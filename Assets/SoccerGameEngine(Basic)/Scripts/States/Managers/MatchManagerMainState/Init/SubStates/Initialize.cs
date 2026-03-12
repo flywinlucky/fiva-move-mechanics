@@ -13,6 +13,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
         {
             base.Enter();
 
+            float casualDistancePassMax = Owner.DistancePassMax * 1.35f;
+            float casualDistancePassMin = Owner.DistancePassMin * 0.7f;
+
             //reset the count
             finishedInitializedTeamCount = 0;
 
@@ -21,8 +24,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             Owner.TeamHome.OnInit += Instance_OnTeamInit;
 
             //set some team data
-            Owner.TeamAway.Init(Owner.DistancePassMax,
-                Owner.DistancePassMin,
+            Owner.TeamAway.Init(casualDistancePassMax,
+                casualDistancePassMin,
                 Owner.DistanceShotValidMax,
                 Owner.DistanceTendGoal,
                 Owner.DistanceThreatMax,
@@ -33,8 +36,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
                 Owner.VelocityShotArrive,
                 Owner.Power,
                 Owner.Speed);
-            Owner.TeamHome.Init(Owner.DistancePassMax,
-                Owner.DistancePassMin,
+            Owner.TeamHome.Init(casualDistancePassMax,
+                casualDistancePassMin,
                 Owner.DistanceShotValidMax,
                 Owner.DistanceTendGoal,
                 Owner.DistanceThreatMax,

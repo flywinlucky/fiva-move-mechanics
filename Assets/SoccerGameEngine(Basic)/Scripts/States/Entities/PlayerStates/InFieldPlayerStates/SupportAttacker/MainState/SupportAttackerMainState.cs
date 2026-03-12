@@ -78,15 +78,35 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             Player ballOwner = Ball.Instance.Owner;
             Vector3 target = ballOwner == null ? Ball.Instance.NormalizedPosition : ballOwner.Position;
 
+            if (Owner.PlayerSupportSpots == null || Owner.PlayerSupportSpots.Count == 0)
+            {
+                SupportSpot = null;
+                return;
+            }
+
+            IEnumerable<SupportSpot> candidateSpots = Owner.PlayerSupportSpots
+                .Where(p => p != null
+                    && p.IsPickedOut(Owner) == false
+                    && Owner.IsPositionWithinWanderRadius(p.transform.position));
+
             // set the distance to goal
-            SupportSpot = Owner.PlayerSupportSpots
-                .Where(p => p.IsPickedOut(Owner) == false
-                    && Owner.IsPositionWithinPassRange(target, p.transform.position)
-                    && Owner.IsPositionWithinWanderRadius(p.transform.position)
+            SupportSpot = candidateSpots
+                .Where(p => Owner.IsPositionWithinPassRange(target, p.transform.position)
                     && Owner.IsTeamMemberWithinMinPassDistance(p.transform.position) == false
                     && Owner.IsPositionThreatened(p.transform.position) == false)
                 .OrderBy(p => Vector3.Distance(p.transform.position, Owner.OppGoal.Position))
                 .FirstOrDefault();
+
+            // Casual fallback: accept less-than-perfect support spots so teammates keep moving.
+            if (SupportSpot == null)
+            {
+                float relaxedSupportDistance = Owner.DistancePassMax * 1.5f;
+                SupportSpot = candidateSpots
+                    .Where(p => Owner.IsWithinDistance(target, p.transform.position, relaxedSupportDistance))
+                    .OrderBy(p => Vector3.Distance(p.transform.position, target))
+                    .ThenBy(p => Vector3.Distance(p.transform.position, Owner.OppGoal.Position))
+                    .FirstOrDefault();
+            }
         }
 
         private void Instance_OnBecameTheClosestPlayerToBall()

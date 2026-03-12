@@ -61,7 +61,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.ManualExecute();
 
             // if we have exhausted ball time, chase down ball
-            if (_ballTime <= 0f)
+            if (_ballTime <= -0.5f)
                 Machine.ChangeState<ChaseBallMainState>();
         }
 
@@ -80,7 +80,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
         public void SetSteeringTarget(float ballTime, Vector3 position)
         {
-            _ballTime = ballTime;
+            _ballTime = Mathf.Max(0.5f, ballTime + 0.35f);
             
             GetState<SteerToReceiveTarget>().SteeringTarget = position;
         }

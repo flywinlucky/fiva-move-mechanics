@@ -11,6 +11,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             base.Enter();
 
+            if (Owner.KickTarget == null)
+            {
+                Machine.ChangeState<RecoverFromKick>();
+                return;
+            }
+
+            if (Owner.PassReceiver == null)
+            {
+                Owner.PassReceiver = Owner.GetRandomTeamMemberInRadius(Mathf.Max(20f, Owner.DistancePassMax * 1.5f));
+            }
+
             // set the prev pass receiver
             Owner.PrevPassReceiver = Owner.PassReceiver;
 

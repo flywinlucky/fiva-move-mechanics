@@ -60,7 +60,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 //start considering passing if wait -time is less than zero
                 //find player to pass ball to if threatened or
                 //has spend alot of time controlling the ball
-                if (Owner.CanPass(considerPassSafety))
+                bool canPass = Owner.CanPass(considerPassSafety);
+                if (!canPass)
+                    canPass = Owner.CanPass(false);
+
+                if (canPass)
                 {
                     //go to kick-ball state
                     Owner.KickType = KickType.Pass;

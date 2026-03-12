@@ -109,6 +109,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         float _rotationSpeed = 6f;
 
+        const float _manualPassDirectionAngle = 60f;
+        const float _casualPassFallbackRangeMultiplier = 1.5f;
+
         Player _prevPassReceiver;
         RPGMovement _rpgMovement;
 
@@ -202,15 +205,22 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         /// ToDo::Implement logic to cache players to message so that they can intercept the pass
         public bool CanPass(bool considerPassSafety = true)
         {
+            if (TeamMembers == null || TeamMembers.Count == 0)
+                return false;
+
             //set the pass target
             bool passToPlayerClosestToMe = false;// Random.value <= 0.1f;
 
-            //set the pass target
+            //reset pass selection
             KickTarget = null;
+            PassReceiver = null;
 
             //loop through each team player and find a pass for each
             foreach (Player player in TeamMembers)
             {
+                if (player == null)
+                    continue;
+
                 // can't pass to myself
                 bool isPlayerMe = player == this;
                 if (isPlayerMe)
@@ -228,6 +238,39 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
                 // check if player can pass
                 CanPass(player.Position, considerPassSafety, passToPlayerClosestToMe, player);
+            }
+
+            // Casual fallback: if strict safety found nothing, allow less strict passing.
+            if (KickTarget == null && considerPassSafety)
+            {
+                foreach (Player player in TeamMembers)
+                {
+                    if (player == null || player == this)
+                        continue;
+
+                    if (player == _prevPassReceiver)
+                        continue;
+
+                    if (player.PlayerType == PlayerTypes.Goalkeeper)
+                        continue;
+
+                    CanPass(player.Position, false, passToPlayerClosestToMe, player);
+                }
+            }
+
+            // Last fallback: include previous receiver to avoid dead-ends.
+            if (KickTarget == null)
+            {
+                foreach (Player player in TeamMembers)
+                {
+                    if (player == null || player == this)
+                        continue;
+
+                    if (player.PlayerType == PlayerTypes.Goalkeeper)
+                        continue;
+
+                    CanPass(player.Position, false, passToPlayerClosestToMe, player);
+                }
             }
 
             //return result
@@ -268,16 +311,21 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                     //return false if the time is less than zero
                     //that means the ball can't reach it's target
                     if (canBallReachTarget == false)
-                        return false;
+                        continue;
+
+                    if (ballTimeToTarget <= 0f)
+                        continue;
 
                     // get time of player to point
+                    float receiverSpeed = player != null ? player.ActualSpeed : ActualSpeed;
+                    receiverSpeed = Mathf.Max(0.01f, receiverSpeed);
                     float timeOfReceiverToTarget = TimeToTarget(position,
                         passOption,
-                        ActualSpeed);
+                        receiverSpeed);
 
                     // pass is not safe if receiver can't reach target before the ball
                     if (timeOfReceiverToTarget > ballTimeToTarget)
-                        return false;
+                        continue;
 
                     // check if pass is safe from all opponents
                     bool isPassSafeFromAllOpponents = false;
@@ -412,21 +460,29 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public bool CanPassInDirection(Vector3 direction)
         {
+            if (TeamMembers == null || TeamMembers.Count == 0)
+                return false;
+
             //set the pass target
             bool passToPlayerClosestToMe = Random.value <= 0.75f;
 
-            //set the pass target
+            //reset pass selection
             KickTarget = null;
+            PassReceiver = null;
 
             //loop through each team player and find a pass for each
             foreach (Player player in TeamMembers)
             {
+                if (player == null)
+                    continue;
+
                 // find a pass to a player who isn't me
                 // who isn't a goal keeper
                 // who is in this direction
                 if (player != this
                     && player.PlayerType == PlayerTypes.InFieldPlayer
-                    && IsPositionInDirection(direction, player.Position, 22.5f))
+                    && player != _prevPassReceiver
+                    && IsPositionInDirection(direction, player.Position, _manualPassDirectionAngle))
                 {
                     CanPass(player.Position, true, passToPlayerClosestToMe, player);
                 }
@@ -438,19 +494,24 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 //loop through each team player and find a pass for each
                 foreach (Player player in TeamMembers)
                 {
+                    if (player == null)
+                        continue;
+
                     // find a pass to a player who isn't me
                     // who isn't a goal keeper
                     // who is in this direction
                     if (player != this
                         && player.PlayerType == PlayerTypes.InFieldPlayer
-                        && IsPositionInDirection(direction, player.Position, 22.5f))
+                        && IsPositionInDirection(direction, player.Position, _manualPassDirectionAngle))
                     {
                         CanPass(player.Position, false, passToPlayerClosestToMe, player);
                     }
                 }
             }
 
-            // if still there is no player simply find a player to pass to
+            // Final fallback: ignore pass direction so user pass input never feels stuck.
+            if (KickTarget == null)
+                CanPass(false);
 
             //return result
             //Player can pass if there is a pass target
@@ -735,6 +796,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             //set some data
             float incrementAngle = 45;
             float iterations = 360 / incrementAngle;
+            float passOptionDistance = Mathf.Max(1f, _distancePassMin * 0.75f);
+
+            Vector3 baseDirection = position - Position;
+            baseDirection.y = 0f;
+            if (baseDirection.sqrMagnitude <= 0.0001f)
+                baseDirection = transform.forward;
+            baseDirection.Normalize();
 
             //find some positions around the player
             for (int i = 0; i < iterations; i++)
@@ -743,10 +811,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 float angle = incrementAngle * i;
 
                 //rotate the direction
-                Vector3 direction = Quaternion.AngleAxis(angle, Vector3.up) * transform.forward;
+                Vector3 direction = Quaternion.AngleAxis(angle, Vector3.up) * baseDirection;
 
                 //get point
-                Vector3 point = position + direction * _distancePassMin * 0.5f;
+                Vector3 point = position + direction * passOptionDistance;
 
                 //add to list
                 result.Add(point);
@@ -920,9 +988,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public bool IsTeamMemberWithinMinPassDistance(Vector3 position)
         {
+            if (_teamMembers == null)
+                return false;
+
+            float minTeamSeparation = Mathf.Max(0.75f, _distancePassMin * 0.75f);
+
            foreach(Player tM in _teamMembers)
             {
-                if (tM != this && IsPositionWithinMinPassDistance(position, tM.transform.position))
+                if (tM != this && IsWithinDistance(position, tM.transform.position, minTeamSeparation))
                     return true;
             }
 
@@ -1023,13 +1096,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         /// <param name="to"></param>
         public void MakePass(Vector3 from, Vector3 to, Player receiver, float power, float time)
         {
+            if (receiver == null)
+                receiver = GetRandomTeamMemberInRadius(Mathf.Max(20f, _distancePassMax * _casualPassFallbackRangeMultiplier));
+
             //kick the ball to target
             Ball.Instance.Kick(to, power);
 
             //message the receiver to receive the ball
-            InstructedToReceiveBall temp = receiver.OnInstructedToReceiveBall;
-            if (temp != null)
-                temp.Invoke(time, to);
+            if (receiver != null)
+            {
+                InstructedToReceiveBall temp = receiver.OnInstructedToReceiveBall;
+                if (temp != null)
+                    temp.Invoke(time, to);
+            }
         }
 
         public void MakeShot(Vector3 from, Vector3 to, float power, float time)
@@ -1054,6 +1133,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public List<Player> GetTeamMembersInRadius(float radius)
         {
+            if (_teamMembers == null)
+                return new List<Player>();
+
             //get the players
             List<Player> result = _teamMembers.FindAll(tM => Vector3.Distance(this.Position, tM.Position) <= radius 
             && this != tM);
@@ -1068,10 +1150,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             List<Player> players = GetTeamMembersInRadius(radius);
 
             //return random player
-            if (players == null)
+            if (players == null || players.Count == 0)
                 return null;
             else
-                return players[Random.Range(0, players.Count - 1)];
+                return players[Random.Range(0, players.Count)];
         }
 
         public Quaternion Rotation
