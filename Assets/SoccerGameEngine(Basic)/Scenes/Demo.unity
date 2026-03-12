@@ -5010,11 +5010,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88ea3c5728654d44496dcc5231060f1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _distanceMaxDisplacement: 30
-  _speedFollow: 1
-  target: {fileID: 546599439}
-  distanceMaxZ: 0
-  distanceMinZ: 0
+  _canAutoFollowTarget: 1
+  _distanceFollow: 35
+  _distanceMinXDisplacement: 15
+  _distanceMaxXDisplacement: 51
+  _distanceMinZDisplacement: -45
+  _distanceMaxZDisplacement: 44
+  _height: 20
+  _speedFollow: 8
+  _lockDamping: 0.9
+  _target: {fileID: 546599439}
 --- !u!1 &986644605
 GameObject:
   m_ObjectHideFlags: 0
