@@ -9,6 +9,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 {
     public class GoToHomeMainState : BHState
     {
+        const float LooseBallAutoCollectDistance = 5f;
+
+        bool IsLooseBallNearKeeper()
+        {
+            if (Ball.Instance == null)
+                return false;
+
+            if (Ball.Instance.Owner != null)
+                return false;
+
+            return Vector3.Distance(Owner.Position, Ball.Instance.NormalizedPosition) <= LooseBallAutoCollectDistance;
+        }
+
         public override void AddStates()
         {
             base.AddStates();
@@ -27,9 +40,27 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             LogGoalKeeperDebug("Enter GoToHome");
         }
 
+        public override void Execute()
+        {
+            base.Execute();
+
+            if (IsLooseBallNearKeeper())
+            {
+                LogGoalKeeperDebug("GoToHome -> TendGoal (loose ball near keeper)");
+                SuperMachine.ChangeState<TendGoalMainState>();
+            }
+        }
+
         public override void ManualExecute()
         {
             base.ManualExecute();
+
+            if (IsLooseBallNearKeeper())
+            {
+                LogGoalKeeperDebug("GoToHome manual -> TendGoal (loose ball near keeper)");
+                SuperMachine.ChangeState<TendGoalMainState>();
+                return;
+            }
 
             // run logic depending on whether team is in control or not
             if (Owner.IsTeamInControl == false)

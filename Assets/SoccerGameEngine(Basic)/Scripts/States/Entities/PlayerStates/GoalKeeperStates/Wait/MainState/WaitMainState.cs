@@ -9,6 +9,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 {
     public class WaitMainState : BState
     {
+        const float LooseBallAutoCollectDistance = 5f;
+
+        bool IsLooseBallNearKeeper()
+        {
+            if (Ball.Instance == null)
+                return false;
+
+            if (Ball.Instance.Owner != null)
+                return false;
+
+            return Vector3.Distance(Owner.Position, Ball.Instance.NormalizedPosition) <= LooseBallAutoCollectDistance;
+        }
+
         public override void Enter()
         {
             base.Enter();
@@ -21,6 +34,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             Owner.OnInstructedToGoToHome += Instance_OnInstructedToGoToHome;
 
             LogGoalKeeperDebug("Enter Wait");
+        }
+
+        public override void Execute()
+        {
+            base.Execute();
+
+            if (IsLooseBallNearKeeper())
+            {
+                LogGoalKeeperDebug("Wait -> TendGoal (loose ball near keeper)");
+                Machine.ChangeState<TendGoalMainState>();
+            }
         }
 
         public override void Exit()

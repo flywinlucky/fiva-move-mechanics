@@ -15,6 +15,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
     /// </summary>
     public class TendGoalMainState : BState
     {
+        const float LooseBallAutoCollectDistance = 10f;
+
         int _goalLayerMask;
         float _timeSinceLastUpdate;
         float _lastPickupBlockedLogTime;
@@ -56,6 +58,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         {
             base.Execute();
 
+            //get the entity positions
+            Vector3 ballPosition = Ball.Instance.NormalizedPosition;
+
             bool isNearOrHasBall = Ball.Instance.Owner == Owner || Owner.IsBallWithinControlableDistance();
             UpdateGoalKeeperControlIcons(isNearOrHasBall);
 
@@ -63,6 +68,35 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             bool isBallLoose = Ball.Instance.Owner == null;
             bool isBallInPickupRange = Owner.IsBallWithinControlableDistance();
             bool canPickupNow = Time.time >= Owner.GoalKeeperPickupBlockedUntil;
+            float distanceToBall = Vector3.Distance(Owner.Position, ballPosition);
+
+            // if loose ball is near the keeper, actively step to it and pick it up when possible
+            bool shouldAutoCollectLooseBall = isBallLoose && distanceToBall <= LooseBallAutoCollectDistance;
+            if (shouldAutoCollectLooseBall)
+            {
+                Owner.RPGMovement.SetRotateFacePosition(ballPosition);
+                Owner.RPGMovement.SetMoveTarget(ballPosition);
+                Owner.RPGMovement.Steer = distanceToBall >= 0.2f;
+
+                if (isBallInPickupRange && canPickupNow)
+                {
+                    LogGoalKeeperDebug("Loose ball within " + LooseBallAutoCollectDistance + "m -> auto collect -> ControlBall");
+                    Machine.ChangeState<ControlBallMainState>();
+                    return;
+                }
+
+                if (isBallInPickupRange && !canPickupNow)
+                {
+                    if (Time.time - _lastPickupBlockedLogTime >= 0.2f)
+                    {
+                        float remaining = Owner.GoalKeeperPickupBlockedUntil - Time.time;
+                        LogGoalKeeperDebug("Auto collect waiting for pickup block: " + Mathf.Max(0f, remaining).ToString("0.00") + "s");
+                        _lastPickupBlockedLogTime = Time.time;
+                    }
+                }
+
+                return;
+            }
 
             if (isBallLoose && isBallInPickupRange && canPickupNow)
             {
@@ -80,9 +114,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                     _lastPickupBlockedLogTime = Time.time;
                 }
             }
-
-            //get the entity positions
-            Vector3 ballPosition = Ball.Instance.NormalizedPosition;
 
             //set the look target
             Owner.RPGMovement.SetRotateFacePosition(ballPosition);
@@ -127,8 +158,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         {
             base.ManualExecute();
 
+            bool isLooseBallNearKeeper = Ball.Instance.Owner == null
+                && Vector3.Distance(Owner.Position, Ball.Instance.NormalizedPosition) <= LooseBallAutoCollectDistance;
+
             // run logic depending on whether team is in control or not
-            if (Owner.IsTeamInControl == true)
+            if (Owner.IsTeamInControl == true && !isLooseBallNearKeeper)
             {
                 LogGoalKeeperDebug("Team in control while TendGoal -> GoToHome");
                 SuperMachine.ChangeState<GoToHomeMainState>();
