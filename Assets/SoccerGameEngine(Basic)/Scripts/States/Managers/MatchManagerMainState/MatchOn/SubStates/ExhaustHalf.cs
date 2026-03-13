@@ -1,4 +1,5 @@
 ﻿using System;
+using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMainState.Init.MainState;
@@ -16,10 +17,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
     public class ExhaustHalf : BState
     {
         Coroutine _executingCoroutine;
+        bool _hasTriggeredMatchStop;
 
         public override void Enter()
         {
             base.Enter();
+
+            _hasTriggeredMatchStop = false;
 
             //raise the match play start event
             ActionUtility.Invoke_Action(Owner.OnMatchPlayStart);
@@ -66,6 +70,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
 
         private void Instance_OnGoalScored()
         {
+            if (_hasTriggeredMatchStop)
+                return;
+
+            _hasTriggeredMatchStop = true;
+
+            // Immediately freeze both teams so keepers don't chase/clear a scored ball from goal.
+            Owner.MatchStatus = MatchStatuses.GoalScored;
+            FreezePlayersForGoalReset();
+
             //prepare the text
             string info = string.Format("TeamA {0}-{1} TeamH", Owner.TeamAway.Goals, Owner.TeamHome.Goals);
 
@@ -73,15 +86,37 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             GoalScored temp = Owner.OnGoalScored;
             if (temp != null) temp.Invoke(info);
 
-            // set the match status
-            Owner.MatchStatus = MatchStatuses.GoalScored;
-
             // trigger state change
             Machine.ChangeState<MatchStoppedMainState>();
         }
 
+        void FreezePlayersForGoalReset()
+        {
+            if (Ball.Instance != null)
+            {
+                Ball.Instance.Owner = null;
+                if (Ball.Instance.Rigidbody != null)
+                    Ball.Instance.Rigidbody.isKinematic = false;
+            }
+
+            if (Owner.TeamAway != null)
+            {
+                Owner.TeamAway.ControllingPlayer = null;
+                ActionUtility.Invoke_Action(Owner.TeamAway.OnInstructPlayersToWait);
+            }
+
+            if (Owner.TeamHome != null)
+            {
+                Owner.TeamHome.ControllingPlayer = null;
+                ActionUtility.Invoke_Action(Owner.TeamHome.OnInstructPlayersToWait);
+            }
+        }
+
         private void Instance_TimeManagerOnTick(int minutes, int seconds)
         {
+            if (_hasTriggeredMatchStop)
+                return;
+
             //raise the on tick event of the match manager
             Tick temp = Owner.OnTick;
             if (temp != null) temp.Invoke(Owner.CurrentHalf, minutes, seconds);
@@ -90,6 +125,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             //stop game if current time is now equal to the next stop time
             if (minutes >= Owner.NextStopTime)
             {
+                _hasTriggeredMatchStop = true;
+
                 // set the match status
                 Owner.MatchStatus = MatchStatuses.HalfExhausted;
 

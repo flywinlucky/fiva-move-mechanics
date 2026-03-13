@@ -6,6 +6,7 @@ using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.MainSta
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.KickOff.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
 using RobustFSM.Base;
 using UnityEngine;
 
@@ -63,6 +64,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
         private void Instance_OnTeamTakeKickOff()
         {
             hasInvokedKickOffEvent = true;
+            Owner.MatchStatus = MatchStatuses.HalfExhausted;
             Machine.ChangeState<ExhaustHalf>();
         }
 

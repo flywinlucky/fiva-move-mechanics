@@ -2,6 +2,7 @@
 using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.GoalKeeperStates.GoToHome.MainState;
+using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
 using RobustFSM.Base;
 using UnityEngine;
 
@@ -22,13 +23,25 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             return Vector3.Distance(Owner.Position, Ball.Instance.NormalizedPosition) <= LooseBallAutoCollectDistance;
         }
 
+        bool IsMatchStoppedForReset()
+        {
+            if (MatchManager.Instance == null)
+                return false;
+
+            MatchStatuses status = MatchManager.Instance.MatchStatus;
+            return status == MatchStatuses.GoalScored;
+        }
+
         public override void Enter()
         {
             base.Enter();
 
             // stop steering
             Owner.RPGMovement.SetSteeringOff();
-            Owner.RPGMovement.SetTrackingOn();
+            if (IsMatchStoppedForReset())
+                Owner.RPGMovement.SetTrackingOff();
+            else
+                Owner.RPGMovement.SetTrackingOn();
 
             //listen to variaus events
             Owner.OnInstructedToGoToHome += Instance_OnInstructedToGoToHome;
@@ -39,6 +52,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Execute()
         {
             base.Execute();
+
+            if (IsMatchStoppedForReset())
+            {
+                if (Owner.RPGMovement.Track)
+                    Owner.RPGMovement.SetTrackingOff();
+
+                return;
+            }
 
             // keep the keeper facing the ball while waiting.
             Owner.RPGMovement.SetRotateFacePosition(Ball.Instance.NormalizedPosition);
