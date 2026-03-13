@@ -12,13 +12,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Triggers
 
         private void OnTriggerEnter(Collider other)
         {
-            if(other.tag == "Ball")
-            {
-                //invoke that the wall has collided with the ball
-                Action temp = OnCollidedWithBall;
-                if (temp != null)
-                    temp.Invoke();
-            }
+            if (!other.CompareTag("Ball"))
+                return;
+
+            // Ignore trigger while the ball is controlled by a player to avoid false goal events.
+            if (Ball.Instance != null && Ball.Instance.Owner != null)
+                return;
+
+            //invoke that the wall has collided with the ball
+            Action temp = OnCollidedWithBall;
+            if (temp != null)
+                temp.Invoke();
         }
     }
 }

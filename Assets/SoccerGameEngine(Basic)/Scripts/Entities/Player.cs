@@ -925,19 +925,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public bool IsPlayerAThreat(Player player)
         {
             return IsWithinDistance(Position, player.Position, DistanceThreatMin);
-            // check if position is infront of me
-            bool isThreatInFrontOfMe = IsInfrontOfPlayer(player.Position);
-
-            // find the threat
-            bool isThreatHigh = IsPositionAHighThreat(player.Position);
-            bool isThreatLow = IsPositionALowThreat(player.Position) && isThreatHigh == false;
-
-            // check the various threat types
-            bool isPlayerHighlyThreatened = isThreatHigh && isThreatInFrontOfMe == false;
-            bool isPlayerLowlylyThreatened = isThreatLow && isThreatInFrontOfMe == true;
-
-            // return the result
-            return isPlayerHighlyThreatened || isPlayerLowlylyThreatened;
         }
 
         public bool IsPositionAHighThreat(Vector3 position)

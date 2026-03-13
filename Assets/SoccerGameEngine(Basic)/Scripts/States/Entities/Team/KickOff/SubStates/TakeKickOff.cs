@@ -23,6 +23,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.KickOff.Su
 
             // set to unexecuted
             executed = false;
+            waitTime = 1f;
+            InstructPlayerToTakeKickOff = null;
+
+            if (ControllingPlayer == null || ControllingPlayer.Player == null)
+            {
+                // Fallback: don't let kickoff flow stall if no valid controlling player is set.
+                executed = true;
+                ActionUtility.Invoke_Action(Owner.OnTakeKickOff);
+                SuperMachine.ChangeState<AttackMainState>();
+                return;
+            }
 
             // uncomment to follow actual procedure in taking kick-off
             //// register player to listening to take-kickoff action
@@ -60,11 +71,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.KickOff.Su
             base.Exit();
 
             // deregister player from listening to take-kickoff action
-            ControllingPlayer.Player.OnTakeKickOff -= Instance_OnPlayerTakeKickOff;
-            InstructPlayerToTakeKickOff -= ControllingPlayer.Player.Invoke_OnInstructedToTakeKickOff;
+            if (ControllingPlayer != null && ControllingPlayer.Player != null)
+            {
+                ControllingPlayer.Player.OnTakeKickOff -= Instance_OnPlayerTakeKickOff;
+                InstructPlayerToTakeKickOff -= ControllingPlayer.Player.Invoke_OnInstructedToTakeKickOff;
 
-            // reset the home region of the player
-            ControllingPlayer.Player.HomeRegion = ControllingPlayer.CurrentHomePosition;
+                // reset the home region of the player
+                ControllingPlayer.Player.HomeRegion = ControllingPlayer.CurrentHomePosition;
+            }
+
+            InstructPlayerToTakeKickOff = null;
         }
 
         public void Instance_OnPlayerTakeKickOff()
