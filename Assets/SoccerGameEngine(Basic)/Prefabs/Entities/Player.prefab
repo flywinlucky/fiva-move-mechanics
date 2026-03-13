@@ -79,6 +79,8 @@ MonoBehaviour:
   _ballShotArriveVelocity: 30
   _threatTrackDistance: 1
   _tendGoalDistance: 1
+  _goalKeeperMovementRadius: 15
+  _goalKeeperMovementRadiusSlowdown: 2
   _oppGoal: {fileID: 0}
   _teamGoal: {fileID: 0}
   _accuracy: 0
@@ -153,8 +155,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Acceleration: 1
   Agility: 1
-  RotationSpeed: 3
-  Speed: 4
+  RotationSpeed: 15
+  Speed: 5
   Steer: 0
   Track: 0
 --- !u!1 &2500224489660211353
