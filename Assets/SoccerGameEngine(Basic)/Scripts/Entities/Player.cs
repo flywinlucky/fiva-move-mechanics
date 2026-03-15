@@ -27,13 +27,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _maxWanderDistance = 10f;
 
         [SerializeField]
-        float _distancePassMax = 20f;
+        float _distancePassMax = 15f;
 
         [SerializeField]
         float _distancePassMin = 5f;
 
         [SerializeField]
-        float _distanceShotMaxValid = 30f;
+        float _distanceShotMaxValid = 20f;
 
         [SerializeField]
         float _distanceThreatMax = 0.5f;
