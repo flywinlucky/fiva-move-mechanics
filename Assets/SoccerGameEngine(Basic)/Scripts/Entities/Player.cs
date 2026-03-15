@@ -51,6 +51,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         //[Range(1f, 3f)]
         float _shotPowerMultiplier = 1.5f;
 
+        //[SerializeField]
+        //[Range(1f, 3f)]
+        float _goalKeeperPassPowerMultiplier = 1.25f;
+
         [SerializeField]
         float _threatTrackDistance = 1f;
 
@@ -1085,15 +1089,32 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             if (receiver == null)
                 receiver = GetRandomTeamMemberInRadius(Mathf.Max(20f, _distancePassMax * _casualPassFallbackRangeMultiplier));
 
+            float finalPower = power;
+            if (_playerType == PlayerTypes.Goalkeeper)
+                finalPower = Mathf.Max(0f, power * _goalKeeperPassPowerMultiplier);
+
             //kick the ball to target
-            Ball.Instance.Kick(to, power);
+            Ball.Instance.Kick(to, finalPower);
+
+            float receiveTime = time;
+            float recalculatedTime = Ball.Instance.TimeToCoverDistance(Ball.Instance.NormalizedPosition,
+                to,
+                Mathf.Max(0.1f, finalPower),
+                true);
+
+            if (!float.IsNaN(recalculatedTime)
+                && !float.IsInfinity(recalculatedTime)
+                && recalculatedTime > 0f)
+            {
+                receiveTime = recalculatedTime;
+            }
 
             //message the receiver to receive the ball
             if (receiver != null)
             {
                 InstructedToReceiveBall temp = receiver.OnInstructedToReceiveBall;
                 if (temp != null)
-                    temp.Invoke(time, to);
+                    temp.Invoke(receiveTime, to);
             }
         }
 
@@ -1306,6 +1327,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             set => _goalKeeperMovementRadiusSlowdown = Mathf.Max(0.1f, value);
         }
         public float GoalKeeperPickupBlockedUntil { get; set; }
+        public float GoalKeeperPassPowerMultiplier
+        {
+            get => Mathf.Max(1f, _goalKeeperPassPowerMultiplier);
+            set => _goalKeeperPassPowerMultiplier = Mathf.Max(1f, value);
+        }
         public Player PrevPassReceiver { get => _prevPassReceiver; set => _prevPassReceiver = value; }
         public GameObject IconUserControlled { get => _iconUserControlled; set => _iconUserControlled = value; }
         public GameObject IconCanPassPlayer { get => _iconCanPassPlayer; set => _iconCanPassPlayer = value; }
