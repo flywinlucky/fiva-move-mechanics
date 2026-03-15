@@ -59,7 +59,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         [SerializeField]
         [Range(1f, 3f)]
-        float _sprintSpeedMultiplier = 0.7f;
+        float _sprintSpeedMultiplier = 2f;
 
         [SerializeField]
         [Range(10f, 200f)]
@@ -166,6 +166,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         GameObject _iconUserControlled;
         [SerializeField]
         GameObject _iconCanPassPlayer;
+
+        [Header("UI")]
+        public string UiPlayerName;
 
         float _radius;
 
