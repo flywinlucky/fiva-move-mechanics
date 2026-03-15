@@ -16,12 +16,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
     public class TendGoalMainState : BState
     {
         const float LooseBallAutoCollectDistance = 10f;
+        const float BaseSaveAttemptChance = 0.5f;
+        const float SaveAttemptSkillInfluence = 0.15f;
 
         int _goalLayerMask;
         float _timeSinceLastUpdate;
         float _lastPickupBlockedLogTime;
         Vector3 _steeringTarget;
         Vector3 _prevBallPosition;
+        bool _hasPendingIntercept;
+        float _pendingInterceptDelay;
+        float _pendingBallVelocity;
+        Vector3 _pendingBallInitialPosition;
+        Vector3 _pendingShotTarget;
 
         void UpdateGoalKeeperControlIcons(bool isNearOrHasBall)
         {
@@ -41,6 +48,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             _prevBallPosition = 1000 * Vector3.one;
             _timeSinceLastUpdate = 0f;
             _lastPickupBlockedLogTime = -10f;
+            _hasPendingIntercept = false;
+            _pendingInterceptDelay = 0f;
 
             //set the rpg movement
             Owner.RPGMovement.SetSteeringOn();
@@ -64,6 +73,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             bool isNearOrHasBall = Ball.Instance.Owner == Owner || Owner.IsBallWithinControlableDistance();
             UpdateGoalKeeperControlIcons(isNearOrHasBall);
+
+            ProcessPendingShotIntercept();
+
+            if (SuperMachine.IsCurrentState<TendGoalMainState>() == false)
+                return;
 
             // catch any loose ball that enters keeper control radius
             bool isBallLoose = Ball.Instance.Owner == null;
@@ -180,6 +194,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             Owner.RPGMovement.SetTrackingOff();
 
+            _hasPendingIntercept = false;
+            _pendingInterceptDelay = 0f;
+
             //deregister to some events
             Owner.OnShotTaken -= Instance_OnShotTaken;
         }
@@ -212,17 +229,57 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
                 if (isShotOnTarget == true)
                 {
-                    // init the intercept shot state
-                    InterceptShotMainState interceptShotState = Machine.GetState<InterceptShotMainState>();
-                    interceptShotState.BallInitialPosition = initial;
-                    interceptShotState.BallInitialVelocity = velocity;
-                    interceptShotState.ShotTarget = target;
+                    if (!ShouldAttemptSave())
+                    {
+                        _hasPendingIntercept = false;
+                        LogGoalKeeperDebug("Shot on target -> keeper late reaction (simulated miss)");
+                        return;
+                    }
 
-                    // trigger state change
-                    LogGoalKeeperDebug("Transition -> InterceptShot");
-                    Machine.ChangeState<InterceptShotMainState>();
+                    _hasPendingIntercept = true;
+                    _pendingBallInitialPosition = initial;
+                    _pendingBallVelocity = velocity;
+                    _pendingShotTarget = target;
+                    _pendingInterceptDelay = GetRandomReactionDelay();
+
+                    LogGoalKeeperDebug("Shot on target -> queued intercept in " + _pendingInterceptDelay.ToString("0.00") + "s");
                 }
             }
+        }
+
+        void ProcessPendingShotIntercept()
+        {
+            if (!_hasPendingIntercept)
+                return;
+
+            _pendingInterceptDelay -= Time.deltaTime;
+            if (_pendingInterceptDelay > 0f)
+                return;
+
+            _hasPendingIntercept = false;
+
+            InterceptShotMainState interceptShotState = Machine.GetState<InterceptShotMainState>();
+            interceptShotState.BallInitialPosition = _pendingBallInitialPosition;
+            interceptShotState.BallInitialVelocity = _pendingBallVelocity;
+            interceptShotState.ShotTarget = _pendingShotTarget;
+
+            LogGoalKeeperDebug("Transition -> InterceptShot (delayed)");
+            Machine.ChangeState<InterceptShotMainState>();
+        }
+
+        bool ShouldAttemptSave()
+        {
+            float keeperSkillOffset = (Owner.GoalKeeping - 0.75f) * SaveAttemptSkillInfluence;
+            float saveAttemptChance = Mathf.Clamp01(BaseSaveAttemptChance + keeperSkillOffset);
+            return Random.value <= saveAttemptChance;
+        }
+
+        float GetRandomReactionDelay()
+        {
+            float skillPenalty = Mathf.Clamp01(1f - Owner.GoalKeeping);
+            float baseDelay = Random.Range(0.05f, 0.24f);
+            float extraDelay = Random.Range(0.02f, 0.22f) * skillPenalty;
+            return baseDelay + extraDelay;
         }
 
         void LogGoalKeeperDebug(string message)

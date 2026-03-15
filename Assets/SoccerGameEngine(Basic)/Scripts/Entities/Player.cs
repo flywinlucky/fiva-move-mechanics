@@ -27,13 +27,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _maxWanderDistance = 10f;
 
         [SerializeField]
-        float _distancePassMax = 15f;
+        float _distancePassMax = 20f;
 
         [SerializeField]
         float _distancePassMin = 5f;
 
         [SerializeField]
-        float _distanceShotMaxValid = 20f;
+        float _distanceShotMaxValid = 30f;
 
         [SerializeField]
         float _distanceThreatMax = 0.5f;
@@ -46,6 +46,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         [SerializeField]
         float _ballShotArriveVelocity = 10f;
+
+        //[SerializeField]
+        //[Range(1f, 3f)]
+        float _shotPowerMultiplier = 1.5f;
 
         [SerializeField]
         float _threatTrackDistance = 1f;
@@ -67,21 +71,21 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         [Header("Player Attributes")]
 
-        [SerializeField]
-        [Range(0.1f, 1f)]
-        float _accuracy;
+        //[SerializeField]
+        //[Range(0.1f, 1f)]
+        float  _accuracy = 0.8f;
 
         [SerializeField]
         [Range(0.1f, 1f)]
         float _goalKeeping = 0.8f;
 
-        [SerializeField]
-        [Range(0.1f, 1f)]
-        float _power;
+        //[SerializeField]
+        //[Range(0.1f, 5f)]
+        float _power = 1.5f;
 
-        [SerializeField]
-        [Range(0.1f, 1f)]
-        float _speed;
+        //[SerializeField]
+        //[Range(0.1f, 5f)]
+        float _speed = 4f;
 
         [SerializeField]
         [Range(0.1f, 5f)]
@@ -402,11 +406,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 if (distanceToGoal > _distanceShotMaxValid)
                     return false;
             }
-
-            //define some positions to be local to the goal
-            //get the shot reference point. It should be a point some distance behinde the 
-            //goal-line/goal
-            Vector3 refShotTarget = _oppGoal.ShotTargetReferencePoint;
 
             //number of tries to find a shot
             float numOfTries = Random.Range(1, 6);
@@ -752,21 +751,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         /// <returns></returns>
         public Vector3 FindRandomShot()
         {
-            //define some positions to be local to the goal
-            //get the shot reference point. It should be a point some distance behinde the 
-            //goal-line/goal
-            Vector3 refShotTarget = _oppGoal.transform.InverseTransformPoint(_oppGoal.ShotTargetReferencePoint);
+            if (_oppGoal == null)
+                return Position + transform.forward * 2f;
 
-            //find an x-position within the goal mouth
-            float randomXPosition = Random.Range(_oppGoal.BottomLeftRelativePosition.x,
-                _oppGoal.BottomRightRelativePosition.x);
-
-            //set result
-            Vector3 goalLocalTarget = new Vector3(randomXPosition, refShotTarget.y, refShotTarget.z);
-            Vector3 goalGlobalTarget = _oppGoal.transform.TransformPoint(goalLocalTarget);
-
-            //return result
-            return goalGlobalTarget;
+            return _oppGoal.GetRandomShotTarget();
         }
 
         /// <summary>
@@ -1111,13 +1099,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public void MakeShot(Vector3 from, Vector3 to, float power, float time)
         {
+            float shotPower = Mathf.Max(0f, power * _shotPowerMultiplier);
+
             //launch the ball
-            Ball.Instance.Kick(to, power);
+            Ball.Instance.Kick(to, shotPower);
 
             // raise the ball shot event
             Ball.BallLaunched temp = Ball.Instance.OnBallShot;
             if (temp != null)
-                temp.Invoke(time, power, from, to);
+                temp.Invoke(time, shotPower, from, to);
         }
 
         /// <summary>
