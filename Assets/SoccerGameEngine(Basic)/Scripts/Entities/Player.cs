@@ -55,6 +55,52 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         //[Range(1f, 3f)]
         float _goalKeeperPassPowerMultiplier = 1.25f;
 
+        [Header("Sprint & Stamina")]
+
+        [SerializeField]
+        [Range(1f, 3f)]
+        float _sprintSpeedMultiplier = 0.7f;
+
+        [SerializeField]
+        [Range(10f, 200f)]
+        float _maxStamina = 100f;
+
+        [SerializeField]
+        [Range(1f, 100f)]
+        float _staminaDrainPerSecond = 22f;
+
+        [SerializeField]
+        [Range(1f, 100f)]
+        float _staminaRegenPerSecond = 14f;
+
+        [SerializeField]
+        [Range(0f, 5f)]
+        float _staminaRegenDelay = 0.7f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        float _aiSprintChance = 0.2f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        float _aiSprintUrgentChance = 0.45f;
+
+        [SerializeField]
+        [Range(0.1f, 5f)]
+        float _aiSprintMinDuration = 0.45f;
+
+        [SerializeField]
+        [Range(0.1f, 5f)]
+        float _aiSprintMaxDuration = 1.2f;
+
+        [SerializeField]
+        [Range(0.1f, 5f)]
+        float _aiSprintDecisionIntervalMin = 0.35f;
+
+        [SerializeField]
+        [Range(0.1f, 5f)]
+        float _aiSprintDecisionIntervalMax = 1.1f;
+
         [SerializeField]
         float _threatTrackDistance = 1f;
 
@@ -130,6 +176,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         Player _prevPassReceiver;
         RPGMovement _rpgMovement;
+        float _currentStamina;
+        float _staminaRegenBlockedUntil;
+        float _aiSprintUntilTime;
+        float _aiNextSprintDecisionTime;
+        bool _isSprinting;
+        int _lastSprintApplyFrame = -1;
 
         public Action OnBecameTheClosestPlayerToBall;
         public Action OnInstructedToGoToHome;
@@ -200,9 +252,117 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _goalKeeping = Mathf.Clamp(Random.value, 0.6f, 0.9f);
             _power = Mathf.Clamp(Random.value, 0.6f, 0.9f);
             _speed = Mathf.Clamp(Random.value, 0.8f, 0.9f);
+            _currentStamina = Mathf.Max(1f, _maxStamina);
+            _staminaRegenBlockedUntil = 0f;
+            _isSprinting = false;
 
             // keep preview icon hidden until a valid manual pass target is selected
             SetCanPassPreviewVisible(false);
+        }
+
+        private void LateUpdate()
+        {
+            // If no movement state applied sprint logic this frame, allow passive stamina regen.
+            if (_lastSprintApplyFrame == Time.frameCount)
+                return;
+
+            _isSprinting = false;
+            RegenerateStamina(Time.deltaTime);
+        }
+
+        void DrainStamina(float deltaTime)
+        {
+            if (deltaTime <= 0f)
+                return;
+
+            _currentStamina = Mathf.Max(0f, _currentStamina - _staminaDrainPerSecond * deltaTime);
+            _staminaRegenBlockedUntil = Time.time + _staminaRegenDelay;
+        }
+
+        void RegenerateStamina(float deltaTime)
+        {
+            if (deltaTime <= 0f)
+                return;
+
+            if (Time.time < _staminaRegenBlockedUntil)
+                return;
+
+            _currentStamina = Mathf.Min(MaxStamina, _currentStamina + _staminaRegenPerSecond * deltaTime);
+        }
+
+        public bool EvaluateAISprintIntent(bool isMoving, bool isHighUrgency = false)
+        {
+            if (!isMoving || _currentStamina <= 0.01f)
+            {
+                _aiSprintUntilTime = 0f;
+                return false;
+            }
+
+            if (Time.time < _aiSprintUntilTime)
+                return true;
+
+            if (Time.time < _aiNextSprintDecisionTime)
+                return false;
+
+            float chance = isHighUrgency
+                ? Mathf.Max(_aiSprintChance, _aiSprintUrgentChance)
+                : _aiSprintChance;
+
+            // Preserve some stamina so AI does not hard-drain itself every possession.
+            if (_currentStamina <= MaxStamina * 0.2f)
+                chance *= 0.35f;
+
+            if (Random.value <= chance)
+            {
+                float sprintDuration = Random.Range(
+                    Mathf.Min(_aiSprintMinDuration, _aiSprintMaxDuration),
+                    Mathf.Max(_aiSprintMinDuration, _aiSprintMaxDuration));
+
+                _aiSprintUntilTime = Time.time + Mathf.Max(0.1f, sprintDuration);
+            }
+
+            float nextDecisionDelay = Random.Range(
+                Mathf.Min(_aiSprintDecisionIntervalMin, _aiSprintDecisionIntervalMax),
+                Mathf.Max(_aiSprintDecisionIntervalMin, _aiSprintDecisionIntervalMax));
+
+            _aiNextSprintDecisionTime = Time.time + Mathf.Max(0.1f, nextDecisionDelay);
+
+            return Time.time < _aiSprintUntilTime;
+        }
+
+        public bool ApplySprintToMovement(bool wantsSprint, bool isMoving, float baseSpeedMultiplier = 1f)
+        {
+            _lastSprintApplyFrame = Time.frameCount;
+
+            bool canSprint = wantsSprint && isMoving && _currentStamina > 0.01f;
+
+            if (canSprint)
+                DrainStamina(Time.deltaTime);
+            else
+                RegenerateStamina(Time.deltaTime);
+
+            _isSprinting = canSprint;
+
+            float normalizedBaseMultiplier = Mathf.Max(0.1f, baseSpeedMultiplier);
+            float speedMultiplier = canSprint ? SprintSpeedMultiplier : 1f;
+            float finalSpeed = Mathf.Max(0.1f, ActualSpeed * normalizedBaseMultiplier * speedMultiplier);
+
+            if (_rpgMovement != null)
+                _rpgMovement.Speed = finalSpeed;
+
+            return canSprint;
+        }
+
+        public void ResetSprintState(float baseSpeedMultiplier = 1f)
+        {
+            _isSprinting = false;
+            _aiSprintUntilTime = 0f;
+
+            float normalizedBaseMultiplier = Mathf.Max(0.1f, baseSpeedMultiplier);
+            float finalSpeed = Mathf.Max(0.1f, ActualSpeed * normalizedBaseMultiplier);
+
+            if (_rpgMovement != null)
+                _rpgMovement.Speed = finalSpeed;
         }
 
         public bool CanBallReachPoint(Vector3 position, float power, out float time)
@@ -1332,6 +1492,37 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             get => Mathf.Max(1f, _goalKeeperPassPowerMultiplier);
             set => _goalKeeperPassPowerMultiplier = Mathf.Max(1f, value);
         }
+        public float SprintSpeedMultiplier
+        {
+            get => Mathf.Max(1f, _sprintSpeedMultiplier);
+            set => _sprintSpeedMultiplier = Mathf.Max(1f, value);
+        }
+        public float MaxStamina
+        {
+            get => Mathf.Max(1f, _maxStamina);
+            set
+            {
+                _maxStamina = Mathf.Max(1f, value);
+                _currentStamina = Mathf.Clamp(_currentStamina, 0f, _maxStamina);
+            }
+        }
+        public float CurrentStamina
+        {
+            get => Mathf.Clamp(_currentStamina, 0f, MaxStamina);
+            set => _currentStamina = Mathf.Clamp(value, 0f, MaxStamina);
+        }
+        public float CurrentStaminaNormalized
+        {
+            get
+            {
+                float maxStamina = MaxStamina;
+                if (maxStamina <= 0.0001f)
+                    return 0f;
+
+                return CurrentStamina / maxStamina;
+            }
+        }
+        public bool IsSprinting => _isSprinting;
         public Player PrevPassReceiver { get => _prevPassReceiver; set => _prevPassReceiver = value; }
         public GameObject IconUserControlled { get => _iconUserControlled; set => _iconUserControlled = value; }
         public GameObject IconCanPassPlayer { get => _iconCanPassPlayer; set => _iconCanPassPlayer = value; }

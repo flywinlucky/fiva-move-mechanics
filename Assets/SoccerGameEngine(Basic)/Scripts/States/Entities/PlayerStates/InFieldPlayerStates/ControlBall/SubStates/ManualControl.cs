@@ -125,6 +125,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (Movement.sqrMagnitude > 1f)
                 Movement.Normalize();
 
+            bool isMoving = Movement.sqrMagnitude > 0.0001f;
+            bool wantsSprint = isMoving && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            Owner.ApplySprintToMovement(wantsSprint, isMoving, 0.95f);
+
             Vector3 direction = Movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : Movement;
             bool canPassInDirection = ScanPassPreview(direction, false);
 
@@ -204,6 +208,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             ClearPreviewPassReceiver();
             _hasCachedPassTarget = false;
+
+            Owner.ResetSprintState(0.95f);
 
             // disable the user controlled icon
             SetUserControlIconVisible(false);

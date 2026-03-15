@@ -207,6 +207,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             movement = Owner.ConstrainGoalKeeperMoveDirection(movement);
 
+            bool isMoving = movement.sqrMagnitude > 0.0001f;
+            bool wantsSprint = isMoving && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            Owner.ApplySprintToMovement(wantsSprint, isMoving);
+
             Vector3 passDirection = movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : movement;
             passDirection.y = 0f;
             if (passDirection.sqrMagnitude <= 0.0001f)
@@ -767,7 +771,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             Owner.RPGMovement.SetMoveDirection(Vector3.zero);
             Owner.RPGMovement.SetSteeringOff();
             Owner.RPGMovement.SetTrackingOff();
-            Owner.RPGMovement.Speed = Owner.ActualSpeed;
+            Owner.ResetSprintState();
 
             LogGoalKeeperDebug("Exit ControlBall");
         }

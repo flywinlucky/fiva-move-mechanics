@@ -158,7 +158,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (isDirectlyBehindCarrier && carrierDistance <= _difficultyProfile.AIBehindStickBreakDistance)
                 chaseSpeedMultiplier = _difficultyProfile.AIChaseSlowdownWhenBehind;
 
-            Owner.RPGMovement.Speed = Mathf.Max(0.1f, Owner.ActualSpeed * chaseSpeedMultiplier);
+            bool isMoving = (SteeringTarget - Owner.Position).sqrMagnitude > 0.25f;
+            bool wantsSprint = Owner.EvaluateAISprintIntent(isMoving, isOpponentCarrier);
+            Owner.ApplySprintToMovement(wantsSprint, isMoving, chaseSpeedMultiplier);
 
             //set the steering to on
             Owner.RPGMovement.SetMoveTarget(SteeringTarget);
@@ -172,7 +174,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             Owner.SetCanPassPreviewVisible(false);
 
             //restore default chase speed
-            Owner.RPGMovement.Speed = Owner.ActualSpeed;
+            Owner.ResetSprintState();
 
             //set the steering to on
             Owner.RPGMovement.SetSteeringOff();

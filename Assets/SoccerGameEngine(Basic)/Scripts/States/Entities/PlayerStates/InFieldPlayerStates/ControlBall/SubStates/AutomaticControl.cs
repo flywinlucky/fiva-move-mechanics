@@ -36,6 +36,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             base.Execute();
 
+            bool isMoving = Owner.OppGoal != null
+                && (Owner.OppGoal.transform.position - Owner.Position).sqrMagnitude > 0.25f;
+            bool wantsSprint = Owner.EvaluateAISprintIntent(isMoving, Owner.IsThreatened());
+            Owner.ApplySprintToMovement(wantsSprint, isMoving, 0.95f);
+
             //decrement time
             if(maxPassTime > 0)
                 maxPassTime -= Time.deltaTime;
@@ -107,6 +112,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.Exit();
 
             Owner.SetCanPassPreviewVisible(false);
+
+            Owner.ResetSprintState(0.95f);
 
             //stop steering
             Owner.RPGMovement.SetSteeringOff();

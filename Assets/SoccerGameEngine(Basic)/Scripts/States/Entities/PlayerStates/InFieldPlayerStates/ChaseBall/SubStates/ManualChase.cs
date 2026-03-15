@@ -89,6 +89,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (movement.sqrMagnitude > 1f)
                 movement.Normalize();
 
+            bool isMoving = movement.sqrMagnitude > 0.0001f;
+            bool wantsSprint = isMoving && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            Owner.ApplySprintToMovement(wantsSprint, isMoving);
+
             if (input == Vector3.zero)
             {
                 Owner.RPGMovement.SetMoveDirection(Vector3.zero);
@@ -115,6 +119,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         public override void Exit()
         {
             base.Exit();
+
+            Owner.ResetSprintState();
 
             // disable the user controlled icon
             if (Owner.IconUserControlled != null)
