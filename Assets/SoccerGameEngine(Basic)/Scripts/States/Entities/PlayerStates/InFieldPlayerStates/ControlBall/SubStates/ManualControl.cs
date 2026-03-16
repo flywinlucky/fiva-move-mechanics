@@ -163,7 +163,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                     SuperMachine.ChangeState<KickBallMainState>();
                 }
             }
-            else if (Input.GetButtonDown("Shoot") || MobileControlsInput.ConsumeShootPressed())
+            else if (Input.GetKeyDown(KeyCode.L) || MobileControlsInput.ConsumeShootPressed())
             {
                 // check if I can score
                 bool canScore = Owner.CanScore(false, true);
