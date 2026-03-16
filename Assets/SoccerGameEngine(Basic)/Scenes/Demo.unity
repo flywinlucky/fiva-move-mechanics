@@ -10106,6 +10106,21 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 921245202726023197, guid: 9827a03c420e3594b831d7d9d1c22716,
         type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 921245202726023197, guid: 9827a03c420e3594b831d7d9d1c22716,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 921245202726023197, guid: 9827a03c420e3594b831d7d9d1c22716,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 921245202726023197, guid: 9827a03c420e3594b831d7d9d1c22716,
+        type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -10147,7 +10162,7 @@ PrefabInstance:
     - target: {fileID: 921245202726023197, guid: 9827a03c420e3594b831d7d9d1c22716,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 180.1529
+      value: 146
       objectReference: {fileID: 0}
     - target: {fileID: 921245202726023197, guid: 9827a03c420e3594b831d7d9d1c22716,
         type: 3}
@@ -10880,7 +10895,7 @@ MonoBehaviour:
   - {fileID: 471885899}
   - {fileID: 430193658}
   - {fileID: 1538589331}
-  team1Sprite: {fileID: 21300000, guid: afa4a3963feee7f4db492abe0535ef16, type: 3}
+  team1Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   team1Color: {r: 0.15, g: 0.55, b: 1, a: 1}
   team2Targets:
   - {fileID: 847210901}
@@ -10894,7 +10909,7 @@ MonoBehaviour:
   - {fileID: 1403291104}
   - {fileID: 1868732223}
   - {fileID: 977541031}
-  team2Sprite: {fileID: 21300000, guid: afa4a3963feee7f4db492abe0535ef16, type: 3}
+  team2Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   team2Color: {r: 1, g: 0.35, b: 0.25, a: 1}
   ballTarget: {fileID: 546599439}
   ballSprite: {fileID: 21300000, guid: 2e3c82f83e6b38d43a54a3b47a6399c8, type: 3}
