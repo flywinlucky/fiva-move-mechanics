@@ -135,7 +135,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         //[SerializeField]
         //[Range(0.1f, 5f)]
-        float _speed = 4f;
+        float _speed = 6f;
 
         [SerializeField]
         [Range(0.1f, 5f)]

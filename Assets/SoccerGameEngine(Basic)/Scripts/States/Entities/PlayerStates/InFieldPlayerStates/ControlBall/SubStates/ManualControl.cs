@@ -1,5 +1,6 @@
 ﻿using System;
 using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.KickBall.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
@@ -86,6 +87,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             }
         }
 
+        Vector2 GetMovementInputAxes()
+        {
+            Vector2 keyboardInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            if (!MobileControlsInput.IsEnabled)
+                return keyboardInput;
+
+            Vector2 mobileInput = MobileControlsInput.ReadMovementInput();
+            if (mobileInput.sqrMagnitude > 0.0001f)
+                return mobileInput;
+
+            return keyboardInput;
+        }
+
         public override void Enter()
         {
             base.Enter();
@@ -106,8 +120,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.Execute();
 
             //capture input
-            float horizontalRot = Input.GetAxisRaw("Horizontal");
-            float verticalRot = Input.GetAxisRaw("Vertical");
+            Vector2 movementAxes = GetMovementInputAxes();
+            float horizontalRot = movementAxes.x;
+            float verticalRot = movementAxes.y;
 
             //calculate the direction to rotate to
             Vector3 input = new Vector3(horizontalRot, 0f, verticalRot);
@@ -126,13 +141,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 Movement.Normalize();
 
             bool isMoving = Movement.sqrMagnitude > 0.0001f;
-            bool wantsSprint = isMoving && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            bool wantsSprint = isMoving
+                && ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    || MobileControlsInput.IsSprintHeld());
             Owner.ApplySprintToMovement(wantsSprint, isMoving, 0.95f);
 
             Vector3 direction = Movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : Movement;
             bool canPassInDirection = ScanPassPreview(direction, false);
 
-            bool passPressed = Input.GetButtonDown("Pass/Press") || Input.GetKeyDown(KeyCode.N);
+            bool passPressed = Input.GetKeyDown(KeyCode.N)
+                || MobileControlsInput.ConsumePassPressed();
             if (passPressed)
             {
                 canPassInDirection = ScanPassPreview(direction, true);
@@ -145,7 +163,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                     SuperMachine.ChangeState<KickBallMainState>();
                 }
             }
-            else if (Input.GetButtonDown("Shoot"))
+            else if (Input.GetButtonDown("Shoot") || MobileControlsInput.ConsumeShootPressed())
             {
                 // check if I can score
                 bool canScore = Owner.CanScore(false, true);

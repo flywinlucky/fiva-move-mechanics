@@ -1,4 +1,5 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.ControlBall.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.TacklePlayer.MainState;
@@ -23,6 +24,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             {
                 _refObject = Camera.main != null ? Camera.main.transform : Owner.transform;
             }
+        }
+
+        Vector2 GetMovementInputAxes()
+        {
+            Vector2 keyboardInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            if (!MobileControlsInput.IsEnabled)
+                return keyboardInput;
+
+            Vector2 mobileInput = MobileControlsInput.ReadMovementInput();
+            if (mobileInput.sqrMagnitude > 0.0001f)
+                return mobileInput;
+
+            return keyboardInput;
         }
 
         /// <summary>
@@ -75,8 +89,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             }
 
             //capture input
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            float vertical = Input.GetAxisRaw("Vertical");
+            Vector2 movementAxes = GetMovementInputAxes();
+            float horizontal = movementAxes.x;
+            float vertical = movementAxes.y;
             Vector3 input = new Vector3(horizontal, 0f, vertical);
 
             //ensure we always have a valid movement reference
@@ -90,7 +105,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 movement.Normalize();
 
             bool isMoving = movement.sqrMagnitude > 0.0001f;
-            bool wantsSprint = isMoving && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            bool wantsSprint = isMoving
+                && ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    || MobileControlsInput.IsSprintHeld());
             Owner.ApplySprintToMovement(wantsSprint, isMoving);
 
             if (input == Vector3.zero)

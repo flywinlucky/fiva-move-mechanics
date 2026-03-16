@@ -191,10 +191,24 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             }
         }
 
+        Vector2 GetManualMovementInputAxes()
+        {
+            Vector2 keyboardInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            if (!MobileControlsInput.IsEnabled)
+                return keyboardInput;
+
+            Vector2 mobileInput = MobileControlsInput.ReadMovementInput();
+            if (mobileInput.sqrMagnitude > 0.0001f)
+                return mobileInput;
+
+            return keyboardInput;
+        }
+
         void ExecuteManualControl()
         {
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            float vertical = Input.GetAxisRaw("Vertical");
+            Vector2 movementAxes = GetManualMovementInputAxes();
+            float horizontal = movementAxes.x;
+            float vertical = movementAxes.y;
             Vector3 input = new Vector3(horizontal, 0f, vertical);
 
             EnsureReferenceObject();
@@ -208,7 +222,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             movement = Owner.ConstrainGoalKeeperMoveDirection(movement);
 
             bool isMoving = movement.sqrMagnitude > 0.0001f;
-            bool wantsSprint = isMoving && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
+            bool wantsSprint = isMoving
+                && ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    || MobileControlsInput.IsSprintHeld());
             Owner.ApplySprintToMovement(wantsSprint, isMoving);
 
             Vector3 passDirection = movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : movement;
@@ -218,7 +234,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             else
                 passDirection.Normalize();
 
-            bool passPressed = Input.GetButtonDown("Pass/Press") || Input.GetKeyDown(KeyCode.N);
+            bool passPressed = Input.GetKeyDown(KeyCode.N)
+                || MobileControlsInput.ConsumePassPressed();
             bool canPass = UpdateManualPassPreview(passDirection, false);
 
             if (passPressed)
