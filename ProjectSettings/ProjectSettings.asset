@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 24
-  productGUID: 2e684e23359bd3645916954b77483fe7
+  productGUID: 369257f6874abc54db63557437f65599
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -78,7 +78,7 @@ PlayerSettings:
   androidAutoRotationBehavior: 1
   defaultIsNativeResolution: 1
   macRetinaSupport: 1
-  runInBackground: 0
+  runInBackground: 1
   captureSingleScreen: 0
   muteOtherAudioSources: 0
   Prepare IOS For Recording: 0
@@ -379,8 +379,8 @@ PlayerSettings:
     m_StaticBatching: 1
     m_DynamicBatching: 0
   - m_BuildTarget: WebGL
-    m_StaticBatching: 1
-    m_DynamicBatching: 1
+    m_StaticBatching: 0
+    m_DynamicBatching: 0
   m_BuildTargetShaderSettings: []
   m_BuildTargetGraphicsJobs:
   - m_BuildTarget: WindowsStandaloneSupport
@@ -453,9 +453,7 @@ PlayerSettings:
     Android: 1
     iPhone: 1
     tvOS: 1
-  m_BuildTargetGroupLightmapEncodingQuality:
-  - m_BuildTarget: WebGL
-    m_EncodingQuality: 0
+  m_BuildTargetGroupLightmapEncodingQuality: []
   m_BuildTargetGroupLightmapSettings: []
   m_BuildTargetNormalMapEncoding: []
   m_BuildTargetDefaultTextureCompressionFormat: []
@@ -692,33 +690,33 @@ PlayerSettings:
   blurSplashScreenBackground: 1
   spritePackerPolicy: 
   webGLMemorySize: 16
-  webGLExceptionSupport: 2
+  webGLExceptionSupport: 1
   webGLNameFilesAsHashes: 0
   webGLDataCaching: 1
   webGLDebugSymbols: 0
   webGLEmscriptenArgs: 
   webGLModulesDirectory: 
-  webGLTemplate: PROJECT:YandexGames
+  webGLTemplate: APPLICATION:Default
   webGLAnalyzeBuildSize: 0
   webGLUseEmbeddedResources: 0
-  webGLCompressionFormat: 0
+  webGLCompressionFormat: 1
   webGLWasmArithmeticExceptions: 0
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 0
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: CROSS_PLATFORM_INPUT;MOBILE_INPUT;CF_FORCE_MOBILE_MODE;YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    LinuxHeadlessSimulation: YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    Nintendo Switch: YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    PS4: YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    PS5: YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    Standalone: CROSS_PLATFORM_INPUT;YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    WebGL: YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    Windows Store Apps: MOBILE_INPUT;CF_FORCE_MOBILE_MODE;YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    XboxOne: YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    iPhone: CROSS_PLATFORM_INPUT;MOBILE_INPUT;CF_FORCE_MOBILE_MODE;YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
-    tvOS: YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;EnvirData_yg;Localization_yg
+    Android: CROSS_PLATFORM_INPUT;MOBILE_INPUT;CF_FORCE_MOBILE_MODE;PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    LinuxHeadlessSimulation: PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    Nintendo Switch: PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    PS4: PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    PS5: PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    Standalone: CROSS_PLATFORM_INPUT;PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    WebGL: PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    Windows Store Apps: MOBILE_INPUT;CF_FORCE_MOBILE_MODE;PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    XboxOne: PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    iPhone: CROSS_PLATFORM_INPUT;MOBILE_INPUT;CF_FORCE_MOBILE_MODE;PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
+    tvOS: PLUGIN_YG_2;YandexGamesPlatform_yg;EnvirData_yg;Localization_yg;TMP_YG2
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}
@@ -732,7 +730,7 @@ PlayerSettings:
     PS4: 1
     PS5: 1
     Stadia: 1
-    WebGL: 4
+    WebGL: 1
     Windows Store Apps: 1
     XboxOne: 1
     iPhone: 1
@@ -821,12 +819,12 @@ PlayerSettings:
     m_VersionCode: 1
     m_VersionName: 
   apiCompatibilityLevel: 6
-  activeInputHandler: 2
+  activeInputHandler: 0
   windowsGamepadBackendHint: 0
   cloudProjectId: ddb636b5-5d7f-4cbf-9d6d-b85f5179438c
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: fiva game core
+  projectName: 
   organizationId: fly-assets-as-publisher
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
