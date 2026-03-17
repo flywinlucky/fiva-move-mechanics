@@ -121,7 +121,7 @@ namespace Arikan
         void LateUpdate()
         {
             UpdateCameraFollow();
-            ApplyLiveDotSizes();
+            //ApplyLiveDotSizes();
         }
 
         void OnValidate()
