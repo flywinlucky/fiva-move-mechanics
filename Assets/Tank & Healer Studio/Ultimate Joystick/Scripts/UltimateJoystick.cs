@@ -103,7 +103,7 @@ public class UltimateJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler
 	enum Anchor { Left, Right, RelativeToTransform, OrbitTransform }
 	[SerializeField] [Tooltip( "Determines which side of the screen the joystick should be anchored to." )]
 	private Anchor anchor = Anchor.Left;
-	[SerializeField] [Tooltip( "The size of the area in which the joystick can be initiated." )] [Range( 0.0f, 2.0f )]
+	[SerializeField] [Tooltip( "The size of the area in which the joystick can be initiated." )] [Range( 0.0f, 10.0f )]
 	private float activationRange = 1.0f;
 	[SerializeField] [Tooltip( "Allows the ability to define a specific area on the screen where the player can interact with the joystick." )]
 	private bool customActivationRange = false;
