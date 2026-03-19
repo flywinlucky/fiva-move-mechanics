@@ -170,7 +170,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         [Header("Movement Tuning")]
         [SerializeField]
-        [Range(0.1f, 30f)]
+        [Range(0.1f, 5f)]
         float _speedMultiplier;
 
         [SerializeField]
