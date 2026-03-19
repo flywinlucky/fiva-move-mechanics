@@ -10,6 +10,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 {
     public class InterceptShotMainState : BState
     {
+        const float GoalKeeperCatchRetryDelay = 0.15f;
+
         float timeOfBallToInterceptPoint;
         Vector3 _steerTarget;
 
@@ -87,10 +89,38 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             else if (Owner.IsBallWithinControlableDistance()
                 && Time.time >= Owner.GoalKeeperPickupBlockedUntil)
             {
-                // keeper catches the ball and starts controlled distribution flow
-                LogGoalKeeperDebug("Ball reached keeper control distance -> ControlBall");
-                Machine.ChangeState<ControlBallMainState>();
+                TryCatchBallAndControl();
             }
+        }
+
+        bool TryCatchBallAndControl()
+        {
+            if (Ball.Instance == null || Ball.Instance.Owner != null)
+                return false;
+
+            float ballSpeed = Ball.Instance.Rigidbody != null
+                ? Ball.Instance.Rigidbody.velocity.magnitude
+                : 0f;
+
+            float catchChance = Owner.EvaluateGoalKeeperCatchChance(ballSpeed);
+            bool isCaught = Owner.TryCatchBallAsGoalKeeper(ballSpeed);
+
+            if (isCaught)
+            {
+                LogGoalKeeperDebug("Ball reached keeper control distance -> Caught (chance: "
+                    + catchChance.ToString("0.00") + ", speed: " + ballSpeed.ToString("0.00")
+                    + ") -> ControlBall");
+                Machine.ChangeState<ControlBallMainState>();
+                return true;
+            }
+
+            Owner.GoalKeeperPickupBlockedUntil = Mathf.Max(Owner.GoalKeeperPickupBlockedUntil,
+                Time.time + GoalKeeperCatchRetryDelay);
+
+            LogGoalKeeperDebug("Ball reached keeper control distance -> Missed catch (chance: "
+                + catchChance.ToString("0.00") + ", speed: " + ballSpeed.ToString("0.00") + ")");
+
+            return false;
         }
 
         public override void Exit()

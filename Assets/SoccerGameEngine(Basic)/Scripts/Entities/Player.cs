@@ -129,6 +129,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [Range(0.1f, 1f)]
         float _goalKeeping = 0.8f;
 
+        [Header("Goalkeeper Catch")]
+        [SerializeField]
+        [Range(0f, 1f)]
+        float _goalKeeperCatchChance = 0.5f;
+
+        [SerializeField]
+        [Range(0.1f, 30f)]
+        float _goalKeeperCatchSpeedReference = 12f;
+
+        [SerializeField]
+        [Range(0f, 0.75f)]
+        float _goalKeeperCatchSpeedPenalty = 0.25f;
+
         //[SerializeField]
         //[Range(0.1f, 5f)]
         float _power = 1.5f;
@@ -1136,6 +1149,22 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public bool IsBallWithinControlableDistance()
         {
             return IsWithinDistance(Position, Ball.Instance.NormalizedPosition, _ballContrallableDistance + Radius);
+        }
+
+        public float EvaluateGoalKeeperCatchChance(float ballSpeed)
+        {
+            float speedReference = Mathf.Max(0.1f, _goalKeeperCatchSpeedReference);
+            float normalizedBallSpeed = Mathf.Clamp01(Mathf.Max(0f, ballSpeed) / speedReference);
+            float speedPenalty = normalizedBallSpeed * Mathf.Clamp(_goalKeeperCatchSpeedPenalty, 0f, 0.75f);
+
+            float chance = Mathf.Clamp01(_goalKeeperCatchChance - speedPenalty);
+
+            return chance;
+        }
+
+        public bool TryCatchBallAsGoalKeeper(float ballSpeed)
+        {
+            return Random.value <= EvaluateGoalKeeperCatchChance(ballSpeed);
         }
 
         public bool IsBallWithinTacklableDistance()

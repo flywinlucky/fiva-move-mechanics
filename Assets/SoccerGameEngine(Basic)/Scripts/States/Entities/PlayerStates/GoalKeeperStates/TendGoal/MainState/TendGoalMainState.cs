@@ -16,6 +16,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
     public class TendGoalMainState : BState
     {
         const float LooseBallAutoCollectDistance = 10f;
+        const float GoalKeeperCatchRetryDelay = 0.15f;
         const float BaseSaveAttemptChance = 0.5f;
         const float SaveAttemptSkillInfluence = 0.15f;
 
@@ -96,9 +97,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
                 if (isBallInPickupRange && canPickupNow)
                 {
-                    LogGoalKeeperDebug("Loose ball within " + LooseBallAutoCollectDistance + "m -> auto collect -> ControlBall");
-                    Machine.ChangeState<ControlBallMainState>();
-                    return;
+                    if (TryCatchBallAndControl("Loose ball within " + LooseBallAutoCollectDistance + "m"))
+                        return;
                 }
 
                 if (isBallInPickupRange && !canPickupNow)
@@ -116,9 +116,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             if (isBallLoose && isBallInPickupRange && canPickupNow)
             {
-                LogGoalKeeperDebug("Loose ball within control distance -> ControlBall");
-                Machine.ChangeState<ControlBallMainState>();
-                return;
+                if (TryCatchBallAndControl("Loose ball within control distance"))
+                    return;
             }
 
             if (isBallLoose && isBallInPickupRange && !canPickupNow)
@@ -272,6 +271,35 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             float keeperSkillOffset = (Owner.GoalKeeping - 0.75f) * SaveAttemptSkillInfluence;
             float saveAttemptChance = Mathf.Clamp01(BaseSaveAttemptChance + keeperSkillOffset);
             return Random.value <= saveAttemptChance;
+        }
+
+        bool TryCatchBallAndControl(string context)
+        {
+            if (Ball.Instance == null || Ball.Instance.Owner != null)
+                return false;
+
+            float ballSpeed = Ball.Instance.Rigidbody != null
+                ? Ball.Instance.Rigidbody.velocity.magnitude
+                : 0f;
+
+            float catchChance = Owner.EvaluateGoalKeeperCatchChance(ballSpeed);
+            bool isCaught = Owner.TryCatchBallAsGoalKeeper(ballSpeed);
+
+            if (isCaught)
+            {
+                LogGoalKeeperDebug(context + " -> Caught ball (chance: " + catchChance.ToString("0.00")
+                    + ", speed: " + ballSpeed.ToString("0.00") + ") -> ControlBall");
+                Machine.ChangeState<ControlBallMainState>();
+                return true;
+            }
+
+            Owner.GoalKeeperPickupBlockedUntil = Mathf.Max(Owner.GoalKeeperPickupBlockedUntil,
+                Time.time + GoalKeeperCatchRetryDelay);
+
+            LogGoalKeeperDebug(context + " -> Missed catch (chance: " + catchChance.ToString("0.00")
+                + ", speed: " + ballSpeed.ToString("0.00") + ")");
+
+            return false;
         }
 
         float GetRandomReactionDelay()
