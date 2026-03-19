@@ -5677,38 +5677,6 @@ MonoBehaviour:
   m_EffectColor: {r: 0.4433962, g: 0.4433962, b: 0.4433962, a: 0.5}
   m_EffectDistance: {x: 5, y: -5}
   m_UseGraphicAlpha: 1
---- !u!1 &879018915
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 879018916}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &879018916
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 879018915}
-  m_LocalRotation: {x: 0, y: 0, z: 0.043619405, w: 0.9990483}
-  m_LocalPosition: {x: 51.75, y: 26.4, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 963194228}
-  m_Father: {fileID: 0}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 5}
 --- !u!1 &944593410
 GameObject:
   m_ObjectHideFlags: 0
@@ -5883,12 +5851,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.18301274, y: -0.6830127, z: 0.18301274, w: 0.6830127}
-  m_LocalPosition: {x: -17.405111, y: -4.310984, z: 0}
+  m_LocalRotation: {x: 0.21263117, y: -0.67437977, z: 0.21263117, w: 0.67437977}
+  m_LocalPosition: {x: 34.78685, y: 20.588465, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 879018916}
+  m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 30, y: -90, z: 0}
 --- !u!114 &963194229
@@ -5903,11 +5871,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88ea3c5728654d44496dcc5231060f1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _distanceMaxDisplacement: 30
-  _speedFollow: 4
   target: {fileID: 546599439}
-  distanceMaxZ: 0
-  distanceMinZ: 0
+  _autoFindBallTarget: 1
+  _followBallOwnerWhenControlled: 1
+  _captureOffsetOnStart: 1
+  _followOffset: {x: 0, y: 0, z: 0}
+  _smoothTime: 0.2
+  _maxFollowSpeed: 100
+  _keepInitialY: 1
+  _minX: -45
+  _maxX: 49.2
+  _minZ: -65
+  _maxZ: 65
+  _drawBoundsGizmo: 1
 --- !u!4 &977541031 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4200073799722462495, guid: 93602d7634211b04f9088674182cf0c4,
