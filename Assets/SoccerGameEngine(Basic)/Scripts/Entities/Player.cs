@@ -171,7 +171,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [Header("Movement Tuning")]
         [SerializeField]
         [Range(0.1f, 5f)]
-        float _speedMultiplier;
+        float _speedMultiplier = 1f;
+
+        [SerializeField]
+        [Range(1f, 40f)]
+        float _sprintRampUpSpeed = 10f;
+
+        [SerializeField]
+        [Range(1f, 40f)]
+        float _sprintRampDownSpeed = 14f;
 
         [SerializeField]
         [Range(0.1f, 30f)]
@@ -188,6 +196,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _aiNextSprintDecisionTime;
         float _configuredBasePower;
         float _configuredBaseSpeed;
+        float _appliedSprintMultiplier = 1f;
         bool _isSprinting;
         int _lastSprintApplyFrame = -1;
 
@@ -273,6 +282,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         {
             _speedMultiplier = Mathf.Max(0.1f, _speedMultiplier);
             _rotationSpeed = Mathf.Max(0.1f, _rotationSpeed);
+            _sprintRampUpSpeed = Mathf.Max(1f, _sprintRampUpSpeed);
+            _sprintRampDownSpeed = Mathf.Max(1f, _sprintRampDownSpeed);
 
             if (!Application.isPlaying || _rpgMovement == null)
                 return;
@@ -295,14 +306,28 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _rpgMovement.RotationSpeed = _rotationSpeed;
         }
 
-        void SyncSpeedToMovement(float baseSpeedMultiplier = 1f)
+        void SyncSpeedToMovement(float baseSpeedMultiplier = 1f, bool snapToTargetSprintMultiplier = false)
         {
             if (_rpgMovement == null)
                 return;
 
             float normalizedBaseMultiplier = Mathf.Max(0.1f, baseSpeedMultiplier);
-            float sprintMultiplier = _isSprinting ? SprintSpeedMultiplier : 1f;
-            float finalSpeed = Mathf.Max(0.1f, ActualSpeed * normalizedBaseMultiplier * sprintMultiplier);
+            float targetSprintMultiplier = _isSprinting ? SprintSpeedMultiplier : 1f;
+
+            if (snapToTargetSprintMultiplier)
+            {
+                _appliedSprintMultiplier = targetSprintMultiplier;
+            }
+            else
+            {
+                float deltaTime = Mathf.Max(0f, Time.deltaTime);
+                float interpolationSpeed = _isSprinting ? _sprintRampUpSpeed : _sprintRampDownSpeed;
+                float maxDelta = Mathf.Max(0.1f, interpolationSpeed) * deltaTime;
+                _appliedSprintMultiplier = Mathf.MoveTowards(_appliedSprintMultiplier, targetSprintMultiplier, maxDelta);
+            }
+
+            _appliedSprintMultiplier = Mathf.Clamp(_appliedSprintMultiplier, 1f, SprintSpeedMultiplier);
+            float finalSpeed = Mathf.Max(0.1f, ActualSpeed * normalizedBaseMultiplier * _appliedSprintMultiplier);
             _rpgMovement.Speed = finalSpeed;
         }
 
@@ -399,7 +424,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _isSprinting = false;
             _aiSprintUntilTime = 0f;
 
-            SyncSpeedToMovement(baseSpeedMultiplier);
+            SyncSpeedToMovement(baseSpeedMultiplier, true);
         }
 
         public bool CanBallReachPoint(Vector3 position, float power, out float time)
@@ -1553,8 +1578,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                     return;
 
                 ActualSpeed = _configuredBaseSpeed * _speedMultiplier;
-                if (_rpgMovement != null && !_isSprinting)
-                    _rpgMovement.Speed = Mathf.Max(0.1f, ActualSpeed);
+                if (_rpgMovement != null)
+                    SyncSpeedToMovement();
             }
         }
         public float RotationSpeed
