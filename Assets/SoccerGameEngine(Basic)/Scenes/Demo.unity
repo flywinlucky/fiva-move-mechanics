@@ -11721,6 +11721,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _goalKeeperCatchChance
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _ballPassArriveVelocity
       value: 12
       objectReference: {fileID: 0}
