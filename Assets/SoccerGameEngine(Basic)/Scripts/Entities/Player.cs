@@ -133,10 +133,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         //[Range(0.1f, 5f)]
         float _power = 1.5f;
 
-        //[SerializeField]
-        //[Range(0.1f, 5f)]
-        float _speed = 6f;
-
         [SerializeField]
         [Range(0.1f, 5f)]
         float _tendGoalSpeed = 4f;
@@ -172,7 +168,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         float _radius;
 
-        float _rotationSpeed = 6f;
+        [Header("Movement Tuning")]
+        [SerializeField]
+        [Range(0.1f, 30f)]
+        float _speedMultiplier;
+
+        [SerializeField]
+        [Range(0.1f, 30f)]
+        float _rotationSpeed = 8f;
 
         const float _manualPassDirectionAngle = 60f;
         const float _casualPassFallbackRangeMultiplier = 1.5f;
@@ -183,6 +186,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _staminaRegenBlockedUntil;
         float _aiSprintUntilTime;
         float _aiNextSprintDecisionTime;
+        float _configuredBasePower;
+        float _configuredBaseSpeed;
         bool _isSprinting;
         int _lastSprintApplyFrame = -1;
 
@@ -254,13 +259,51 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _accuracy = Mathf.Clamp(Random.value, 0.6f, 0.9f);
             _goalKeeping = Mathf.Clamp(Random.value, 0.6f, 0.9f);
             _power = Mathf.Clamp(Random.value, 0.6f, 0.9f);
-            _speed = Mathf.Clamp(Random.value, 0.8f, 0.9f);
             _currentStamina = Mathf.Max(1f, _maxStamina);
             _staminaRegenBlockedUntil = 0f;
             _isSprinting = false;
 
+            SyncRotationSpeedToMovement();
+
             // keep preview icon hidden until a valid manual pass target is selected
             SetCanPassPreviewVisible(false);
+        }
+
+        void OnValidate()
+        {
+            _speedMultiplier = Mathf.Max(0.1f, _speedMultiplier);
+            _rotationSpeed = Mathf.Max(0.1f, _rotationSpeed);
+
+            if (!Application.isPlaying || _rpgMovement == null)
+                return;
+
+            _rpgMovement.RotationSpeed = _rotationSpeed;
+
+            if (!_isSprinting)
+                _rpgMovement.Speed = Mathf.Max(0.1f, ActualSpeed);
+        }
+
+        void SyncRotationSpeedToMovement()
+        {
+            if (_rpgMovement == null)
+                return;
+
+            if (_rotationSpeed <= 0.001f)
+                _rotationSpeed = _rpgMovement.RotationSpeed > 0.001f ? _rpgMovement.RotationSpeed : 8f;
+
+            _rotationSpeed = Mathf.Max(0.1f, _rotationSpeed);
+            _rpgMovement.RotationSpeed = _rotationSpeed;
+        }
+
+        void SyncSpeedToMovement(float baseSpeedMultiplier = 1f)
+        {
+            if (_rpgMovement == null)
+                return;
+
+            float normalizedBaseMultiplier = Mathf.Max(0.1f, baseSpeedMultiplier);
+            float sprintMultiplier = _isSprinting ? SprintSpeedMultiplier : 1f;
+            float finalSpeed = Mathf.Max(0.1f, ActualSpeed * normalizedBaseMultiplier * sprintMultiplier);
+            _rpgMovement.Speed = finalSpeed;
         }
 
         private void LateUpdate()
@@ -346,12 +389,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             _isSprinting = canSprint;
 
-            float normalizedBaseMultiplier = Mathf.Max(0.1f, baseSpeedMultiplier);
-            float speedMultiplier = canSprint ? SprintSpeedMultiplier : 1f;
-            float finalSpeed = Mathf.Max(0.1f, ActualSpeed * normalizedBaseMultiplier * speedMultiplier);
-
-            if (_rpgMovement != null)
-                _rpgMovement.Speed = finalSpeed;
+            SyncSpeedToMovement(baseSpeedMultiplier);
 
             return canSprint;
         }
@@ -361,11 +399,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _isSprinting = false;
             _aiSprintUntilTime = 0f;
 
-            float normalizedBaseMultiplier = Mathf.Max(0.1f, baseSpeedMultiplier);
-            float finalSpeed = Mathf.Max(0.1f, ActualSpeed * normalizedBaseMultiplier);
-
-            if (_rpgMovement != null)
-                _rpgMovement.Speed = finalSpeed;
+            SyncSpeedToMovement(baseSpeedMultiplier);
         }
 
         public bool CanBallReachPoint(Vector3 position, float power, out float time)
@@ -995,13 +1029,22 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         /// </summary>
         public void Init()
         {
-            ActualPower *= _power;
-            ActualSpeed *= _speed;
+            if (_configuredBasePower <= 0.001f)
+                _configuredBasePower = Mathf.Max(0.1f, ActualPower);
+
+            if (_configuredBaseSpeed <= 0.001f)
+                _configuredBaseSpeed = Mathf.Max(0.1f, ActualSpeed);
+
+            ActualPower = _configuredBasePower * _power;
+            ActualSpeed = _configuredBaseSpeed * SpeedMultiplier;
+
+            SyncRotationSpeedToMovement();
+            SyncSpeedToMovement();
 
             //Init the RPGMovement
             RPGMovement.Init(ActualSpeed,
                 ActualSpeed,
-                _rotationSpeed * _speed,
+                RotationSpeed,
                 ActualSpeed);
         }
 
@@ -1033,8 +1076,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _ballShotArriveVelocity = velocityShotArrive;
             _distanceThreatMax = distanceThreatMax;
             _distanceThreatMin = distanceThreatMin;
-            ActualSpeed = speed;
-            ActualPower = power;
+
+            _configuredBaseSpeed = Mathf.Max(0.1f, speed);
+            _configuredBasePower = Mathf.Max(0.1f, power);
+
+            ActualSpeed = _configuredBaseSpeed;
+            ActualPower = _configuredBasePower;
         }
 
         /// <summary>
@@ -1494,6 +1541,31 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         {
             get => Mathf.Max(1f, _goalKeeperPassPowerMultiplier);
             set => _goalKeeperPassPowerMultiplier = Mathf.Max(1f, value);
+        }
+        public float SpeedMultiplier
+        {
+            get => Mathf.Max(0.1f, _speedMultiplier);
+            set
+            {
+                _speedMultiplier = Mathf.Max(0.1f, value);
+
+                if (_configuredBaseSpeed <= 0.001f)
+                    return;
+
+                ActualSpeed = _configuredBaseSpeed * _speedMultiplier;
+                if (_rpgMovement != null && !_isSprinting)
+                    _rpgMovement.Speed = Mathf.Max(0.1f, ActualSpeed);
+            }
+        }
+        public float RotationSpeed
+        {
+            get => Mathf.Max(0.1f, _rotationSpeed);
+            set
+            {
+                _rotationSpeed = Mathf.Max(0.1f, value);
+                if (_rpgMovement != null)
+                    _rpgMovement.RotationSpeed = _rotationSpeed;
+            }
         }
         public float SprintSpeedMultiplier
         {

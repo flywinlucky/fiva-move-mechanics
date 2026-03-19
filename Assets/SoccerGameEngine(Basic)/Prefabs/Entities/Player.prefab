@@ -77,16 +77,24 @@ MonoBehaviour:
   _distanceThreatMin: 5
   _ballPassArriveVelocity: 15
   _ballShotArriveVelocity: 30
+  _sprintSpeedMultiplier: 2
+  _maxStamina: 100
+  _staminaDrainPerSecond: 22
+  _staminaRegenPerSecond: 14
+  _staminaRegenDelay: 0.7
+  _aiSprintChance: 0.2
+  _aiSprintUrgentChance: 0.45
+  _aiSprintMinDuration: 0.45
+  _aiSprintMaxDuration: 1.2
+  _aiSprintDecisionIntervalMin: 0.35
+  _aiSprintDecisionIntervalMax: 1.1
   _threatTrackDistance: 1
   _tendGoalDistance: 1
   _goalKeeperMovementRadius: 15
   _goalKeeperMovementRadiusSlowdown: 2
   _oppGoal: {fileID: 0}
   _teamGoal: {fileID: 0}
-  _accuracy: 0
   _goalKeeping: 0.8
-  _power: 0
-  _speed: 0
   _tendGoalSpeed: 4
   _homeRegion: {fileID: 0}
   _oppositionMembers: []
@@ -97,6 +105,9 @@ MonoBehaviour:
   _playerType: 0
   _iconUserControlled: {fileID: 7363217310203470874}
   _iconCanPassPlayer: {fileID: 3973144619716014223}
+  UiPlayerName: 
+  _speedMultiplier: 5
+  _rotationSpeed: 10
   IsTeamInControl: 0
   PassReceiver: {fileID: 0}
 --- !u!114 &-731324859167567875

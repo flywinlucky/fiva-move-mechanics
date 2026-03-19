@@ -9,8 +9,10 @@ namespace Assets.SimpleSteering.Scripts.Movement
         [Header("Attributes")]
         public float Acceleration = 1f;
         public float Agility = 1f;
-        public float RotationSpeed = 3f;
-        public float Speed = 4f;
+        [HideInInspector]
+        public float RotationSpeed;
+        [HideInInspector]
+        public float Speed;
 
         public bool Steer;
 
@@ -191,9 +193,11 @@ namespace Assets.SimpleSteering.Scripts.Movement
                 //get the target rotation
                 Quaternion targetRotation = Quaternion.LookRotation(direction);
 
+                float rotationSpeed = Mathf.Max(0.01f, RotationSpeed);
+
                 //rotate to target
                 Quaternion currTargetRotation;
-                currTargetRotation = Quaternion.Lerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
+                currTargetRotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
 
                 //rotate here
                 RigidBody.MoveRotation(currTargetRotation);
