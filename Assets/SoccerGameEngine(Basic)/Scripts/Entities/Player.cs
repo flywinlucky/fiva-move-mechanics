@@ -182,6 +182,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _sprintRampDownSpeed = 14f;
 
         [SerializeField]
+        [Range(0.85f, 0.95f)]
+        float _withBallSpeedMultiplier = 0.9f;
+
+        [SerializeField]
         [Range(0.1f, 30f)]
         float _rotationSpeed = 8f;
 
@@ -284,6 +288,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _rotationSpeed = Mathf.Max(0.1f, _rotationSpeed);
             _sprintRampUpSpeed = Mathf.Max(1f, _sprintRampUpSpeed);
             _sprintRampDownSpeed = Mathf.Max(1f, _sprintRampDownSpeed);
+            _withBallSpeedMultiplier = Mathf.Clamp(_withBallSpeedMultiplier, 0.85f, 0.95f);
 
             if (!Application.isPlaying || _rpgMovement == null)
                 return;
@@ -327,7 +332,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             }
 
             _appliedSprintMultiplier = Mathf.Clamp(_appliedSprintMultiplier, 1f, SprintSpeedMultiplier);
-            float finalSpeed = Mathf.Max(0.1f, ActualSpeed * normalizedBaseMultiplier * _appliedSprintMultiplier);
+
+            float ballControlMultiplier = 1f;
+            if (PlayerType == PlayerTypes.InFieldPlayer
+                && Ball.Instance != null
+                && Ball.Instance.Owner == this)
+            {
+                ballControlMultiplier = _withBallSpeedMultiplier;
+            }
+
+            float finalSpeed = Mathf.Max(0.1f, ActualSpeed * normalizedBaseMultiplier * _appliedSprintMultiplier * ballControlMultiplier);
             _rpgMovement.Speed = finalSpeed;
         }
 
