@@ -628,6 +628,7 @@ MonoBehaviour:
   _playerType: 0
   _iconUserControlled: {fileID: 7363217310203470874}
   _iconCanPassPlayer: {fileID: 3973144619716014223}
+  _playerAnimationManager: {fileID: 0}
   UiPlayerName: 
   _speedMultiplier: 5
   _sprintRampUpSpeed: 10
@@ -709,6 +710,38 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerAnimator: {fileID: 1044810641946995209}
+  player: {fileID: 2500224488907276372}
+  movement: {fileID: 8791604249906945687}
+  runParameterName: run
+  runDampTime: 0.12
+  useRunResponseCurve: 1
+  runResponseCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  stopSpeedThreshold: 0.691
+  fallbackRunSpeed: 19.9
+  fallbackSprintMultiplier: 3.26
 --- !u!1 &2500224489660211353
 GameObject:
   m_ObjectHideFlags: 0
@@ -2621,7 +2654,7 @@ Animator:
   m_GameObject: {fileID: 6246127263105824096}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: fc656d7937ad4b84bb578540424ba2d6, type: 3}
-  m_Controller: {fileID: 9100000, guid: 262b9be0e1cd5ff4eb318e9d2be66090, type: 2}
+  m_Controller: {fileID: 9100000, guid: 02d11f68ab4a2c04da879cf7cf276091, type: 2}
   m_CullingMode: 2
   m_UpdateMode: 1
   m_ApplyRootMotion: 0

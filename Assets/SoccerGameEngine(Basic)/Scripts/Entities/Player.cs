@@ -176,6 +176,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [SerializeField]
         GameObject _iconCanPassPlayer;
 
+        [Header("Animation")]
+        [SerializeField]
+        PlayerAnimationManager _playerAnimationManager;
+
         [Header("UI")]
         public string UiPlayerName;
 
@@ -278,6 +282,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             RPGMovement = GetComponent<RPGMovement>();
             SupportSpot = GetComponent<SupportSpot>();
 
+            if (_playerAnimationManager == null)
+                _playerAnimationManager = GetComponent<PlayerAnimationManager>();
+
+            if (_playerAnimationManager != null)
+                _playerAnimationManager.Initialize(this, RPGMovement);
+
             // cache some component data
             _radius = GetComponent<CapsuleCollider>().radius;
 
@@ -361,11 +371,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         private void LateUpdate()
         {
             // If no movement state applied sprint logic this frame, allow passive stamina regen.
-            if (_lastSprintApplyFrame == Time.frameCount)
-                return;
+            if (_lastSprintApplyFrame != Time.frameCount)
+            {
+                _isSprinting = false;
+                RegenerateStamina(Time.deltaTime);
+            }
 
-            _isSprinting = false;
-            RegenerateStamina(Time.deltaTime);
+            if (_playerAnimationManager != null)
+                _playerAnimationManager.RefreshAnimation(Time.deltaTime);
         }
 
         void DrainStamina(float deltaTime)

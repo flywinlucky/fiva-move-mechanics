@@ -39,8 +39,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             set
             {
                 _owner = value;
-                if (_iconBallControlled != null)
-                    _iconBallControlled.SetActive(_owner == null);
+                //if (_iconBallControlled != null)
+                    //_iconBallControlled.SetActive(_owner == null);
             }
         }
 
@@ -56,8 +56,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             SphereCollider = GetComponent<SphereCollider>();
 
             //init some variables
-            if (_iconBallControlled != null)
-                _iconBallControlled.SetActive(true);
+            //if (_iconBallControlled != null)
+                //_iconBallControlled.SetActive(true);
             _groundMask = LayerMask.GetMask(_groundMaskName);
             _rayCastDistance = SphereCollider.radius + 0.05f;
         }
