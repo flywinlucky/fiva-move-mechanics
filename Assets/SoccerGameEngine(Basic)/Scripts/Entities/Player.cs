@@ -175,6 +175,30 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         GameObject _iconUserControlled;
         [SerializeField]
         GameObject _iconCanPassPlayer;
+        [SerializeField] 
+        PlayerWiget _playerWiget;
+
+        [Header("Player Body Parts")]
+        [SerializeField]
+        SkinnedMeshRenderer _bodyRenderer;
+
+        [SerializeField]
+        SkinnedMeshRenderer _bootsRenderer;
+
+        [SerializeField]
+        SkinnedMeshRenderer _eyesRenderer;
+
+        [SerializeField]
+        SkinnedMeshRenderer _gloavesRenderer;
+
+        [SerializeField]
+        SkinnedMeshRenderer _headRenderer;
+
+        [SerializeField]
+        SkinnedMeshRenderer _kitBodyRenderer;
+
+        [SerializeField]
+        SkinnedMeshRenderer _socksRenderer;
 
         [Header("Animation")]
         [SerializeField]
@@ -1463,6 +1487,47 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             if (_iconCanPassPlayer.activeSelf != visible)
                 _iconCanPassPlayer.SetActive(visible);
+        }
+
+        public void ApplyFormationWidget(Color formationColor)
+        {
+            if (_playerWiget == null)
+                _playerWiget = GetComponentInChildren<PlayerWiget>(true);
+
+            if (_playerWiget == null)
+                return;
+
+            string playerName = string.IsNullOrWhiteSpace(UiPlayerName)
+                ? gameObject.name
+                : UiPlayerName;
+
+            _playerWiget.SetPlayerWiget(formationColor, playerName);
+        }
+
+        public void ApplyTeamMaterials(
+            Material body,
+            Material boots,
+            Material eyes,
+            Material gloaves,
+            Material head,
+            Material kitbody,
+            Material socks)
+        {
+            ApplyMaterialToRenderer(_bodyRenderer, body);
+            ApplyMaterialToRenderer(_bootsRenderer, boots);
+            ApplyMaterialToRenderer(_eyesRenderer, eyes);
+            ApplyMaterialToRenderer(_gloavesRenderer, gloaves);
+            ApplyMaterialToRenderer(_headRenderer, head);
+            ApplyMaterialToRenderer(_kitBodyRenderer, kitbody);
+            ApplyMaterialToRenderer(_socksRenderer, socks);
+        }
+
+        void ApplyMaterialToRenderer(SkinnedMeshRenderer renderer, Material material)
+        {
+            if (renderer == null || material == null)
+                return;
+
+            renderer.sharedMaterial = material;
         }
 
         public Vector3 GoalKeeperHomeCenter

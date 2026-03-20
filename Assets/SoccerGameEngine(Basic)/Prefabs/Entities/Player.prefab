@@ -628,7 +628,15 @@ MonoBehaviour:
   _playerType: 0
   _iconUserControlled: {fileID: 7363217310203470874}
   _iconCanPassPlayer: {fileID: 3973144619716014223}
-  _playerAnimationManager: {fileID: 0}
+  _playerWiget: {fileID: 1178302882516884799}
+  _bodyRenderer: {fileID: 2082217629762700266}
+  _bootsRenderer: {fileID: 4578098819467789044}
+  _eyesRenderer: {fileID: 5933342939325217147}
+  _gloavesRenderer: {fileID: 380478156806529401}
+  _headRenderer: {fileID: 3499258381575859054}
+  _kitBodyRenderer: {fileID: 3793257317103424887}
+  _socksRenderer: {fileID: 6395015896883235118}
+  _playerAnimationManager: {fileID: 3198421749626700802}
   UiPlayerName: 
   _speedMultiplier: 5
   _sprintRampUpSpeed: 10
@@ -3935,6 +3943,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e5794df09c1c82b46a0915561f52aec7, type: 3}
+--- !u!114 &1178302882516884799 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7388596111728307015, guid: e5794df09c1c82b46a0915561f52aec7,
+    type: 3}
+  m_PrefabInstance: {fileID: 8562395394478782072}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3973144619716014223}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d5dfd73f7dfe104c9f3bab819403451, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &2948220481557372059 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6789620463532976867, guid: e5794df09c1c82b46a0915561f52aec7,
