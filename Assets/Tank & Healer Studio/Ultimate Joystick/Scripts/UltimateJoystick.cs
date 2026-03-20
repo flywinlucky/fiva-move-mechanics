@@ -568,6 +568,32 @@ public class UltimateJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler
 #endif
 #endif
 		}
+		else if( InputActive )
+		{
+			// Failsafe for EventSystem mode: if no touch remains, force a reset so input cannot latch.
+#if ENABLE_INPUT_SYSTEM
+			if( UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.Count == 0 )
+			{
+#if UNITY_EDITOR
+				Mouse mouse = InputSystem.GetDevice<Mouse>();
+				if( mouse == null || !mouse.leftButton.isPressed )
+					ResetJoystick();
+#else
+				ResetJoystick();
+#endif
+			}
+#else
+			if( Input.touchCount == 0 )
+			{
+#if UNITY_EDITOR
+				if( !Input.GetMouseButton( 0 ) )
+					ResetJoystick();
+#else
+				ResetJoystick();
+#endif
+			}
+#endif
+		}
 
 		// If the joystick's position is not centered and the input is not active...
 		if( gravity > 0.0f && !InputActive && joystick.localPosition != Vector3.zero )
