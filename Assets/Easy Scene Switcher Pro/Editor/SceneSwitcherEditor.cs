@@ -17,7 +17,7 @@ namespace FlyStudiosGames.EasySceneSwitcherPro.Editor
 		#region Constants
 		private const string SourcePrefKey = "FlyStudiosGames.EasySceneSwitcherPro.SceneSource";
 		private const string CompanyName = "Fly Studios Games";
-		private const string AssetStoreUrl = "https://assetstore.unity.com/";
+		private const string AssetStoreUrl = "https://assetstore.unity.com/publishers/56140";
 		#endregion
 
 		#region GUI Content
