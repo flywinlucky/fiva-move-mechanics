@@ -2531,13 +2531,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4787cfe20a3efeb4693b2685b01bbe6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  backButton: {fileID: 2007490506}
-  storeShopPanelButton: {fileID: 0}
-  dailyRewardsPanelButton: {fileID: 0}
-  statusBar: {fileID: 1312369291}
-  mainMenu: {fileID: 1496380686}
-  storeShopPanel: {fileID: 0}
-  dailyRewardsPanel: {fileID: 0}
 --- !u!4 &1517609295
 Transform:
   m_ObjectHideFlags: 0
