@@ -2,37 +2,86 @@
 using UnityEditor;
 using System;
 using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 
 namespace SceneSwitcher
 {
 	public class SceneSwitcherEditor : EditorWindow
 	{
-		private static List<Scenes> m_Scenes;
+		private const string SourcePrefKey = "SceneSwitcher.SceneSource";
+		private const string OpenModePrefKey = "SceneSwitcher.OpenMode";
 
+		private static readonly GUIContent WindowTitle = new GUIContent("Scene Switcher");
+		private static readonly GUIContent[] SourceOptions =
+		{
+			new GUIContent("Build Settings"),
+			new GUIContent("All Project")
+		};
+
+		private static readonly GUIContent[] OpenModeOptions =
+		{
+			new GUIContent("Single"),
+			new GUIContent("Additive")
+		};
+
+		private static List<SceneEntry> m_Scenes = new List<SceneEntry>();
 		private static Vector2 ScrollPos;
-		private static string SearchString = "";
+		private static string SearchString = string.Empty;
 
 		private static SceneSwitcherEditor Window;
 		private static bool m_OpenInSceneView = true;
 		private static bool m_CloseInSceneView;
 		private static bool m_IsMinimized;
-		
-		private class Scenes
+		private static bool m_IsDirty = true;
+
+		private static SceneSource m_SceneSource;
+		private static OpenMode m_OpenMode;
+
+		private enum SceneSource
+		{
+			BuildSettings = 0,
+			AllProject = 1
+		}
+
+		private enum OpenMode
+		{
+			Single = 0,
+			Additive = 1
+		}
+
+		private class SceneEntry
 		{
 			public string filePath;
 			public string sceneName;
+			public bool inBuildSettings;
+			public bool enabledInBuild;
 		}
 		
 		[MenuItem ("Window/SceneSwitcher/Open Dockable Window")]
 		private static void Init ()
 		{
-			Window = EditorWindow.GetWindow<SceneSwitcherEditor>("Scene Switcher");
-			Vector2 minSize = new Vector2(212,100);
+			Window = GetWindow<SceneSwitcherEditor>("Scene Switcher");
+			Vector2 minSize = new Vector2(320, 220);
 			Window.minSize = minSize;
 			Window.Show();
+		}
+
+		private void OnEnable()
+		{
+			LoadPreferences();
+			MarkDirty();
+
+			EditorBuildSettings.sceneListChanged += MarkDirty;
+			EditorApplication.projectChanged += MarkDirty;
+		}
+
+		private void OnDisable()
+		{
+			EditorBuildSettings.sceneListChanged -= MarkDirty;
+			EditorApplication.projectChanged -= MarkDirty;
 		}
 
 		[MenuItem("Window/SceneSwitcher/Open SceneView", true)]
@@ -40,6 +89,7 @@ namespace SceneSwitcher
 		[MenuItem("Window/SceneSwitcher/Open SceneView")]
 		private static void OpenSceneView()
 		{
+			LoadPreferences();
 			m_OpenInSceneView = false;
 			m_CloseInSceneView = true;
 			SceneView.onSceneGUIDelegate += OnScene;
@@ -59,39 +109,25 @@ namespace SceneSwitcher
 		
 		private void OnGUI ()
 		{
-			m_Scenes = GetScenes();
-			GUI.skin.font = ((GUIStyle)"ShurikenLabel").font;
-			
-			EditorGUILayout.BeginVertical((GUIStyle)"HelpBox");
-			EditorGUILayout.LabelField("Scene Switcher", (GUIStyle)"ShurikenEmitterTitle");
-			
-			Texture2D iconTexture = EditorGUIUtility.FindTexture("UnityEditor.SceneView");
-			
-			Rect iconRect = GUILayoutUtility.GetLastRect();
-			iconRect.x += 6;
-			iconRect.y += 6;
-			iconRect.width = iconTexture.width;
-			iconRect.height = iconTexture.height;
-			
-			GUI.DrawTexture(iconRect, iconTexture);
-			GUILayout.Space(12);
-			SceneListLayout();
-			EditorGUILayout.EndVertical();
+			LoadPreferences();
+			RefreshSceneCacheIfNeeded();
+
+			DrawWindowContent();
 		}
 
 		private static void OnScene(SceneView sceneView)
 		{
 			Handles.BeginGUI();
-			m_Scenes = GetScenes();
-			GUI.skin.font = ((GUIStyle)"ShurikenLabel").font;
+			RefreshSceneCacheIfNeeded();
 
-			if(GUI.Button(new Rect(10,10,212,15), "Scene Switcher", EditorStyles.miniButton))
+			if (GUI.Button(new Rect(10, 10, 260, 18), "Scene Switcher", EditorStyles.miniButton))
 				m_IsMinimized = !m_IsMinimized;
 
-			if(!m_IsMinimized)
+			if (!m_IsMinimized)
 			{
-				GUILayout.BeginArea(new Rect(10,10,212,150), "Scene Switcher", GUI.skin.window);
-				SceneListLayout();
+				GUILayout.BeginArea(new Rect(10, 30, 340, 220), "Scene Switcher", GUI.skin.window);
+				DrawToolbar(compact: true);
+				DrawSceneList(compact: true);
 				GUILayout.EndArea();
 			}
 
@@ -99,81 +135,236 @@ namespace SceneSwitcher
 			Handles.EndGUI();
 		}
 
-		private static void SceneListLayout()
+		private static void DrawWindowContent()
 		{
-			ScrollPos = GUILayout.BeginScrollView(ScrollPos);
-			
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(2);
-			
-			SearchString = GUILayout.TextField(SearchString, (GUIStyle)"ToolbarSeachTextField");
-			
-			GUIStyle searchCancelStyle = (SearchString == "") ? (GUIStyle)"ToolbarSeachCancelButtonEmpty" : (GUIStyle)"ToolbarSeachCancelButton";
-			
-			if (GUILayout.Button ("", searchCancelStyle))
-				SearchString = "";
-			
-			GUILayout.Space(2);
-			GUILayout.EndHorizontal();
-
-			if(m_Scenes.Count == 0)
-				EditorGUILayout.LabelField("There are no scenes available.");
-			
-			GUILayout.Space(5);
-			
-			foreach(Scenes scene in m_Scenes)
+			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
 			{
-				if(SearchString == "" || StringContains(scene.sceneName, SearchString))
+				DrawHeader();
+				DrawToolbar(compact: false);
+				DrawSceneList(compact: false);
+			}
+		}
+
+		private static void DrawHeader()
+		{
+			using (new EditorGUILayout.HorizontalScope())
+			{
+				GUILayout.Label(WindowTitle, EditorStyles.boldLabel);
+				GUILayout.FlexibleSpace();
+				GUILayout.Label($"Scenes: {m_Scenes.Count}", EditorStyles.miniLabel);
+			}
+
+			EditorGUILayout.Space(2);
+		}
+
+		private static void DrawToolbar(bool compact)
+		{
+			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+			{
+				using (new EditorGUILayout.HorizontalScope())
 				{
-					EditorGUILayout.BeginHorizontal();
-					EditorGUIUtility.labelWidth = 50;
+					EditorGUI.BeginChangeCheck();
+					int sourceIndex = GUILayout.Toolbar((int)m_SceneSource, SourceOptions, EditorStyles.miniButton);
+					if (EditorGUI.EndChangeCheck())
+					{
+						m_SceneSource = (SceneSource)Mathf.Clamp(sourceIndex, 0, SourceOptions.Length - 1);
+						SavePreferences();
+						MarkDirty();
+					}
 
-					string currentScene = "";
-					if(EditorApplication.currentScene.Contains(scene.sceneName))
-						currentScene = "[LOADED] ";
+					if (GUILayout.Button("Refresh", GUILayout.Width(70)))
+					{
+						MarkDirty();
+						RefreshSceneCacheIfNeeded(force: true);
+					}
+				}
 
-					EditorGUILayout.LabelField(new GUIContent(currentScene + scene.sceneName, scene.sceneName));
+				using (new EditorGUILayout.HorizontalScope())
+				{
+					EditorGUILayout.LabelField("Search", GUILayout.Width(50));
+					SearchString = EditorGUILayout.TextField(SearchString);
 
-					if(GUILayout.Button("Load", GUILayout.Width(40)))
-						OpenScene(scene.filePath);
-					if(GUILayout.Button("x", GUILayout.Width(18)))
+					if (GUILayout.Button("X", GUILayout.Width(22)))
+						SearchString = string.Empty;
+
+					if (!compact)
+					{
+						EditorGUILayout.LabelField("Open", GUILayout.Width(38));
+						EditorGUI.BeginChangeCheck();
+						int modeIndex = GUILayout.Toolbar((int)m_OpenMode, OpenModeOptions, EditorStyles.miniButton);
+						if (EditorGUI.EndChangeCheck())
+						{
+							m_OpenMode = (OpenMode)Mathf.Clamp(modeIndex, 0, OpenModeOptions.Length - 1);
+							SavePreferences();
+						}
+					}
+				}
+			}
+		}
+
+		private static void DrawSceneList(bool compact)
+		{
+			IEnumerable<SceneEntry> filteredScenes = m_Scenes;
+			if (!string.IsNullOrEmpty(SearchString))
+				filteredScenes = filteredScenes.Where(s => StringContains(s.sceneName, SearchString));
+
+			List<SceneEntry> sceneList = filteredScenes.ToList();
+			if (sceneList.Count == 0)
+			{
+				EditorGUILayout.HelpBox("No scenes found for the selected source.", MessageType.Info);
+				return;
+			}
+
+			float rowHeight = compact ? 22.0f : 24.0f;
+			float contentHeight = Mathf.Max(60.0f, (sceneList.Count * rowHeight) + 6.0f);
+			float maxHeight = Window != null ? Mathf.Max(80.0f, Window.position.height - (compact ? 84.0f : 130.0f)) : 240.0f;
+			bool shouldScroll = contentHeight > maxHeight;
+
+			if (shouldScroll)
+				ScrollPos = GUILayout.BeginScrollView(ScrollPos, GUILayout.Height(maxHeight));
+
+			foreach (SceneEntry scene in sceneList)
+			{
+				using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+				{
+					string status = GetSceneStatus(scene.filePath);
+					string label = string.IsNullOrEmpty(status)
+						? scene.sceneName
+						: $"[{status}] {scene.sceneName}";
+
+					GUILayout.Label(new GUIContent(label, scene.filePath), EditorStyles.label);
+					GUILayout.FlexibleSpace();
+
+					if (m_SceneSource == SceneSource.AllProject && scene.inBuildSettings)
+					{
+						GUIContent buildState = new GUIContent(scene.enabledInBuild ? "Build" : "Build (Off)");
+						GUILayout.Label(buildState, EditorStyles.miniLabel, GUILayout.Width(62));
+					}
+
+					if (GUILayout.Button("Ping", GUILayout.Width(42)))
+						PingScene(scene.filePath);
+
+					if (GUILayout.Button("Load", GUILayout.Width(44)))
+						OpenScene(scene.filePath, m_OpenMode);
+
+					if (!compact && GUILayout.Button("Delete", GUILayout.Width(55)))
 						DeleteScene(scene.filePath);
-
-					EditorGUILayout.EndHorizontal();
 				}
 			}
 
-			GUILayout.EndScrollView();
+			if (shouldScroll)
+				GUILayout.EndScrollView();
 		}
 		
-		private static List<Scenes> GetScenes()
+		private static void RefreshSceneCacheIfNeeded(bool force = false)
 		{
-			List<Scenes> tempScenes = new List<Scenes>();
-			DirectoryInfo directory = new DirectoryInfo(Application.dataPath);
-			FileInfo[] fileInfo = directory.GetFiles("*.unity", SearchOption.AllDirectories);
-			foreach(FileInfo file in fileInfo)
+			if (!force && !m_IsDirty)
+				return;
+
+			m_Scenes = GetScenes();
+			m_IsDirty = false;
+		}
+
+		private static List<SceneEntry> GetScenes()
+		{
+			Dictionary<string, EditorBuildSettingsScene> buildSceneLookup = EditorBuildSettings.scenes
+				.ToDictionary(scene => scene.path, scene => scene, StringComparer.OrdinalIgnoreCase);
+
+			IEnumerable<string> paths;
+			if (m_SceneSource == SceneSource.BuildSettings)
+				paths = EditorBuildSettings.scenes.Select(s => s.path);
+			else
 			{
-				Scenes newScene = new Scenes()
-				{
-					sceneName = file.Name.Replace(".unity",""),
-					filePath = file.FullName.Replace(@"\", "/").Replace(Application.dataPath, "Assets")
-				};
-				tempScenes.Add(newScene);
+				string[] guids = AssetDatabase.FindAssets("t:Scene");
+				paths = guids.Select(AssetDatabase.GUIDToAssetPath);
 			}
-			
+
+			List<SceneEntry> tempScenes = new List<SceneEntry>();
+			foreach (string path in paths.Distinct(StringComparer.OrdinalIgnoreCase))
+			{
+				if (string.IsNullOrEmpty(path))
+					continue;
+
+				SceneEntry entry = new SceneEntry
+				{
+					filePath = path,
+					sceneName = Path.GetFileNameWithoutExtension(path),
+					inBuildSettings = buildSceneLookup.TryGetValue(path, out EditorBuildSettingsScene buildScene),
+					enabledInBuild = buildSceneLookup.TryGetValue(path, out buildScene) && buildScene.enabled
+				};
+
+				tempScenes.Add(entry);
+			}
+
 			return tempScenes.OrderBy(list => list.sceneName).ToList();
 		}
 		
-		private static void OpenScene(string filePath)
+		private static void OpenScene(string filePath, OpenMode mode)
 		{
-			if(EditorApplication.SaveCurrentSceneIfUserWantsTo())
-				EditorApplication.OpenScene(filePath);
+			OpenSceneMode openMode = mode == OpenMode.Additive ? OpenSceneMode.Additive : OpenSceneMode.Single;
+			if (openMode == OpenSceneMode.Single && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+				return;
+
+			EditorSceneManager.OpenScene(filePath, openMode);
 		}
 
 		private static void DeleteScene(string filePath)
 		{
-			if(EditorUtility.DisplayDialog("Delete Scene?", "Are you sure you want to delete this scene?\n\nFile: " + filePath, "YES", "NO"))
-				File.Delete(filePath);
+			if (!EditorUtility.DisplayDialog("Delete Scene?", "Are you sure you want to delete this scene?\n\nFile: " + filePath, "YES", "NO"))
+				return;
+
+			if (!AssetDatabase.DeleteAsset(filePath))
+				EditorUtility.DisplayDialog("Delete failed", "Could not delete scene:\n" + filePath, "OK");
+
+			MarkDirty();
+		}
+
+		private static void PingScene(string filePath)
+		{
+			UnityEngine.Object sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(filePath);
+			if (sceneAsset != null)
+				EditorGUIUtility.PingObject(sceneAsset);
+		}
+
+		private static string GetSceneStatus(string filePath)
+		{
+			Scene activeScene = SceneManager.GetActiveScene();
+			if (string.Equals(activeScene.path, filePath, StringComparison.OrdinalIgnoreCase))
+				return "ACTIVE";
+
+			for (int i = 0; i < SceneManager.sceneCount; i++)
+			{
+				Scene loadedScene = SceneManager.GetSceneAt(i);
+				if (string.Equals(loadedScene.path, filePath, StringComparison.OrdinalIgnoreCase))
+					return "LOADED";
+			}
+
+			return string.Empty;
+		}
+
+		private static void MarkDirty()
+		{
+			m_IsDirty = true;
+			if (Window != null)
+				Window.Repaint();
+		}
+
+		private static void SavePreferences()
+		{
+			EditorPrefs.SetInt(SourcePrefKey, (int)m_SceneSource);
+			EditorPrefs.SetInt(OpenModePrefKey, (int)m_OpenMode);
+		}
+
+		private static void LoadPreferences()
+		{
+			if (!Enum.IsDefined(typeof(SceneSource), EditorPrefs.GetInt(SourcePrefKey, 0)))
+				EditorPrefs.SetInt(SourcePrefKey, 0);
+
+			if (!Enum.IsDefined(typeof(OpenMode), EditorPrefs.GetInt(OpenModePrefKey, 0)))
+				EditorPrefs.SetInt(OpenModePrefKey, 0);
+
+			m_SceneSource = (SceneSource)EditorPrefs.GetInt(SourcePrefKey, 0);
+			m_OpenMode = (OpenMode)EditorPrefs.GetInt(OpenModePrefKey, 0);
 		}
 		
 		private static bool StringContains(string _source, string _compareTo)
