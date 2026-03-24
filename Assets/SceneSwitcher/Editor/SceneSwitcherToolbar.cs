@@ -16,6 +16,13 @@ namespace SceneSwitcher
 		private const string SourcePrefKey = "SceneSwitcher.Toolbar.SceneSource";
 		private const string RootFieldName = "m_Root";
 		private const string ContainerName = "SceneSwitcherToolbarContainer";
+		private const float DefaultVerticalOffset = 1f;
+		private static readonly string[] PlayZoneNames =
+		{
+			"ToolbarZonePlayModes",
+			"ToolbarZonePlayMode",
+			"ToolbarZonePlay"
+		};
 
 		private static readonly Type ToolbarType = typeof(Editor).Assembly.GetType("UnityEditor.Toolbar");
 
@@ -23,13 +30,20 @@ namespace SceneSwitcher
 		private static readonly GUIContent SourceAllContent = new GUIContent("All", "List all scenes in the project");
 		private static readonly GUIContent NoScenesContent = new GUIContent("No Scenes", "No scenes found for selected source");
 		private static readonly GUIContent LockedContent = new GUIContent("Locked", "Scene switching is disabled in Play Mode");
+		private const float SourceWidth = 52f;
+		private const float MinScenePopupWidth = 90f;
+		private const float MaxScenePopupWidth = 150f;
+		private const float LockedLabelWidth = 46f;
 
 		private static readonly List<SceneItem> SceneCache = new List<SceneItem>();
 
 		private static ScriptableObject _toolbar;
+		private static VisualElement _toolbarRoot;
+		private static VisualElement _playHostZone;
 		private static IMGUIContainer _toolbarContainer;
 		private static bool _isDirty = true;
 		private static SceneSource _sceneSource;
+		private static float _scenePopupWidth = 110f;
 
 		private enum SceneSource
 		{
@@ -56,6 +70,7 @@ namespace SceneSwitcher
 		private static void OnEditorUpdate()
 		{
 			EnsureToolbarInjected();
+			UpdateOverlayPosition();
 		}
 
 		private static void OnActiveSceneChanged(Scene oldScene, Scene newScene)
@@ -94,11 +109,14 @@ namespace SceneSwitcher
 			if (root == null)
 				return;
 
-			VisualElement hostZone = root.Q("ToolbarZonePlayModes") ?? root.Q("ToolbarZoneLeftAlign");
+			VisualElement hostZone = FindPlayHostZone(root);
 			if (hostZone == null)
 				return;
 
-			VisualElement existing = hostZone.Q(ContainerName);
+			_toolbarRoot = root;
+			_playHostZone = hostZone;
+
+			VisualElement existing = root.Q(ContainerName);
 			if (existing != null)
 				existing.RemoveFromHierarchy();
 
@@ -107,12 +125,61 @@ namespace SceneSwitcher
 				name = ContainerName
 			};
 
-			_toolbarContainer.style.marginLeft = 6;
-			_toolbarContainer.style.marginRight = 4;
-			_toolbarContainer.style.width = 255;
+			_toolbarContainer.style.marginLeft = 1;
+			_toolbarContainer.style.marginRight = 0;
+			_toolbarContainer.style.width = 190;
 			_toolbarContainer.style.flexShrink = 0;
+			_toolbarContainer.style.position = Position.Absolute;
+			_toolbarContainer.style.top = 0;
+			_toolbarContainer.style.height = 22;
+			_toolbarContainer.style.unityTextAlign = TextAnchor.MiddleLeft;
 
-			hostZone.Add(_toolbarContainer);
+			root.Add(_toolbarContainer);
+			UpdateOverlayPosition();
+		}
+
+		private static void UpdateOverlayPosition()
+		{
+			if (_toolbarContainer == null || _toolbarRoot == null || _playHostZone == null)
+				return;
+
+			Rect playWorldRect = _playHostZone.worldBound;
+			if (playWorldRect.width <= 0f)
+				return;
+
+			Vector2 playLocalTopLeft = _toolbarRoot.WorldToLocal(new Vector2(playWorldRect.xMin, playWorldRect.yMin));
+			float targetLeft = playLocalTopLeft.x - _toolbarContainer.resolvedStyle.width - 4f;
+			if (targetLeft < 0f)
+				targetLeft = 0f;
+
+			float containerHeight = _toolbarContainer.resolvedStyle.height;
+			if (containerHeight <= 0f)
+				containerHeight = 22f;
+
+			float targetTop = playLocalTopLeft.y + ((playWorldRect.height - containerHeight) * 0.5f);
+
+			_toolbarContainer.style.left = targetLeft;
+			_toolbarContainer.style.top = targetTop + DefaultVerticalOffset;
+		}
+
+		private static VisualElement FindPlayHostZone(VisualElement root)
+		{
+			for (int i = 0; i < PlayZoneNames.Length; i++)
+			{
+				VisualElement zone = root.Q(PlayZoneNames[i]);
+				if (zone != null)
+					return zone;
+			}
+
+			List<VisualElement> allElements = root.Query<VisualElement>().ToList();
+			for (int i = 0; i < allElements.Count; i++)
+			{
+				string name = allElements[i].name;
+				if (!string.IsNullOrEmpty(name) && name.IndexOf("Play", StringComparison.OrdinalIgnoreCase) >= 0 && name.IndexOf("ToolbarZone", StringComparison.OrdinalIgnoreCase) >= 0)
+					return allElements[i];
+			}
+
+			return root.Q("ToolbarZoneLeftAlign");
 		}
 
 		private static void DrawToolbarGUI()
@@ -120,6 +187,7 @@ namespace SceneSwitcher
 			RefreshSceneCacheIfNeeded();
 
 			bool isLocked = EditorApplication.isPlayingOrWillChangePlaymode;
+			UpdateCompactWidths(isLocked);
 			using (new EditorGUI.DisabledScope(isLocked))
 			{
 				using (new EditorGUILayout.HorizontalScope())
@@ -130,13 +198,40 @@ namespace SceneSwitcher
 			}
 
 			if (isLocked)
-				GUILayout.Label(LockedContent, EditorStyles.miniLabel, GUILayout.Width(46));
+				GUILayout.Label(LockedContent, EditorStyles.miniLabel, GUILayout.Width(LockedLabelWidth));
+		}
+
+		private static void UpdateCompactWidths(bool isLocked)
+		{
+			_scenePopupWidth = CalculateScenePopupWidth();
+
+			float desiredWidth = SourceWidth + _scenePopupWidth + 6f;
+			if (isLocked)
+				desiredWidth += LockedLabelWidth;
+
+			if (_toolbarContainer != null)
+				_toolbarContainer.style.width = desiredWidth;
+		}
+
+		private static float CalculateScenePopupWidth()
+		{
+			if (SceneCache.Count == 0)
+			{
+				float noSceneWidth = EditorStyles.miniLabel.CalcSize(NoScenesContent).x + 8f;
+				return Mathf.Clamp(noSceneWidth, MinScenePopupWidth, MaxScenePopupWidth);
+			}
+
+			int currentSceneIndex = GetActiveSceneIndex();
+			int shownIndex = Mathf.Clamp(currentSceneIndex, 0, SceneCache.Count - 1);
+			string title = SceneCache[shownIndex].Name;
+			float popupWidth = EditorStyles.toolbarPopup.CalcSize(new GUIContent(title)).x + 24f;
+			return Mathf.Clamp(popupWidth, MinScenePopupWidth, MaxScenePopupWidth);
 		}
 
 		private static void DrawSourceDropdown()
 		{
 			GUIContent sourceContent = _sceneSource == SceneSource.BuildSettings ? SourceBuildContent : SourceAllContent;
-			if (!EditorGUILayout.DropdownButton(sourceContent, FocusType.Passive, EditorStyles.toolbarDropDown, GUILayout.Width(52)))
+			if (!EditorGUILayout.DropdownButton(sourceContent, FocusType.Passive, EditorStyles.toolbarDropDown, GUILayout.Width(SourceWidth)))
 				return;
 
 			GenericMenu menu = new GenericMenu();
@@ -149,7 +244,7 @@ namespace SceneSwitcher
 		{
 			if (SceneCache.Count == 0)
 			{
-				GUILayout.Label(NoScenesContent, EditorStyles.miniLabel, GUILayout.Width(180));
+				GUILayout.Label(NoScenesContent, EditorStyles.miniLabel, GUILayout.Width(_scenePopupWidth));
 				return;
 			}
 
@@ -158,7 +253,7 @@ namespace SceneSwitcher
 
 			int shownIndex = Mathf.Clamp(currentSceneIndex, 0, sceneNames.Length - 1);
 			EditorGUI.BeginChangeCheck();
-			int newIndex = EditorGUILayout.Popup(shownIndex, sceneNames, EditorStyles.toolbarPopup, GUILayout.Width(195));
+			int newIndex = EditorGUILayout.Popup(shownIndex, sceneNames, EditorStyles.toolbarPopup, GUILayout.Width(_scenePopupWidth));
 			if (!EditorGUI.EndChangeCheck())
 				return;
 
