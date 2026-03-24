@@ -12,19 +12,14 @@ namespace SceneSwitcher
 	public class SceneSwitcherEditor : EditorWindow
 	{
 		private const string SourcePrefKey = "SceneSwitcher.SceneSource";
-		private const string OpenModePrefKey = "SceneSwitcher.OpenMode";
+		private const string CompanyName = "Fly Studios Games";
+		private const string AssetStoreUrl = "https://assetstore.unity.com/";
 
 		private static readonly GUIContent WindowTitle = new GUIContent("Scene Switcher");
 		private static readonly GUIContent[] SourceOptions =
 		{
 			new GUIContent("Build Settings"),
 			new GUIContent("All Project")
-		};
-
-		private static readonly GUIContent[] OpenModeOptions =
-		{
-			new GUIContent("Single"),
-			new GUIContent("Additive")
 		};
 
 		private static List<SceneEntry> m_Scenes = new List<SceneEntry>();
@@ -38,18 +33,10 @@ namespace SceneSwitcher
 		private static bool m_IsDirty = true;
 
 		private static SceneSource m_SceneSource;
-		private static OpenMode m_OpenMode;
-
 		private enum SceneSource
 		{
 			BuildSettings = 0,
 			AllProject = 1
-		}
-
-		private enum OpenMode
-		{
-			Single = 0,
-			Additive = 1
 		}
 
 		private class SceneEntry
@@ -142,6 +129,8 @@ namespace SceneSwitcher
 				DrawHeader();
 				DrawToolbar(compact: false);
 				DrawSceneList(compact: false);
+				GUILayout.FlexibleSpace();
+				DrawFooterWatermark();
 			}
 		}
 
@@ -186,18 +175,6 @@ namespace SceneSwitcher
 
 					if (GUILayout.Button("X", GUILayout.Width(22)))
 						SearchString = string.Empty;
-
-					if (!compact)
-					{
-						EditorGUILayout.LabelField("Open", GUILayout.Width(38));
-						EditorGUI.BeginChangeCheck();
-						int modeIndex = GUILayout.Toolbar((int)m_OpenMode, OpenModeOptions, EditorStyles.miniButton);
-						if (EditorGUI.EndChangeCheck())
-						{
-							m_OpenMode = (OpenMode)Mathf.Clamp(modeIndex, 0, OpenModeOptions.Length - 1);
-							SavePreferences();
-						}
-					}
 				}
 			}
 		}
@@ -245,7 +222,7 @@ namespace SceneSwitcher
 						PingScene(scene.filePath);
 
 					if (GUILayout.Button("Load", GUILayout.Width(44)))
-						OpenScene(scene.filePath, m_OpenMode);
+						OpenScene(scene.filePath);
 
 					if (!compact && GUILayout.Button("Delete", GUILayout.Width(55)))
 						DeleteScene(scene.filePath);
@@ -254,6 +231,34 @@ namespace SceneSwitcher
 
 			if (shouldScroll)
 				GUILayout.EndScrollView();
+		}
+
+		private static void DrawFooterWatermark()
+		{
+			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+			{
+				GUIStyle companyStyle = new GUIStyle(EditorStyles.boldLabel)
+				{
+					alignment = TextAnchor.MiddleCenter
+				};
+
+				GUIStyle hintStyle = new GUIStyle(EditorStyles.miniLabel)
+				{
+					alignment = TextAnchor.MiddleCenter,
+					wordWrap = true
+				};
+
+				GUILayout.Label(CompanyName, companyStyle);
+				GUILayout.Label("Professional tools by " + CompanyName, hintStyle);
+
+				using (new EditorGUILayout.HorizontalScope())
+				{
+					GUILayout.FlexibleSpace();
+					if (GUILayout.Button("Visit Our Asset Store", GUILayout.Height(22), GUILayout.MaxWidth(220)))
+						Application.OpenURL(AssetStoreUrl);
+					GUILayout.FlexibleSpace();
+				}
+			}
 		}
 		
 		private static void RefreshSceneCacheIfNeeded(bool force = false)
@@ -299,13 +304,12 @@ namespace SceneSwitcher
 			return tempScenes.OrderBy(list => list.sceneName).ToList();
 		}
 		
-		private static void OpenScene(string filePath, OpenMode mode)
+		private static void OpenScene(string filePath)
 		{
-			OpenSceneMode openMode = mode == OpenMode.Additive ? OpenSceneMode.Additive : OpenSceneMode.Single;
-			if (openMode == OpenSceneMode.Single && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+			if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
 				return;
 
-			EditorSceneManager.OpenScene(filePath, openMode);
+			EditorSceneManager.OpenScene(filePath, OpenSceneMode.Single);
 		}
 
 		private static void DeleteScene(string filePath)
@@ -352,7 +356,6 @@ namespace SceneSwitcher
 		private static void SavePreferences()
 		{
 			EditorPrefs.SetInt(SourcePrefKey, (int)m_SceneSource);
-			EditorPrefs.SetInt(OpenModePrefKey, (int)m_OpenMode);
 		}
 
 		private static void LoadPreferences()
@@ -360,11 +363,7 @@ namespace SceneSwitcher
 			if (!Enum.IsDefined(typeof(SceneSource), EditorPrefs.GetInt(SourcePrefKey, 0)))
 				EditorPrefs.SetInt(SourcePrefKey, 0);
 
-			if (!Enum.IsDefined(typeof(OpenMode), EditorPrefs.GetInt(OpenModePrefKey, 0)))
-				EditorPrefs.SetInt(OpenModePrefKey, 0);
-
 			m_SceneSource = (SceneSource)EditorPrefs.GetInt(SourcePrefKey, 0);
-			m_OpenMode = (OpenMode)EditorPrefs.GetInt(OpenModePrefKey, 0);
 		}
 		
 		private static bool StringContains(string _source, string _compareTo)
