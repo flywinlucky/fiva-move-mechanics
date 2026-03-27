@@ -10803,6 +10803,10 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 11496818, guid: 1a5154ebeae449e4994357609381b281, type: 3}
+      propertyPath: gravity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11496818, guid: 1a5154ebeae449e4994357609381b281, type: 3}
       propertyPath: uniqueId
       value: 753f4064
       objectReference: {fileID: 0}
@@ -10829,6 +10833,10 @@ PrefabInstance:
     - target: {fileID: 11496818, guid: 1a5154ebeae449e4994357609381b281, type: 3}
       propertyPath: positionVertical
       value: 22
+      objectReference: {fileID: 0}
+    - target: {fileID: 11496818, guid: 1a5154ebeae449e4994357609381b281, type: 3}
+      propertyPath: dynamicPositioning
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11496818, guid: 1a5154ebeae449e4994357609381b281, type: 3}
       propertyPath: positionHorizontal
