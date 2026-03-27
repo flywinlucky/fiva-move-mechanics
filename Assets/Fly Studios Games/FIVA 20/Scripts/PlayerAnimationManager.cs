@@ -24,20 +24,28 @@ public class PlayerAnimationManager : MonoBehaviour
     [Range(0f, 0.5f)]
     float runDampTime = 0.12f;
 
-    [Header("Run Response")]
-    [SerializeField]
-    bool useRunResponseCurve = true;
-
-    [Tooltip("X is linear run blend (0..1), Y is final animator run value (0..1).")]
-    [SerializeField]
-    AnimationCurve runResponseCurve = new AnimationCurve(
-        new Keyframe(0f, 0f),
-        new Keyframe(0.5f, 0.5f),
-        new Keyframe(1f, 1f));
-
     [SerializeField]
     [Range(0f, 1f)]
     float stopSpeedThreshold = 0.05f;
+
+    [Header("1D Blend Threshold Targets")]
+    [SerializeField]
+    [Range(0f, 1f)]
+    float runBlendIdleValue = 0f;
+
+    [SerializeField]
+    [Range(0f, 1f)]
+    float runBlendNormalValue = 0.35f;
+
+    [SerializeField]
+    [Range(0f, 1f)]
+    float runBlendSprintValue = 0.44f;
+
+    [Header("With Ball Sync")]
+    [Tooltip("Reduces run blend while owning ball so locomotion looks heavier/slower.")]
+    [SerializeField]
+    [Range(0.6f, 1f)]
+    float withBallRunBlendMultiplier = 0.88f;
 
     [Header("Fallback Speeds")]
     [SerializeField]
@@ -63,14 +71,10 @@ public class PlayerAnimationManager : MonoBehaviour
         fallbackRunSpeed = Mathf.Max(0.1f, fallbackRunSpeed);
         fallbackSprintMultiplier = Mathf.Max(1f, fallbackSprintMultiplier);
         runDampTime = Mathf.Clamp(runDampTime, 0f, 0.5f);
-
-        if (runResponseCurve == null || runResponseCurve.length == 0)
-        {
-            runResponseCurve = new AnimationCurve(
-                new Keyframe(0f, 0f),
-                new Keyframe(0.5f, 0.5f),
-                new Keyframe(1f, 1f));
-        }
+        runBlendIdleValue = Mathf.Clamp01(runBlendIdleValue);
+        runBlendNormalValue = Mathf.Clamp(runBlendNormalValue, runBlendIdleValue, 1f);
+        runBlendSprintValue = Mathf.Clamp(runBlendSprintValue, runBlendNormalValue, 1f);
+        withBallRunBlendMultiplier = Mathf.Clamp(withBallRunBlendMultiplier, 0.6f, 1f);
 
         if (!Application.isPlaying)
             return;
@@ -176,32 +180,29 @@ public class PlayerAnimationManager : MonoBehaviour
         float runSpeed = ResolveRunSpeedReference();
         float sprintSpeed = ResolveSprintSpeedReference(runSpeed);
 
-        if (currentMoveSpeed <= stopSpeedThreshold)
-            return 0f;
+        if (IsOwningBall())
+            currentMoveSpeed *= withBallRunBlendMultiplier;
 
-        float linearBlend;
+        if (currentMoveSpeed <= stopSpeedThreshold)
+            return runBlendIdleValue;
 
         if (currentMoveSpeed <= runSpeed)
         {
             float tRun = Mathf.InverseLerp(stopSpeedThreshold, runSpeed, currentMoveSpeed);
-            linearBlend = Mathf.Lerp(0f, 0.5f, tRun);
-        }
-        else
-        {
-            float tSprint = Mathf.InverseLerp(runSpeed, sprintSpeed, currentMoveSpeed);
-            linearBlend = Mathf.Lerp(0.5f, 1f, tSprint);
+            return Mathf.Lerp(runBlendIdleValue, runBlendNormalValue, tRun);
         }
 
-        return ApplyRunResponseCurve(linearBlend);
+        float sprintT = Mathf.InverseLerp(runSpeed, sprintSpeed, currentMoveSpeed);
+        float linearBlend = Mathf.Lerp(runBlendNormalValue, runBlendSprintValue, sprintT);
+
+        return Mathf.Clamp(linearBlend, runBlendIdleValue, runBlendSprintValue);
     }
 
-    float ApplyRunResponseCurve(float linearBlend)
+    bool IsOwningBall()
     {
-        float clamped = Mathf.Clamp01(linearBlend);
-        if (!useRunResponseCurve || runResponseCurve == null || runResponseCurve.length == 0)
-            return clamped;
-
-        return Mathf.Clamp01(runResponseCurve.Evaluate(clamped));
+        return player != null
+            && Ball.Instance != null
+            && Ball.Instance.Owner == player;
     }
 
     float ResolveRunSpeedReference()

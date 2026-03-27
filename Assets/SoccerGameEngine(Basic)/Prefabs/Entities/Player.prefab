@@ -598,7 +598,7 @@ MonoBehaviour:
   _ballPassArriveVelocity: 15
   _ballShotArriveVelocity: 30
   _sprintSpeedMultiplier: 2
-  _maxStamina: 100
+  _maxStamina: 50
   _staminaDrainPerSecond: 22
   _staminaRegenPerSecond: 14
   _staminaRegenDelay: 0.7
@@ -748,6 +748,12 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   stopSpeedThreshold: 0.691
+  runBlendIdleValue: 0
+  runBlendNormalValue: 0.22
+  runBlendFastValue: 0.35
+  runBlendSprintValue: 0.44
+  fastRunPivotNormalized: 0.6
+  withBallRunBlendMultiplier: 0.88
   fallbackRunSpeed: 19.9
   fallbackSprintMultiplier: 3.26
 --- !u!1 &2500224489660211353

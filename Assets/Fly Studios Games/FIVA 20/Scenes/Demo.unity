@@ -214,7 +214,7 @@ Light:
     serializedVersion: 2
     m_Bits: 55
   m_RenderingLayerMask: 1
-  m_Lightmapping: 4
+  m_Lightmapping: 1
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
@@ -815,7 +815,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -42.8618, y: 10.9006}
+  m_AnchoredPosition: {x: -42.861816, y: 10.900574}
   m_SizeDelta: {x: 85.7237, y: 21.8012}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &233224637
@@ -1553,7 +1553,7 @@ Light:
     serializedVersion: 2
     m_Bits: 55
   m_RenderingLayerMask: 1
-  m_Lightmapping: 4
+  m_Lightmapping: 1
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
@@ -1582,6 +1582,11 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: e114f7a8122868f4caf94aea6c18bc31, type: 2}
+    - target: {fileID: 15587667723953606, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 15587667723953606, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: _playerType
@@ -1626,6 +1631,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 15587667723953606, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 15587667723953606, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -1704,6 +1714,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: UiPlayerName
       value: RVEB
       objectReference: {fileID: 0}
@@ -1756,6 +1771,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _goalKeeperCatchChance
       value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -1852,6 +1872,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 973453484546982902, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 975660682992446675, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -1866,6 +1891,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1073800274646081936, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 1077745765482151128, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -1954,6 +1984,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1363285695426856406, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 1363285695426856406, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -1996,6 +2031,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1363285695426856406, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 1363285695426856406, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -2064,6 +2104,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1658590344429098005, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 1658590344429098005, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -2106,6 +2151,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1658590344429098005, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 1658590344429098005, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -2162,6 +2212,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 1861667176075350083, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 1894257258616222968, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -2181,6 +2236,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2034178229029634432, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 2116154833969951115, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -2284,6 +2344,11 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: e114f7a8122868f4caf94aea6c18bc31, type: 2}
     - target: {fileID: 2641800103215230987, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 2641800103215230987, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -2326,6 +2391,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 2641800103215230987, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 2641800103215230987, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -2391,6 +2461,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3060205283047699549, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 3068292783547289416, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -2497,6 +2572,16 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 3789831388439439688, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3825360852718546742, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 3845380977553973628, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -2549,6 +2634,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4200073799722462494, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 4200073799722462494, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -2594,6 +2684,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4200073799722462494, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4200073799722462494, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _ballPassArriveVelocity
       value: 12
       objectReference: {fileID: 0}
@@ -2622,6 +2717,11 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: e114f7a8122868f4caf94aea6c18bc31, type: 2}
+    - target: {fileID: 4307673399063636832, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 4307673399063636832, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: _playerType
@@ -2666,6 +2766,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 4307673399063636832, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 4307673399063636832, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -2939,6 +3044,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5947730757855564375, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 5947730757855564375, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -2984,6 +3094,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5947730757855564375, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5947730757855564375, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _ballPassArriveVelocity
       value: 12
       objectReference: {fileID: 0}
@@ -2997,6 +3112,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 6010545500769698879, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6060912758043134518, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -3007,6 +3127,11 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: e114f7a8122868f4caf94aea6c18bc31, type: 2}
+    - target: {fileID: 6066985309762649932, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 6066985309762649932, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: _playerType
@@ -3051,6 +3176,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 6066985309762649932, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 6066985309762649932, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -3137,6 +3267,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 6549295647554894618, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6575516085345585912, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -3157,6 +3292,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 6654933572048803329, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6657463541221733607, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -3166,6 +3306,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6753209239862001769, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 6753209239862001769, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -3211,6 +3356,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 6753209239862001769, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 6753209239862001769, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -3292,6 +3442,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 7369340763940294521, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 7384400808693388289, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -3327,6 +3482,11 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: e114f7a8122868f4caf94aea6c18bc31, type: 2}
+    - target: {fileID: 7535840692679510831, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 7535840692679510831, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: _playerType
@@ -3371,6 +3531,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 7535840692679510831, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 7535840692679510831, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -4768,7 +4933,7 @@ Light:
     serializedVersion: 2
     m_Bits: 55
   m_RenderingLayerMask: 1
-  m_Lightmapping: 4
+  m_Lightmapping: 1
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
@@ -5013,13 +5178,13 @@ Light:
     serializedVersion: 2
     m_Bits: 55
   m_RenderingLayerMask: 1
-  m_Lightmapping: 4
+  m_Lightmapping: 1
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 1.02e-43, y: 0, z: 0, w: -2.865137e+38}
+  m_BoundingSphereOverride: {x: 1.0947971e+21, y: 9.940218e+27, z: 9.314623e-39, w: -1.7419481e-37}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
@@ -9328,7 +9493,7 @@ Light:
     serializedVersion: 2
     m_Bits: 55
   m_RenderingLayerMask: 1
-  m_Lightmapping: 4
+  m_Lightmapping: 1
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
@@ -11725,6 +11890,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 15587667723953606, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 15587667723953606, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -11772,6 +11942,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 15587667723953606, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 15587667723953606, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -11835,6 +12010,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 0
       objectReference: {fileID: 0}
@@ -11892,6 +12072,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _goalKeeperCatchChance
       value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 239783174910314400, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -11988,6 +12173,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 973453484546982902, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 975660682992446675, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -12002,6 +12192,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1073800274646081936, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 1077745765482151128, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -12085,6 +12280,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1363285695426856406, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 1363285695426856406, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -12132,6 +12332,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1363285695426856406, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 1363285695426856406, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -12205,6 +12410,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1658590344429098005, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 1658590344429098005, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -12252,6 +12462,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1658590344429098005, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 1658590344429098005, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -12308,6 +12523,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 1861667176075350083, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 1894257258616222968, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -12327,6 +12547,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2034178229029634432, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 2116154833969951115, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -12430,6 +12655,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2641800103215230987, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 2641800103215230987, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -12477,6 +12707,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 2641800103215230987, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 2641800103215230987, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -12542,6 +12777,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3060205283047699549, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 3068292783547289416, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -12648,6 +12888,16 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 3789831388439439688, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3825360852718546742, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 3845380977553973628, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -12692,6 +12942,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4200073799722462494, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 4200073799722462494, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -12745,6 +13000,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4200073799722462494, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4200073799722462494, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _ballPassArriveVelocity
       value: 12
       objectReference: {fileID: 0}
@@ -12772,6 +13032,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4307673399063636832, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 4307673399063636832, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -12822,6 +13087,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 4307673399063636832, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 4307673399063636832, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -13100,6 +13370,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5947730757855564375, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _maxStamina
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 5947730757855564375, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _playerType
       value: 1
       objectReference: {fileID: 0}
@@ -13150,6 +13425,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5947730757855564375, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5947730757855564375, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
       propertyPath: _ballPassArriveVelocity
       value: 12
       objectReference: {fileID: 0}
@@ -13163,10 +13443,20 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 6010545500769698879, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6060912758043134518, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6066985309762649932, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 6066985309762649932, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -13217,6 +13507,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 6066985309762649932, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 6066985309762649932, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -13308,6 +13603,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 6549295647554894618, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6575516085345585912, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -13328,6 +13628,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 6654933572048803329, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6657463541221733607, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -13342,6 +13647,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_RootOrder
       value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6753209239862001769, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 6753209239862001769, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -13392,6 +13702,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 6753209239862001769, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 6753209239862001769, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -13468,6 +13783,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 7369340763940294521, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 7384400808693388289, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -13502,6 +13822,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_RootOrder
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7535840692679510831, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _maxStamina
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 7535840692679510831, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
@@ -13552,6 +13877,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _distanceShotMaxValid
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 7535840692679510831, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: _sprintSpeedMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 7535840692679510831, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
