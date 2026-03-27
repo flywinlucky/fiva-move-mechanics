@@ -2605,6 +2605,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6986748232090568563}
   - component: {fileID: 1044810641946995209}
+  - component: {fileID: 2816457289773249196}
   m_Layer: 12
   m_Name: Character To Inspect
   m_TagString: Untagged
@@ -2656,6 +2657,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2816457289773249196
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6246127263105824096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b300af7287f076468c82a236fa2ea87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetAnimator: {fileID: 1044810641946995209}
+  passLayerName: passlayer
+  passTriggerName: pass
+  triggerKey: 112
+  passLayerWeight: 1
 --- !u!1 &6273629065941464741
 GameObject:
   m_ObjectHideFlags: 0
