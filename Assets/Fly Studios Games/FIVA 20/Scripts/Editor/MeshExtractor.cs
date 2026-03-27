@@ -1,48 +1,56 @@
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
 using System.IO;
 
-public class MeshExtractor : EditorWindow
+public class MeshRecursiveExtractor : EditorWindow
 {
-    [MenuItem("Tools/Extract Selected Mesh")]
-    public static void ExtractMesh()
+    [MenuItem("Tools/Extract All Meshes (Recursive)")]
+    public static void ExtractMeshesRecursive()
     {
-        // Verificăm dacă avem ceva selectat în ierarhie
-        GameObject selectedObject = Selection.activeGameObject;
+        GameObject root = Selection.activeGameObject;
 
-        if (selectedObject == null)
+        if (root == null)
         {
-            Debug.LogError("MeshExtractor: Selectează un obiect din scenă mai întâi!");
+            Debug.LogError("Selectează obiectul ROOT (părintele) din ierarhie!");
             return;
         }
 
-        MeshFilter meshFilter = selectedObject.GetComponent<MeshFilter>();
-        if (meshFilter == null || meshFilter.sharedMesh == null)
+        // Creăm un folder dedicat pentru a nu amesteca sute de fișiere
+        string folderPath = EditorUtility.OpenFolderPanel("Alege folderul unde salvăm mesh-urile", "Assets", "");
+        if (string.IsNullOrEmpty(folderPath)) return;
+
+        // Convertim path-ul absolut în path de proiect (Assets/...)
+        folderPath = "Assets" + folderPath.Replace(Application.dataPath, "");
+
+        // Găsim toate MeshFilter-ele din copii și sub-copii
+        MeshFilter[] meshFilters = root.GetComponentsInChildren<MeshFilter>(true);
+        int count = 0;
+
+        foreach (MeshFilter mf in meshFilters)
         {
-            Debug.LogError("MeshExtractor: Obiectul selectat nu are un MeshFilter sau un Mesh valid.");
-            return;
+            if (mf.sharedMesh == null) continue;
+
+            // Creăm copia mesh-ului
+            Mesh meshCopy = Instantiate(mf.sharedMesh);
+            string meshName = mf.gameObject.name + "_" + mf.sharedMesh.name + ".asset";
+            
+            // Curățăm numele de caractere invalide
+            foreach (char c in Path.GetInvalidFileNameChars()) { meshName = meshName.Replace(c, '_'); }
+
+            string assetPath = Path.Combine(folderPath, meshName);
+            
+            // Salvăm mesh-ul ca fișier .asset
+            AssetDatabase.CreateAsset(meshCopy, assetPath);
+            
+            // Înlocuim referința în scenă cu noul fișier extras
+            mf.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
+            count++;
         }
 
-        // Creăm o copie a mesh-ului pentru a rupe legătura cu FBX-ul original
-        Mesh meshCopy = Instantiate(meshFilter.sharedMesh);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
         
-        // Alegem unde să salvăm fișierul
-        string path = EditorUtility.SaveFilePanelInProject(
-            "Salvează Mesh-ul extras",
-            selectedObject.name + "_Extracted",
-            "asset",
-            "Introduceți un nume pentru noul mesh asset");
-
-        if (!string.IsNullOrEmpty(path))
-        {
-            AssetDatabase.CreateAsset(meshCopy, path);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            // Opțional: Înlocuim automat mesh-ul în scenă cu cel nou creat (pentru confirmare)
-            meshFilter.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-
-            Debug.Log("<color=green>Succes!</color> Mesh-ul a fost extras și salvat la: " + path);
-        }
+        Debug.Log($"<color=cyan>Gata!</color> Am extras {count} mesh-uri individuale în {folderPath}");
     }
 }
