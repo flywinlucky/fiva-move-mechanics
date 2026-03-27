@@ -19,6 +19,50 @@ public class PlayerAnimationManager : MonoBehaviour
     [SerializeField]
     string runParameterName = "run";
 
+    [Header("Pass Animation")]
+    [SerializeField]
+    string passTriggerName = "pass";
+
+    [SerializeField]
+    string passLayerName = "passlayer";
+
+    [SerializeField]
+    [Range(0f, 1f)]
+    float passLayerActiveWeight = 1f;
+
+    [Tooltip("Expected pass clip duration in seconds.")]
+    [SerializeField]
+    [Range(0.1f, 3f)]
+    float passAnimationDuration = 1f;
+
+    [Tooltip("Kick ball at this normalized point from pass clip length (0..1).")]
+    [SerializeField]
+    [Range(0f, 1f)]
+    float passReleaseNormalizedTime = 0.5f;
+
+    [SerializeField]
+    string shotTriggerName = "shot";
+
+    [Tooltip("Expected shot clip duration in seconds.")]
+    [SerializeField]
+    [Range(0.1f, 3f)]
+    float shotAnimationDuration = 0.8f;
+
+    [Tooltip("Release shot ball at this normalized point from shot clip length (0..1).")]
+    [SerializeField]
+    [Range(0f, 1f)]
+    float shotReleaseNormalizedTime = 0.35f;
+
+    [Header("Kick Timing")]
+    [Tooltip("Global kick release speed scale. < 1 = faster release, > 1 = slower release.")]
+    [SerializeField]
+    [Range(0.25f, 2f)]
+    float kickReleaseTimeScale = 1f;
+
+    [SerializeField]
+    [Range(1f, 30f)]
+    float passLayerBlendSpeed = 12f;
+
     [Header("Smoothing")]
     [SerializeField]
     [Range(0f, 0.5f)]
@@ -58,6 +102,12 @@ public class PlayerAnimationManager : MonoBehaviour
 
     bool hasRunParameter;
     int runParameterHash;
+    bool hasPassTrigger;
+    int passTriggerHash;
+    bool hasShotTrigger;
+    int shotTriggerHash;
+    int passLayerIndex = -1;
+    float passLayerHoldUntil;
 
     void Awake()
     {
@@ -75,6 +125,13 @@ public class PlayerAnimationManager : MonoBehaviour
         runBlendNormalValue = Mathf.Clamp(runBlendNormalValue, runBlendIdleValue, 1f);
         runBlendSprintValue = Mathf.Clamp(runBlendSprintValue, runBlendNormalValue, 1f);
         withBallRunBlendMultiplier = Mathf.Clamp(withBallRunBlendMultiplier, 0.6f, 1f);
+        passLayerActiveWeight = Mathf.Clamp01(passLayerActiveWeight);
+        passAnimationDuration = Mathf.Max(0.1f, passAnimationDuration);
+        passReleaseNormalizedTime = Mathf.Clamp01(passReleaseNormalizedTime);
+        shotAnimationDuration = Mathf.Max(0.1f, shotAnimationDuration);
+        shotReleaseNormalizedTime = Mathf.Clamp01(shotReleaseNormalizedTime);
+        kickReleaseTimeScale = Mathf.Clamp(kickReleaseTimeScale, 0.25f, 2f);
+        passLayerBlendSpeed = Mathf.Max(1f, passLayerBlendSpeed);
 
         if (!Application.isPlaying)
             return;
@@ -117,6 +174,8 @@ public class PlayerAnimationManager : MonoBehaviour
 
         if (hasRunParameter)
             playerAnimator.SetFloat(runParameterHash, runBlendValue, runDampTime, deltaTime);
+
+        UpdatePassLayerWeight(deltaTime);
     }
 
     void AutoAssignReferences()
@@ -137,22 +196,91 @@ public class PlayerAnimationManager : MonoBehaviour
     void CacheAnimatorParameterAvailability()
     {
         hasRunParameter = false;
+        hasPassTrigger = false;
+        hasShotTrigger = false;
 
         runParameterHash = Animator.StringToHash(runParameterName);
+        passTriggerHash = Animator.StringToHash(passTriggerName);
+        shotTriggerHash = Animator.StringToHash(shotTriggerName);
+        passLayerIndex = -1;
 
         if (playerAnimator == null)
             return;
+
+        passLayerIndex = playerAnimator.GetLayerIndex(passLayerName);
 
         AnimatorControllerParameter[] parameters = playerAnimator.parameters;
         for (int i = 0; i < parameters.Length; i++)
         {
             AnimatorControllerParameter parameter = parameters[i];
-            if (parameter.type != AnimatorControllerParameterType.Float)
-                continue;
-
-            if (parameter.name == runParameterName)
+            if (parameter.type == AnimatorControllerParameterType.Float
+                && parameter.name == runParameterName)
                 hasRunParameter = true;
+
+            if (parameter.type == AnimatorControllerParameterType.Trigger
+                && parameter.name == passTriggerName)
+                hasPassTrigger = true;
+
+            if (parameter.type == AnimatorControllerParameterType.Trigger
+                && parameter.name == shotTriggerName)
+                hasShotTrigger = true;
         }
+    }
+
+    void UpdatePassLayerWeight(float deltaTime)
+    {
+        if (playerAnimator == null || passLayerIndex < 0)
+            return;
+
+        float targetWeight = Time.time <= passLayerHoldUntil ? passLayerActiveWeight : 0f;
+        float currentWeight = playerAnimator.GetLayerWeight(passLayerIndex);
+        float nextWeight = Mathf.MoveTowards(currentWeight, targetWeight, passLayerBlendSpeed * Mathf.Max(0f, deltaTime));
+        playerAnimator.SetLayerWeight(passLayerIndex, nextWeight);
+    }
+
+    public float TriggerPassAnimationAndGetReleaseDelay(float fallbackDelay = 0.5f)
+    {
+        return TriggerKickAnimationAndGetReleaseDelay(
+            passTriggerHash,
+            hasPassTrigger,
+            passAnimationDuration,
+            passReleaseNormalizedTime,
+            fallbackDelay);
+    }
+
+    public float TriggerShotAnimationAndGetReleaseDelay(float fallbackDelay = 0.35f)
+    {
+        return TriggerKickAnimationAndGetReleaseDelay(
+            shotTriggerHash,
+            hasShotTrigger,
+            shotAnimationDuration,
+            shotReleaseNormalizedTime,
+            fallbackDelay);
+    }
+
+    float TriggerKickAnimationAndGetReleaseDelay(
+        int triggerHash,
+        bool hasTrigger,
+        float animationDuration,
+        float releaseNormalizedTime,
+        float fallbackDelay)
+    {
+        AutoAssignReferences();
+        CacheAnimatorParameterAvailability();
+
+        float timingScale = Mathf.Clamp(kickReleaseTimeScale, 0.25f, 2f);
+        float duration = Mathf.Max(0.1f, animationDuration) * timingScale;
+        float releaseDelay = duration * Mathf.Clamp01(releaseNormalizedTime);
+
+        if (playerAnimator == null)
+            return Mathf.Max(0.01f, fallbackDelay);
+
+        if (hasTrigger)
+            playerAnimator.SetTrigger(triggerHash);
+
+        passLayerHoldUntil = Time.time + duration;
+
+        return Mathf.Max(0.01f, releaseDelay);
     }
 
     float ResolveCurrentMoveSpeed()

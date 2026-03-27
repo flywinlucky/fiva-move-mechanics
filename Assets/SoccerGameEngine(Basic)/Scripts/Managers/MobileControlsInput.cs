@@ -96,6 +96,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             _shootQueued = false;
         }
 
+        void ResetQueuedTapActions()
+        {
+            _passQueued = false;
+            _shootQueued = false;
+        }
+
         public void SetMobileControlsEnabled(bool enabled)
         {
             _isMobileControls = enabled;
@@ -156,6 +162,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         public static bool ConsumeShootPressed()
         {
             return Instance != null && Instance.ConsumeShootInternal();
+        }
+
+        public static void ClearQueuedTapActions()
+        {
+            if (Instance == null)
+                return;
+
+            Instance.ResetQueuedTapActions();
         }
 
         public bool IsMobileControls

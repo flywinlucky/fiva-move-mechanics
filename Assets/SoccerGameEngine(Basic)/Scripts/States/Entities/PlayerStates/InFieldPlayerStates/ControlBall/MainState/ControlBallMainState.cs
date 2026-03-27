@@ -1,5 +1,6 @@
 ﻿using System;
 using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.ControlBall.SubStates;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.Tackled.MainState;
@@ -36,6 +37,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             //set the ball to is kinematic
             Ball.Instance.Owner = Owner;
             Ball.Instance.Rigidbody.isKinematic = true;
+
+            // Prevent immediate accidental re-pass when control changes player.
+            Owner.BlockKickInputOnReceive();
+            MobileControlsInput.ClearQueuedTapActions();
 
             // raise event that I'm controlling the ball
             ControlBallDel temp = Owner.OnControlBall;

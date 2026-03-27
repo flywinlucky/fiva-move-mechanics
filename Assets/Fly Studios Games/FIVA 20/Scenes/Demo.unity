@@ -1877,6 +1877,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 973453484546982902, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 975660682992446675, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -1895,6 +1900,11 @@ PrefabInstance:
     - target: {fileID: 1073800274646081936, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1073800274646081936, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 1077745765482151128, guid: 93602d7634211b04f9088674182cf0c4,
@@ -2217,6 +2227,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 1861667176075350083, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 1894257258616222968, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -2240,6 +2255,11 @@ PrefabInstance:
     - target: {fileID: 2034178229029634432, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2034178229029634432, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 2116154833969951115, guid: 93602d7634211b04f9088674182cf0c4,
@@ -2467,6 +2487,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 3060205283047699549, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 3068292783547289416, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -2577,9 +2602,19 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 3789831388439439688, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 3825360852718546742, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3825360852718546742, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 3845380977553973628, guid: 93602d7634211b04f9088674182cf0c4,
@@ -3117,6 +3152,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 6010545500769698879, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6060912758043134518, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -3272,6 +3312,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 6549295647554894618, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6575516085345585912, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -3295,6 +3340,11 @@ PrefabInstance:
     - target: {fileID: 6654933572048803329, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6654933572048803329, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 6657463541221733607, guid: 93602d7634211b04f9088674182cf0c4,
@@ -3445,6 +3495,11 @@ PrefabInstance:
     - target: {fileID: 7369340763940294521, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7369340763940294521, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 7384400808693388289, guid: 93602d7634211b04f9088674182cf0c4,
@@ -12178,6 +12233,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 973453484546982902, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 975660682992446675, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -12196,6 +12256,11 @@ PrefabInstance:
     - target: {fileID: 1073800274646081936, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1073800274646081936, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 1077745765482151128, guid: 93602d7634211b04f9088674182cf0c4,
@@ -12528,6 +12593,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 1861667176075350083, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 1894257258616222968, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -12551,6 +12621,11 @@ PrefabInstance:
     - target: {fileID: 2034178229029634432, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2034178229029634432, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 2116154833969951115, guid: 93602d7634211b04f9088674182cf0c4,
@@ -12783,6 +12858,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 3060205283047699549, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 3068292783547289416, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -12893,9 +12973,19 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 3789831388439439688, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 3825360852718546742, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3825360852718546742, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 3845380977553973628, guid: 93602d7634211b04f9088674182cf0c4,
@@ -13448,6 +13538,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 6010545500769698879, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6060912758043134518, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -13608,6 +13703,11 @@ PrefabInstance:
       propertyPath: runBlendNormalValue
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 6549295647554894618, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 6575516085345585912, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -13631,6 +13731,11 @@ PrefabInstance:
     - target: {fileID: 6654933572048803329, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6654933572048803329, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 6657463541221733607, guid: 93602d7634211b04f9088674182cf0c4,
@@ -13786,6 +13891,11 @@ PrefabInstance:
     - target: {fileID: 7369340763940294521, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: runBlendNormalValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7369340763940294521, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: kickReleaseTimeScale
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 7384400808693388289, guid: 93602d7634211b04f9088674182cf0c4,

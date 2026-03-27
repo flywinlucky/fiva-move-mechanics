@@ -244,6 +244,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [Range(0.1f, 30f)]
         float _rotationSpeed = 8f;
 
+        [Header("Kick Input Safety")]
+        [SerializeField]
+        [Range(0f, 1f)]
+        float _kickInputCooldownAfterKick = 0.2f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        float _kickInputCooldownOnReceive = 0.15f;
+
         const float _manualPassDirectionAngle = 60f;
         const float _casualPassFallbackRangeMultiplier = 1.5f;
 
@@ -256,6 +265,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _configuredBasePower;
         float _configuredBaseSpeed;
         float _speedVarianceMultiplier = 1f;
+        float _kickInputBlockedUntil;
         float _appliedSprintMultiplier = 1f;
         bool _isSprinting;
         int _lastSprintApplyFrame = -1;
@@ -354,6 +364,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _sprintRampDownSpeed = Mathf.Max(1f, _sprintRampDownSpeed);
             _withBallSpeedMultiplier = Mathf.Clamp(_withBallSpeedMultiplier, 0.85f, 0.95f);
             _speedVariancePercent = Mathf.Clamp(_speedVariancePercent, 0f, 0.5f);
+            _kickInputCooldownAfterKick = Mathf.Clamp(_kickInputCooldownAfterKick, 0f, 1f);
+            _kickInputCooldownOnReceive = Mathf.Clamp(_kickInputCooldownOnReceive, 0f, 1f);
 
             if (!Application.isPlaying || _rpgMovement == null)
                 return;
@@ -396,6 +408,29 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         {
             float variance = Mathf.Clamp(_speedVariancePercent, 0f, 0.5f);
             _speedVarianceMultiplier = 1f + Random.Range(-variance, variance);
+        }
+
+        public void BlockKickInput(float durationSeconds)
+        {
+            float duration = Mathf.Max(0f, durationSeconds);
+            float blockedUntil = Time.time + duration;
+            if (blockedUntil > _kickInputBlockedUntil)
+                _kickInputBlockedUntil = blockedUntil;
+        }
+
+        public void BlockKickInputAfterKick()
+        {
+            BlockKickInput(_kickInputCooldownAfterKick);
+        }
+
+        public void BlockKickInputOnReceive()
+        {
+            BlockKickInput(_kickInputCooldownOnReceive);
+        }
+
+        public bool IsKickInputBlocked()
+        {
+            return Time.time < _kickInputBlockedUntil;
         }
 
         void SyncSpeedToMovement(float baseSpeedMultiplier = 1f, bool snapToTargetSprintMultiplier = false)
@@ -1533,6 +1568,28 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             if (_iconCanPassPlayer.activeSelf != visible)
                 _iconCanPassPlayer.SetActive(visible);
+        }
+
+        public float TriggerPassAnimationAndGetReleaseDelay(float fallbackDelay = 0.5f)
+        {
+            if (_playerAnimationManager == null)
+                _playerAnimationManager = GetComponent<PlayerAnimationManager>();
+
+            if (_playerAnimationManager == null)
+                return Mathf.Max(0.01f, fallbackDelay);
+
+            return _playerAnimationManager.TriggerPassAnimationAndGetReleaseDelay(fallbackDelay);
+        }
+
+        public float TriggerShotAnimationAndGetReleaseDelay(float fallbackDelay = 0.35f)
+        {
+            if (_playerAnimationManager == null)
+                _playerAnimationManager = GetComponent<PlayerAnimationManager>();
+
+            if (_playerAnimationManager == null)
+                return Mathf.Max(0.01f, fallbackDelay);
+
+            return _playerAnimationManager.TriggerShotAnimationAndGetReleaseDelay(fallbackDelay);
         }
 
         public void ApplyFormationWidget(Color formationColor)

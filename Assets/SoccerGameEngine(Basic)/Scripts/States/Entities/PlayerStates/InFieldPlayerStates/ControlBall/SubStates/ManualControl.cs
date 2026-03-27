@@ -149,8 +149,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             Vector3 direction = Movement.sqrMagnitude <= 0.0001f ? Owner.transform.forward : Movement;
             bool canPassInDirection = ScanPassPreview(direction, false);
 
-            bool passPressed = Input.GetKeyDown(KeyCode.N)
-                || MobileControlsInput.ConsumePassPressed();
+            bool canUseKickInput = !Owner.IsKickInputBlocked();
+
+            bool passPressed = canUseKickInput
+                && (Input.GetKeyDown(KeyCode.N)
+                    || MobileControlsInput.ConsumePassPressed());
             if (passPressed)
             {
                 canPassInDirection = ScanPassPreview(direction, true);
@@ -163,7 +166,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                     SuperMachine.ChangeState<KickBallMainState>();
                 }
             }
-            else if (Input.GetKeyDown(KeyCode.L) || MobileControlsInput.ConsumeShootPressed())
+            else if (canUseKickInput && (Input.GetKeyDown(KeyCode.L) || MobileControlsInput.ConsumeShootPressed()))
             {
                 // check if I can score
                 bool canScore = Owner.CanScore(false, true);
