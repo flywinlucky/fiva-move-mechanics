@@ -214,6 +214,20 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [Range(0.1f, 5f)]
         float _speedMultiplier = 1f;
 
+        [Header("Movement Randomization")]
+        [SerializeField]
+        bool _useSpeedVariance = true;
+
+        [SerializeField]
+        [Range(0f, 0.5f)]
+        float _speedVariancePercent = 0.15f;
+
+        [SerializeField]
+        bool _applySpeedVarianceToUserControlled = true;
+
+        [SerializeField]
+        bool _rerollSpeedVarianceOnInit = true;
+
         [SerializeField]
         [Range(1f, 40f)]
         float _sprintRampUpSpeed = 10f;
@@ -241,6 +255,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _aiNextSprintDecisionTime;
         float _configuredBasePower;
         float _configuredBaseSpeed;
+        float _speedVarianceMultiplier = 1f;
         float _appliedSprintMultiplier = 1f;
         bool _isSprinting;
         int _lastSprintApplyFrame = -1;
@@ -323,6 +338,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _staminaRegenBlockedUntil = 0f;
             _isSprinting = false;
 
+            ReRollMovementSpeedVariance();
+
             SyncRotationSpeedToMovement();
 
             // keep preview icon hidden until a valid manual pass target is selected
@@ -336,6 +353,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _sprintRampUpSpeed = Mathf.Max(1f, _sprintRampUpSpeed);
             _sprintRampDownSpeed = Mathf.Max(1f, _sprintRampDownSpeed);
             _withBallSpeedMultiplier = Mathf.Clamp(_withBallSpeedMultiplier, 0.85f, 0.95f);
+            _speedVariancePercent = Mathf.Clamp(_speedVariancePercent, 0f, 0.5f);
 
             if (!Application.isPlaying || _rpgMovement == null)
                 return;
@@ -356,6 +374,28 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             _rotationSpeed = Mathf.Max(0.1f, _rotationSpeed);
             _rpgMovement.RotationSpeed = _rotationSpeed;
+        }
+
+        float ResolveActiveSpeedVarianceMultiplier()
+        {
+            if (!_useSpeedVariance)
+                return 1f;
+
+            if (!_applySpeedVarianceToUserControlled && _isUserControlled)
+                return 1f;
+
+            return Mathf.Max(0.1f, _speedVarianceMultiplier);
+        }
+
+        float ResolveConfiguredSpeedWithVariance(float baseSpeed)
+        {
+            return Mathf.Max(0.1f, baseSpeed * ResolveActiveSpeedVarianceMultiplier());
+        }
+
+        public void ReRollMovementSpeedVariance()
+        {
+            float variance = Mathf.Clamp(_speedVariancePercent, 0f, 0.5f);
+            _speedVarianceMultiplier = 1f + Random.Range(-variance, variance);
         }
 
         void SyncSpeedToMovement(float baseSpeedMultiplier = 1f, bool snapToTargetSprintMultiplier = false)
@@ -1118,6 +1158,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         /// </summary>
         public void Init()
         {
+            if (_rerollSpeedVarianceOnInit)
+                ReRollMovementSpeedVariance();
+
             if (_configuredBasePower <= 0.001f)
                 _configuredBasePower = Mathf.Max(0.1f, ActualPower);
 
@@ -1125,7 +1168,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 _configuredBaseSpeed = Mathf.Max(0.1f, ActualSpeed);
 
             ActualPower = _configuredBasePower * _power;
-            ActualSpeed = _configuredBaseSpeed * SpeedMultiplier;
+            ActualSpeed = ResolveConfiguredSpeedWithVariance(_configuredBaseSpeed) * SpeedMultiplier;
 
             SyncRotationSpeedToMovement();
             SyncSpeedToMovement();
@@ -1155,6 +1198,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
            float power,
            float speed)
         {
+            if (_rerollSpeedVarianceOnInit)
+                ReRollMovementSpeedVariance();
+
             _distancePassMax = distancePassMax;
             _distancePassMin = distancePassMin;
             _distanceShotMaxValid = distanceShotValidMax;
@@ -1169,7 +1215,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _configuredBaseSpeed = Mathf.Max(0.1f, speed);
             _configuredBasePower = Mathf.Max(0.1f, power);
 
-            ActualSpeed = _configuredBaseSpeed;
+            ActualSpeed = ResolveConfiguredSpeedWithVariance(_configuredBaseSpeed);
             ActualPower = _configuredBasePower;
         }
 
@@ -1698,7 +1744,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 if (_configuredBaseSpeed <= 0.001f)
                     return;
 
-                ActualSpeed = _configuredBaseSpeed * _speedMultiplier;
+                ActualSpeed = ResolveConfiguredSpeedWithVariance(_configuredBaseSpeed) * _speedMultiplier;
                 if (_rpgMovement != null)
                     SyncSpeedToMovement();
             }

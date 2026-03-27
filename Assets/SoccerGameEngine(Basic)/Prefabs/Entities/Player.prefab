@@ -639,6 +639,10 @@ MonoBehaviour:
   _playerAnimationManager: {fileID: 3198421749626700802}
   UiPlayerName: 
   _speedMultiplier: 5
+  _useSpeedVariance: 1
+  _speedVariancePercent: 0.2
+  _applySpeedVarianceToUserControlled: 1
+  _rerollSpeedVarianceOnInit: 1
   _sprintRampUpSpeed: 10
   _sprintRampDownSpeed: 14
   _withBallSpeedMultiplier: 0.9
@@ -722,37 +726,10 @@ MonoBehaviour:
   movement: {fileID: 8791604249906945687}
   runParameterName: run
   runDampTime: 0.12
-  useRunResponseCurve: 1
-  runResponseCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 2
-      outSlope: 2
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
   stopSpeedThreshold: 0.691
   runBlendIdleValue: 0
   runBlendNormalValue: 0.22
-  runBlendFastValue: 0.35
   runBlendSprintValue: 0.44
-  fastRunPivotNormalized: 0.6
   withBallRunBlendMultiplier: 0.88
   fallbackRunSpeed: 19.9
   fallbackSprintMultiplier: 3.26
