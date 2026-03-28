@@ -18,6 +18,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [SerializeField]
         string _groundMaskName;
 
+        [SerializeField]
+        [Range(0f, 3f)]
+        float _ownerRecaptureBlockDuration = 1f;
+
         bool _isGrounded;
         float _rayCastDistance;
         int _groundMask;
@@ -38,7 +42,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             get => _owner;
             set
             {
+                Player previousOwner = _owner;
                 _owner = value;
+
+                // Prevent ping-pong possession: previous owner cannot instantly retake after losing the ball.
+                if (previousOwner != null && previousOwner != value)
+                {
+                    previousOwner.BallRecoveryBlockedUntil = Mathf.Max(
+                        previousOwner.BallRecoveryBlockedUntil,
+                        Time.time + Mathf.Max(0f, _ownerRecaptureBlockDuration));
+                }
+
                 //if (_iconBallControlled != null)
                     //_iconBallControlled.SetActive(_owner == null);
             }

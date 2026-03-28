@@ -1266,6 +1266,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public bool IsBallWithinControlableDistance()
         {
+            if (Ball.Instance == null)
+                return false;
+
+            if (Ball.Instance.Owner != this && Time.time < BallRecoveryBlockedUntil)
+                return false;
+
             return IsWithinDistance(Position, Ball.Instance.NormalizedPosition, _ballContrallableDistance + Radius);
         }
 
@@ -1785,6 +1791,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             get => Mathf.Max(0.1f, _goalKeeperMovementRadiusSlowdown);
             set => _goalKeeperMovementRadiusSlowdown = Mathf.Max(0.1f, value);
         }
+        public float BallRecoveryBlockedUntil { get; set; }
         public float GoalKeeperPickupBlockedUntil { get; set; }
         public float GoalKeeperPassPowerMultiplier
         {
