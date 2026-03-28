@@ -6,6 +6,30 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 {
     public class Ball : Singleton<Ball>
     {
+    [Header("Air FX")]
+    [SerializeField]
+    TrailRenderer _ballTrailRenderer;
+
+    [SerializeField]
+    ParticleSystem[] _ballAirParticles;
+
+    [SerializeField]
+    [Range(0f, 20f)]
+    float _airFxMinSpeed = 4.5f;
+
+    [SerializeField]
+    [Range(0f, 2f)]
+    float _airFxMinHeight = 0.2f;
+
+    [SerializeField]
+    bool _clearTrailWhenDisabled = true;
+
+    [SerializeField]
+    bool _clearParticlesWhenDisabled = true;
+
+    [SerializeField]
+    bool _alwaysEnableTrailWhileBallIsFree = true;
+
         [SerializeField]
         public Transform ball_model_position;
 
@@ -168,6 +192,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         Transform _ballModelTransform;
         Vector3 _previousVisualPosition;
         bool _hasPreviousVisualPosition;
+        bool _isTrailFxActive;
+        bool _isParticlesFxActive;
+        bool _forceTrailUntilControlled;
 
         public float LastKickLaunchSpeed { get; private set; }
 
@@ -195,6 +222,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                         Time.time + Mathf.Max(0f, _ownerRecaptureBlockDuration));
                 }
 
+                // Trail/air FX should stop once ball is controlled at player's feet.
+                if (_owner != null)
+                {
+                    _forceTrailUntilControlled = false;
+                    SetTrailFxActive(false, false);
+                    SetAirParticlesActive(false, false);
+                }
+
                 //if (_iconBallControlled != null)
                     //_iconBallControlled.SetActive(_owner == null);
             }
@@ -213,6 +248,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             EnsurePhysicsComponents();
             ResolveBallModel();
+            ResolveAirFxReferences();
+            SetTrailFxActive(false, true);
+            SetAirParticlesActive(false, true);
 
             //init some variables
             //if (_iconBallControlled != null)
@@ -258,6 +296,88 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         private void LateUpdate()
         {
             UpdateBallVisualRotation(Time.deltaTime);
+            UpdateAirFx();
+        }
+
+        void ResolveAirFxReferences()
+        {
+            if (_ballTrailRenderer == null)
+                _ballTrailRenderer = GetComponent<TrailRenderer>();
+        }
+
+        void UpdateAirFx()
+        {
+            if (Rigidbody == null)
+                return;
+
+            bool isControlled = Owner != null;
+            float speed = Rigidbody.velocity.magnitude;
+            float height = HeightAbovePitch;
+
+            if (isControlled)
+            {
+                _forceTrailUntilControlled = false;
+                SetTrailFxActive(false, false);
+                SetAirParticlesActive(false, false);
+                return;
+            }
+
+            bool shouldEnableTrail = _alwaysEnableTrailWhileBallIsFree
+                || _forceTrailUntilControlled
+                || speed > 0.05f;
+
+            bool shouldEnableParticles = !_isGrounded
+                && speed >= Mathf.Max(0f, _airFxMinSpeed)
+                && height >= Mathf.Max(0f, _airFxMinHeight);
+
+            SetTrailFxActive(shouldEnableTrail, false);
+            SetAirParticlesActive(shouldEnableParticles, false);
+        }
+
+        void SetTrailFxActive(bool active, bool force)
+        {
+            if (!force && _isTrailFxActive == active)
+                return;
+
+            _isTrailFxActive = active;
+
+            if (_ballTrailRenderer != null)
+            {
+                _ballTrailRenderer.emitting = active;
+                if (!active && _clearTrailWhenDisabled)
+                    _ballTrailRenderer.Clear();
+            }
+        }
+
+        void SetAirParticlesActive(bool active, bool force)
+        {
+            if (!force && _isParticlesFxActive == active)
+                return;
+
+            _isParticlesFxActive = active;
+
+            if (_ballAirParticles == null)
+                return;
+
+            for (int i = 0; i < _ballAirParticles.Length; i++)
+            {
+                ParticleSystem system = _ballAirParticles[i];
+                if (system == null)
+                    continue;
+
+                if (active)
+                {
+                    if (!system.isPlaying)
+                        system.Play();
+                }
+                else
+                {
+                    if (_clearParticlesWhenDisabled)
+                        system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    else
+                        system.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                }
+            }
         }
 
         void ResolveBallModel()
@@ -422,6 +542,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             Rigidbody.velocity = velocity;
             LastKickLaunchSpeed = velocity.magnitude;
             _ignoreFrictionUntilTime = Time.time + Mathf.Max(0f, _postKickFrictionDelay);
+            _forceTrailUntilControlled = true;
+            SetTrailFxActive(true, false);
 
             //invoke the ball launched event
             BallLaunched temp = OnBallLaunched;
@@ -519,6 +641,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             Rigidbody.velocity = velocity;
             LastKickLaunchSpeed = velocity.magnitude;
             _ignoreFrictionUntilTime = Time.time + Mathf.Max(0f, _postKickFrictionDelay);
+            _forceTrailUntilControlled = true;
+            SetTrailFxActive(true, false);
 
             //invoke the ball launched event
             BallLaunched temp = OnBallLaunched;
@@ -531,6 +655,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             Rigidbody.angularVelocity = Vector3.zero;
             Rigidbody.velocity = Vector3.zero;
             _hasPreviousVisualPosition = false;
+            _forceTrailUntilControlled = false;
+            SetTrailFxActive(false, false);
+            SetAirParticlesActive(false, false);
         }
 
         public float HeightAbovePitch => Mathf.Max(0f, Position.y);
@@ -615,6 +742,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _powerBoostDistanceMax = Mathf.Max(_powerBoostDistanceStart + 0.1f, _powerBoostDistanceMax);
             _maxDistancePowerBoost = Mathf.Max(0f, _maxDistancePowerBoost);
             _postKickFrictionDelay = Mathf.Clamp(_postKickFrictionDelay, 0f, 0.5f);
+            _airFxMinSpeed = Mathf.Max(0f, _airFxMinSpeed);
+            _airFxMinHeight = Mathf.Max(0f, _airFxMinHeight);
 
             if (_distanceLiftCurve == null || _distanceLiftCurve.length == 0)
             {
@@ -652,6 +781,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 _ballModelTransform = ball_model.transform;
             else if (ball_model_position != null)
                 _ballModelTransform = ball_model_position;
+
+            ResolveAirFxReferences();
         }
     }
 }
