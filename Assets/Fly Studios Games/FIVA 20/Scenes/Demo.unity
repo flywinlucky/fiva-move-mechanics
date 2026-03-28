@@ -1454,6 +1454,8 @@ MonoBehaviour:
   passButton: {fileID: 2050966121}
   sprintButton: {fileID: 2018473878}
   JoystickArea: {fileID: 1576243919}
+  autoToggleShotButton: 1
+  refreshInterval: 0.12
 --- !u!1 &360501271
 GameObject:
   m_ObjectHideFlags: 0
@@ -6271,7 +6273,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 45
+  field of view: 42
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -6321,7 +6323,7 @@ MonoBehaviour:
   _followBallOwnerWhenControlled: 1
   _captureOffsetOnStart: 1
   _followOffset: {x: 0, y: 0, z: 0}
-  _smoothTime: 0.2
+  _smoothTime: 0.3
   _maxFollowSpeed: 100
   _keepInitialY: 1
   _minX: -45
@@ -10897,7 +10899,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 22473068, guid: 1a5154ebeae449e4994357609381b281, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 163.7827
+      value: 163.78273
       objectReference: {fileID: 0}
     - target: {fileID: 22473068, guid: 1a5154ebeae449e4994357609381b281, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

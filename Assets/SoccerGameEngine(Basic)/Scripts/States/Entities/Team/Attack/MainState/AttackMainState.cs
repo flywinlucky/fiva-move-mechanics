@@ -16,8 +16,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
     /// </summary>
     public class AttackMainState : BState
     {
-        const float LooseBallSwitchCooldown = 1f;
-
         float _lengthPitch = 90;
         TeamPlayer _closestPlayerToLooseBall;
         float _nextClosestPlayerSwitchTime;
@@ -30,6 +28,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
 
             if (currClosestPlayerToPoint != _closestPlayerToLooseBall)
             {
+                bool shouldSwitch = Owner.ShouldSwitchClosestPlayer(_closestPlayerToLooseBall,
+                    currClosestPlayerToPoint,
+                    Ball.Instance.NormalizedPosition);
+                if (!shouldSwitch)
+                    return;
+
                 bool hasCurrentChaser = _closestPlayerToLooseBall != null && _closestPlayerToLooseBall.Player != null;
                 if (hasCurrentChaser && Time.time < _nextClosestPlayerSwitchTime)
                     return;
@@ -39,7 +43,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
 
                 _closestPlayerToLooseBall = currClosestPlayerToPoint;
                 _closestPlayerToLooseBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
-                _nextClosestPlayerSwitchTime = Time.time + LooseBallSwitchCooldown;
+                _nextClosestPlayerSwitchTime = Time.time + Owner.ClosestPlayerSwitchCooldownSeconds;
             }
             else if (_closestPlayerToLooseBall.Player.InFieldPlayerFSM.IsCurrentState<ChaseBallMainState>() == false)
             {

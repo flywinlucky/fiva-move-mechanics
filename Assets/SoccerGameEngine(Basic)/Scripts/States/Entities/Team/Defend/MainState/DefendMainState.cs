@@ -18,8 +18,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
     /// </summary>
     public class DefendMainState : BState
     {
-        const float ClosestPlayerSwitchCooldown = 1f;
-
         float _lengthPitch = 90;
         TeamPlayer _closestPlayerToBall;
         bool _isHoldingShapeAgainstGoalkeeper;
@@ -49,6 +47,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
             //update new player to attack ball
             if(currClosestPlayerToPoint != _closestPlayerToBall)
             {
+                bool shouldSwitch = Owner.ShouldSwitchClosestPlayer(_closestPlayerToBall,
+                    currClosestPlayerToPoint,
+                    target);
+                if (!shouldSwitch)
+                    return;
+
                 bool hasCurrentChaser = _closestPlayerToBall != null && _closestPlayerToBall.Player != null;
                 if (hasCurrentChaser && Time.time < _nextClosestPlayerSwitchTime)
                     return;
@@ -62,7 +66,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
 
                 // raise the new player to say he is now the new closest player to ball
                 _closestPlayerToBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
-                _nextClosestPlayerSwitchTime = Time.time + ClosestPlayerSwitchCooldown;
+                _nextClosestPlayerSwitchTime = Time.time + Owner.ClosestPlayerSwitchCooldownSeconds;
             }
         }
 
@@ -82,6 +86,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
             //update new player to attack ball
             if (currClosestPlayerToPoint != _closestPlayerToBall)
             {
+                bool shouldSwitch = Owner.ShouldSwitchClosestPlayer(_closestPlayerToBall,
+                    currClosestPlayerToPoint,
+                    Ball.Instance.NormalizedPosition);
+                if (!shouldSwitch)
+                    return;
+
                 bool hasCurrentChaser = _closestPlayerToBall != null && _closestPlayerToBall.Player != null;
                 if (hasCurrentChaser && Time.time < _nextClosestPlayerSwitchTime)
                     return;
@@ -95,7 +105,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
 
                 // raise the new player to say he is now the new closest player to ball
                 _closestPlayerToBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
-                _nextClosestPlayerSwitchTime = Time.time + ClosestPlayerSwitchCooldown;
+                _nextClosestPlayerSwitchTime = Time.time + Owner.ClosestPlayerSwitchCooldownSeconds;
             }
             else if(currClosestPlayerToPoint != null 
                 && currClosestPlayerToPoint.Player.InFieldPlayerFSM.IsCurrentState<ChaseBallMainState>() == false)
@@ -163,6 +173,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
         public override void Exit()
         {
             base.Exit();
+
+            CancelCurrentChaser();
 
             _isHoldingShapeAgainstGoalkeeper = false;
 

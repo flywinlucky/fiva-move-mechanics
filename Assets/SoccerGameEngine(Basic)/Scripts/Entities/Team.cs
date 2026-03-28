@@ -15,8 +15,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
     [RequireComponent(typeof(TeamFSM))]
     public class Team : MonoBehaviour
     {
-        const float ClosestPlayerSwitchCooldown = 1f;
-
         [Header("Control Variables")]
 
         [SerializeField]
@@ -57,6 +55,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         [SerializeField]
         float _speed = 3.5f;
+
+        [Header("Closest Player Switch")]
+        [SerializeField]
+        [Range(0f, 2f)]
+        float _closestPlayerSwitchCooldown = 1f;
+
+        [SerializeField]
+        [Range(0f, 2f)]
+        float _closestPlayerSwitchMinDistanceGain = 0.35f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        float _closestPlayerTieEpsilon = 0.12f;
 
         [Header("Entities")]
         [SerializeField]
@@ -212,8 +223,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 && tm.Player != null
                 && tm.Player.PlayerType == PlayerTypes.InFieldPlayer
                 && tm.Player.InFieldPlayerFSM.IsCurrentState<TackledMainState>() == false)
-                .OrderBy(tm => Vector3.Distance(tm.Player.Position,
-                position))
+                .OrderBy(tm => (tm.Player.Position - position).sqrMagnitude)
+                .ThenBy(tm => tm.Player.GetInstanceID())
                 .FirstOrDefault();
 
             if (player == null)
@@ -222,8 +233,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                     .Where(tm => tm != null
                     && tm.Player != null
                     && tm.Player.PlayerType == PlayerTypes.InFieldPlayer)
-                    .OrderBy(tm => Vector3.Distance(tm.Player.Position,
-                    position))
+                    .OrderBy(tm => (tm.Player.Position - position).sqrMagnitude)
+                    .ThenBy(tm => tm.Player.GetInstanceID())
                     .FirstOrDefault();
             }
 
@@ -231,14 +242,54 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             {
                 player = Players
                     .Where(tm => tm != null && tm.Player != null)
-                    .OrderBy(tm => Vector3.Distance(tm.Player.Position,
-                    position))
+                    .OrderBy(tm => (tm.Player.Position - position).sqrMagnitude)
+                    .ThenBy(tm => tm.Player.GetInstanceID())
                     .FirstOrDefault();
             }
 
             // return player
             return player;
         }
+
+        public TeamPlayer GetTeamPlayer(Player player)
+        {
+            if (player == null)
+                return null;
+
+            return Players.FirstOrDefault(tm => tm != null && tm.Player == player);
+        }
+
+        public bool ShouldSwitchClosestPlayer(TeamPlayer current, TeamPlayer candidate, Vector3 position)
+        {
+            if (candidate == null || candidate.Player == null)
+                return false;
+
+            if (current == null || current.Player == null)
+                return true;
+
+            if (current == candidate)
+                return false;
+
+            float currentSqr = (current.Player.Position - position).sqrMagnitude;
+            float candidateSqr = (candidate.Player.Position - position).sqrMagnitude;
+
+            // Only switch if the new candidate is meaningfully closer.
+            float requiredGain = Mathf.Max(0f, _closestPlayerSwitchMinDistanceGain);
+            float requiredGainSqr = requiredGain * requiredGain;
+
+            if (candidateSqr + requiredGainSqr < currentSqr)
+                return true;
+
+            // For near ties, keep current to avoid flickering control.
+            float tieEpsilon = Mathf.Max(0f, _closestPlayerTieEpsilon);
+            float tieEpsilonSqr = tieEpsilon * tieEpsilon;
+            if (Mathf.Abs(candidateSqr - currentSqr) <= tieEpsilonSqr)
+                return false;
+
+            return candidateSqr < currentSqr;
+        }
+
+        public float ClosestPlayerSwitchCooldownSeconds => Mathf.Max(0f, _closestPlayerSwitchCooldown);
 
         public Formation Formation
         {
@@ -321,6 +372,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             if(chasingPlayer != currClosestPlayerToPoint.Player)
             {
+                TeamPlayer currentChaser = GetTeamPlayer(chasingPlayer);
+                bool shouldSwitch = ShouldSwitchClosestPlayer(currentChaser,
+                    currClosestPlayerToPoint,
+                    Ball.Instance.NormalizedPosition);
+
+                if (!shouldSwitch)
+                    return;
+
                 if (Time.time < _nextClosestPlayerSwitchTime)
                     return;
 
@@ -329,7 +388,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
                 // make the current closet player chase the ball
                 currClosestPlayerToPoint.Player.Invoke_OnBecameTheClosestPlayerToBall();
-                _nextClosestPlayerSwitchTime = Time.time + ClosestPlayerSwitchCooldown;
+                _nextClosestPlayerSwitchTime = Time.time + ClosestPlayerSwitchCooldownSeconds;
 
             }
         }
