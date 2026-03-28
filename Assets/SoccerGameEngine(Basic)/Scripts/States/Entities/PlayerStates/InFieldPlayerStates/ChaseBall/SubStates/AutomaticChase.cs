@@ -99,6 +99,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             base.Execute();
 
+            if (Owner.IsUserControlled)
+            {
+                Machine.ChangeState<ManualChase>();
+                return;
+            }
+
             _difficultyProfile = GetDifficultyProfile();
 
             Player ballOwner = Ball.Instance.Owner;

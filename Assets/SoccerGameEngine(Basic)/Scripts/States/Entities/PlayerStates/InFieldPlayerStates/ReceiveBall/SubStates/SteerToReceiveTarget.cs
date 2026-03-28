@@ -30,6 +30,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         public override void Execute()
         {
             base.Execute();
+
+            // Keep steering target fresh so receiver can adapt to the ball's current flight.
+            Owner.RPGMovement.SetMoveTarget(SteeringTarget);
+            Owner.RPGMovement.SetRotateFacePosition(SteeringTarget);
            
             //check if now at target and switch to wait for ball
             if (Owner.IsAtTarget(SteeringTarget))

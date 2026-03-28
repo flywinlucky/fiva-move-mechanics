@@ -12462,8 +12462,43 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7073706793633987281, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
         type: 3}
+      propertyPath: _maxLiftVelocity
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987281, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: _minLiftVelocity
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987281, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
       propertyPath: _ownerRecaptureBlockDuration
       value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987281, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: _distanceLiftCurve.m_Curve.Array.data[2].time
+      value: 1.1166687
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987281, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: _distanceLiftCurve.m_Curve.Array.data[2].value
+      value: 0.8514137
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987281, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: _distancePowerBoostCurve.m_Curve.Array.data[2].time
+      value: 1.125
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987281, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: _distancePowerBoostCurve.m_Curve.Array.data[2].value
+      value: 0.82783127
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987283, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: m_Mass
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7073706793633987283, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
         type: 3}

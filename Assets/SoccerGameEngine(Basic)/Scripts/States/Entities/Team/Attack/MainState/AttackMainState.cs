@@ -42,11 +42,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.Mai
                     _closestPlayerToLooseBall.Player.Invoke_OnIsNoLongerTheClosestPlayerToBall();
 
                 _closestPlayerToLooseBall = currClosestPlayerToPoint;
+                if (Owner.IsUserControlled)
+                    Owner.ControllingPlayer = _closestPlayerToLooseBall.Player;
                 _closestPlayerToLooseBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
                 _nextClosestPlayerSwitchTime = Time.time + Owner.ClosestPlayerSwitchCooldownSeconds;
             }
-            else if (_closestPlayerToLooseBall.Player.InFieldPlayerFSM.IsCurrentState<ChaseBallMainState>() == false)
+            else if (_closestPlayerToLooseBall.Player.InFieldPlayerFSM == null
+                || _closestPlayerToLooseBall.Player.InFieldPlayerFSM.CurrentState == null
+                || _closestPlayerToLooseBall.Player.InFieldPlayerFSM.IsCurrentState<ChaseBallMainState>() == false)
             {
+                if (Owner.IsUserControlled)
+                    Owner.ControllingPlayer = _closestPlayerToLooseBall.Player;
                 _closestPlayerToLooseBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
             }
         }

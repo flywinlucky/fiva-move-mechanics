@@ -104,15 +104,23 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Defend.Mai
                 _closestPlayerToBall = currClosestPlayerToPoint;
 
                 // raise the new player to say he is now the new closest player to ball
+                if (Owner.IsUserControlled)
+                    Owner.ControllingPlayer = _closestPlayerToBall.Player;
                 _closestPlayerToBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
                 _nextClosestPlayerSwitchTime = Time.time + Owner.ClosestPlayerSwitchCooldownSeconds;
             }
             else if(currClosestPlayerToPoint != null 
-                && currClosestPlayerToPoint.Player.InFieldPlayerFSM.IsCurrentState<ChaseBallMainState>() == false)
+                && (currClosestPlayerToPoint.Player.InFieldPlayerFSM == null
+                    || currClosestPlayerToPoint.Player.InFieldPlayerFSM.CurrentState == null
+                    || currClosestPlayerToPoint.Player.InFieldPlayerFSM.IsCurrentState<ChaseBallMainState>() == false))
             {
                 // raise the new player to say he is now the new closest player to ball
                 if (_closestPlayerToBall != null && _closestPlayerToBall.Player != null)
+                {
+                    if (Owner.IsUserControlled)
+                        Owner.ControllingPlayer = _closestPlayerToBall.Player;
                     _closestPlayerToBall.Player.Invoke_OnBecameTheClosestPlayerToBall();
+                }
             }
         }
 

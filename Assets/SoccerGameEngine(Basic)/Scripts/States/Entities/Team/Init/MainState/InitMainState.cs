@@ -187,7 +187,26 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Init.MainS
 
         public void SetPlayerControl()
         {
-            Owner.Players.ForEach(tM => tM.Player.IsUserControlled = Owner.IsUserControlled);
+            Owner.Players.ForEach(tM =>
+            {
+                if (tM != null && tM.Player != null)
+                    tM.Player.IsUserControlled = false;
+            });
+
+            if (!Owner.IsUserControlled)
+            {
+                Owner.ControllingPlayer = null;
+                return;
+            }
+
+            Vector3 referencePoint = Ball.Instance != null ? Ball.Instance.NormalizedPosition : Owner.transform.position;
+            TeamPlayer initialControllingPlayer = Owner.GetClosestPlayerToPoint(referencePoint);
+            if (initialControllingPlayer == null || initialControllingPlayer.Player == null)
+            {
+                initialControllingPlayer = Owner.Players.FirstOrDefault(tM => tM != null && tM.Player != null);
+            }
+
+            Owner.ControllingPlayer = initialControllingPlayer != null ? initialControllingPlayer.Player : null;
         }
 
         private void Instance_OnMessagedSwitchToTakeKickOff()

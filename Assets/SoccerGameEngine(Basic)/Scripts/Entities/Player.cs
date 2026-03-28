@@ -166,6 +166,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _ballContrallableDistance = 1f;
 
         [SerializeField]
+        [Range(0.2f, 3f)]
+        float _maxBallControlHeight = 1.15f;
+
+        [SerializeField]
         float _ballTacklableDistance = 3f;
 
         [SerializeField]
@@ -285,6 +289,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public delegate void ControlBallDel(Player player);
         public delegate void InstructedToReceiveBall(float time, Vector3 position);
 
+        public enum KickCommandSource
+        {
+            None,
+            Manual,
+            Automatic
+        }
+
         public BallLaunched OnShotTaken;
         public ChaseBallDel OnChaseBall;
         public ControlBallDel OnControlBall;
@@ -293,7 +304,23 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [SerializeField]
         public bool IsTeamInControl;// { get; set; }
 
-        public bool IsUserControlled { get => _isUserControlled; set => _isUserControlled = value; }
+        public bool IsUserControlled
+        {
+            get => _isUserControlled;
+            set
+            {
+                if (_isUserControlled == value)
+                    return;
+
+                _isUserControlled = value;
+
+                // Control hand-off should never carry stale kick intents.
+                ClearPendingKickCommand();
+
+                if (_isUserControlled)
+                    BlockKickInputOnReceive();
+            }
+        }
 
         public float ActualAccuracy { get; set; }
 
@@ -366,6 +393,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _speedVariancePercent = Mathf.Clamp(_speedVariancePercent, 0f, 0.5f);
             _kickInputCooldownAfterKick = Mathf.Clamp(_kickInputCooldownAfterKick, 0f, 1f);
             _kickInputCooldownOnReceive = Mathf.Clamp(_kickInputCooldownOnReceive, 0f, 1f);
+            _maxBallControlHeight = Mathf.Clamp(_maxBallControlHeight, 0.2f, 3f);
 
             if (!Application.isPlaying || _rpgMovement == null)
                 return;
@@ -431,6 +459,30 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public bool IsKickInputBlocked()
         {
             return Time.time < _kickInputBlockedUntil;
+        }
+
+        public KickCommandSource PendingKickSource { get; private set; }
+
+        public void MarkManualKickCommand(KickType kickType)
+        {
+            KickType = kickType;
+            PendingKickSource = KickCommandSource.Manual;
+        }
+
+        public void MarkAutomaticKickCommand(KickType kickType)
+        {
+            KickType = kickType;
+            PendingKickSource = KickCommandSource.Automatic;
+        }
+
+        public void ClearPendingKickCommand()
+        {
+            PendingKickSource = KickCommandSource.None;
+            KickTarget = null;
+            PassReceiver = null;
+            KickPower = 0f;
+            BallTime = 0f;
+            KickTime = 0f;
         }
 
         void SyncSpeedToMovement(float baseSpeedMultiplier = 1f, bool snapToTargetSprintMultiplier = false)
@@ -1272,6 +1324,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             if (Ball.Instance.Owner != this && Time.time < BallRecoveryBlockedUntil)
                 return false;
 
+            float ballHeightRelativeToPlayer = Ball.Instance.Position.y - transform.position.y;
+            if (ballHeightRelativeToPlayer > _maxBallControlHeight)
+                return false;
+
             return IsWithinDistance(Position, Ball.Instance.NormalizedPosition, _ballContrallableDistance + Radius);
         }
 
@@ -1499,9 +1555,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             Ball.Instance.Kick(to, finalPower);
 
             float receiveTime = time;
+            float effectiveLaunchSpeed = Mathf.Max(0.1f,
+                Ball.Instance.LastKickLaunchSpeed > 0f ? Ball.Instance.LastKickLaunchSpeed : finalPower);
             float recalculatedTime = Ball.Instance.TimeToCoverDistance(Ball.Instance.NormalizedPosition,
                 to,
-                Mathf.Max(0.1f, finalPower),
+                effectiveLaunchSpeed,
                 true);
 
             if (!float.IsNaN(recalculatedTime)

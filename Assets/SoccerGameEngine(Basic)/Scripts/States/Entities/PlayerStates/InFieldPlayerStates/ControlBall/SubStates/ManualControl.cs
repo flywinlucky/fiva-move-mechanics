@@ -119,6 +119,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             base.Execute();
 
+            if (!Owner.IsUserControlled)
+            {
+                Owner.ClearPendingKickCommand();
+                Machine.ChangeState<AutomaticControl>();
+                return;
+            }
+
             //capture input
             Vector2 movementAxes = GetMovementInputAxes();
             float horizontalRot = movementAxes.x;
@@ -162,7 +169,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 if(canPassInDirection)
                 {
                     //go to kick-ball state
-                    Owner.KickType = KickType.Pass;
+                    Owner.MarkManualKickCommand(KickType.Pass);
                     SuperMachine.ChangeState<KickBallMainState>();
                 }
             }
@@ -175,7 +182,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 if (canScore)
                 {
                     //go to kick-ball state
-                    Owner.KickType = KickType.Shot;
+                    Owner.MarkManualKickCommand(KickType.Shot);
                     SuperMachine.ChangeState<KickBallMainState>();
                 }
                 else
@@ -188,7 +195,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                     if (canScore)
                     {
                         //go to kick-ball state
-                        Owner.KickType = KickType.Shot;
+                        Owner.MarkManualKickCommand(KickType.Shot);
                         SuperMachine.ChangeState<KickBallMainState>();
                     }
                 }

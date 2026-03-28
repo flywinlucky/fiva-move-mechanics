@@ -17,7 +17,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4640927210040920188
 Transform:
   m_ObjectHideFlags: 0
@@ -272,11 +272,173 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b53fa4f8b79ea940b40b5207d629f9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ball_model_position: {fileID: 7493656998535874076}
+  ball_model: {fileID: 7493656998536174140}
   _friction: 0
   _gravity: 9.11
   _iconBallControlled: {fileID: 3878464925130267037}
   _groundMaskName: 
   _ownerRecaptureBlockDuration: 1
+  _autoFindBallModel: 1
+  _visualRollSpeedMultiplier: 1
+  _minRollSpeed: 0.05
+  _airSpinMultiplier: 0.25
+  _maxVisualRollDegreesPerSecond: 1440
+  _useCasualFlight: 1
+  _groundPassMaxDistance: 9
+  _liftDistanceStart: 10
+  _liftDistanceMax: 45
+  _liftPowerStart: 8
+  _liftPowerMax: 28
+  _useBallisticKickForLongDistance: 1
+  _ballisticKickDistanceStart: 16
+  _autoPowerByDistance: 1
+  _powerBoostDistanceStart: 14
+  _powerBoostDistanceMax: 50
+  _maxDistancePowerBoost: 10
+  _distancePowerBoostCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 0.45
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _minLiftVelocity: 1.2
+  _maxLiftVelocity: 8.5
+  _distanceLiftCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 0.55
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _useAdaptiveFlightProfiles: 1
+  _drivenLiftMultiplier: 0.7
+  _lobLiftMultiplier: 1.15
+  _distanceWeightForLob: 0.65
+  _drivenDistanceLiftCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 0.35
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0.7
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _lobDistanceLiftCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 0.75
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _autoConfigureRigidbody: 1
+  _forceContinuousCollision: 1
+  _forceInterpolate: 1
+  _forceUseGravity: 1
+  _postKickFrictionDelay: 0.12
 --- !u!1 &7493656998536174140
 GameObject:
   m_ObjectHideFlags: 0

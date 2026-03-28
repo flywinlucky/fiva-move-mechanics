@@ -98,7 +98,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public IFSM FSM { get; set; }
 
-        public Player ControllingPlayer { get; set; }
+        Player _controllingPlayer;
+        public Player ControllingPlayer
+        {
+            get => _controllingPlayer;
+            set
+            {
+                _controllingPlayer = IsTeamMember(value) ? value : null;
+                ApplySingleUserControlSelection(_controllingPlayer);
+            }
+        }
         public List<TeamPlayer> Players = new List<TeamPlayer>();
 
         public Action OnGainPossession;
@@ -222,7 +231,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 .Where(tm => tm != null
                 && tm.Player != null
                 && tm.Player.PlayerType == PlayerTypes.InFieldPlayer
-                && tm.Player.InFieldPlayerFSM.IsCurrentState<TackledMainState>() == false)
+                && (tm.Player.InFieldPlayerFSM == null
+                    || tm.Player.InFieldPlayerFSM.CurrentState == null
+                    || tm.Player.InFieldPlayerFSM.IsCurrentState<TackledMainState>() == false))
                 .OrderBy(tm => (tm.Player.Position - position).sqrMagnitude)
                 .ThenBy(tm => tm.Player.GetInstanceID())
                 .FirstOrDefault();
@@ -387,9 +398,35 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 chasingPlayer.Invoke_OnIsNoLongerTheClosestPlayerToBall();
 
                 // make the current closet player chase the ball
+                ControllingPlayer = currClosestPlayerToPoint.Player;
                 currClosestPlayerToPoint.Player.Invoke_OnBecameTheClosestPlayerToBall();
                 _nextClosestPlayerSwitchTime = Time.time + ClosestPlayerSwitchCooldownSeconds;
 
+            }
+        }
+
+        bool IsTeamMember(Player player)
+        {
+            if (player == null || Players == null)
+                return false;
+
+            return Players.Any(tm => tm != null && tm.Player == player);
+        }
+
+        void ApplySingleUserControlSelection(Player selected)
+        {
+            if (Players == null)
+                return;
+
+            bool hasSelected = selected != null;
+
+            foreach (TeamPlayer teamPlayer in Players)
+            {
+                if (teamPlayer == null || teamPlayer.Player == null)
+                    continue;
+
+                bool shouldBeUserControlled = _isUserControlled && hasSelected && teamPlayer.Player == selected;
+                teamPlayer.Player.IsUserControlled = shouldBeUserControlled;
             }
         }
     }

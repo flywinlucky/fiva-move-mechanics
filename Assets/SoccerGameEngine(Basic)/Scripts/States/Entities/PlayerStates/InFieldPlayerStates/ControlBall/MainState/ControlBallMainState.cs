@@ -40,6 +40,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             // Prevent immediate accidental re-pass when control changes player.
             Owner.BlockKickInputOnReceive();
+            Owner.ClearPendingKickCommand();
             MobileControlsInput.ClearQueuedTapActions();
 
             // raise event that I'm controlling the ball

@@ -36,6 +36,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             base.Execute();
 
+            if (Owner.IsUserControlled)
+            {
+                Owner.ClearPendingKickCommand();
+                Machine.ChangeState<ManualControl>();
+                return;
+            }
+
             bool isMoving = Owner.OppGoal != null
                 && (Owner.OppGoal.transform.position - Owner.Position).sqrMagnitude > 0.25f;
             bool wantsSprint = Owner.EvaluateAISprintIntent(isMoving, Owner.IsThreatened());
@@ -57,7 +64,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (Owner.CanScore())
             {
                 //go to kick-ball state
-                Owner.KickType = KickType.Shot;
+                Owner.MarkAutomaticKickCommand(KickType.Shot);
                 SuperMachine.ChangeState<KickBallMainState>();
             }
             else
@@ -72,7 +79,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
                     if (shouldTryLongShot && Owner.CanScore(false, false))
                     {
-                        Owner.KickType = KickType.Shot;
+                        Owner.MarkAutomaticKickCommand(KickType.Shot);
                         SuperMachine.ChangeState<KickBallMainState>();
                         return;
                     }
@@ -97,7 +104,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 if (canPass)
                 {
                     //go to kick-ball state
-                    Owner.KickType = KickType.Pass;
+                    Owner.MarkAutomaticKickCommand(KickType.Pass);
                     SuperMachine.ChangeState<KickBallMainState>();
                 }
 

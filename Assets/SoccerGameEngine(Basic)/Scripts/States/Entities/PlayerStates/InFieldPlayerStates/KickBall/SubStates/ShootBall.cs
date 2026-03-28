@@ -1,5 +1,6 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.ControlBall.MainState;
 using RobustFSM.Base;
 using UnityEngine;
 
@@ -13,6 +14,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         public override void Enter()
         {
             base.Enter();
+
+            bool requiresManualCommand = Owner.IsUserControlled;
+            bool hasMatchingKickCommand = requiresManualCommand
+                ? Owner.PendingKickSource == Player.KickCommandSource.Manual
+                : Owner.PendingKickSource == Player.KickCommandSource.Automatic;
+            if (!hasMatchingKickCommand)
+            {
+                Owner.ClearPendingKickCommand();
+                SuperMachine.ChangeState<ControlBallMainState>();
+                return;
+            }
 
             if (Owner.KickTarget == null)
             {
@@ -65,6 +77,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             Ball.Instance.Owner = null;
             Ball.Instance.Rigidbody.isKinematic = false;
+            Owner.ClearPendingKickCommand();
         }
 
         public Player Owner

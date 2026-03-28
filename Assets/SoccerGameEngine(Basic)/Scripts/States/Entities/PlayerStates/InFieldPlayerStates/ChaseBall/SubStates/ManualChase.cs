@@ -72,6 +72,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             base.Execute();
 
+            if (!Owner.IsUserControlled)
+            {
+                Machine.ChangeState<AutomaticChase>();
+                return;
+            }
+
             //check if ball is within control distance
             if (Ball.Instance.Owner != null
                 && Ball.Instance.Owner != Owner
