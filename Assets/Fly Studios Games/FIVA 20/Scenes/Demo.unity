@@ -3106,6 +3106,21 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 5469194417671837827, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 5469194417671837827, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 5469194417671837827, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 90
+      objectReference: {fileID: 0}
     - target: {fileID: 5470281424248256407, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -3761,6 +3776,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 7889979943447576374, guid: 93602d7634211b04f9088674182cf0c4,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 5c6b67cbb19c1f342ba20bc1f2e3bf41, type: 2}
     - target: {fileID: 7908403277352786548, guid: 93602d7634211b04f9088674182cf0c4,
         type: 3}
       propertyPath: m_Layer
@@ -7337,7 +7357,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   team_1: {fileID: 1860320940}
-  formation_team_1_Color: {r: 0, g: 0.6310749, b: 1, a: 1}
+  formation_team_1_Color: {r: 1, g: 1, b: 1, a: 1}
   team_1_materials:
     body: {fileID: 2100000, guid: 9d410b05e4762464d882db73377e3468, type: 2}
     boots: {fileID: 2100000, guid: 800c472907acd25448f4d66ade3377c4, type: 2}
@@ -12345,10 +12365,30 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 682725971}
     m_Modifications:
+    - target: {fileID: 3878464925130267037, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7073706793633987276, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
         type: 3}
       propertyPath: m_RootOrder
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987276, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987276, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987276, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.45
       objectReference: {fileID: 0}
     - target: {fileID: 7073706793633987276, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
         type: 3}
@@ -12419,6 +12459,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _groundMaskName
       value: Ground
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073706793633987281, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
+        type: 3}
+      propertyPath: _ownerRecaptureBlockDuration
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 7073706793633987283, guid: 08ccbf5a5f8669e44bea758ea3d2b698,
         type: 3}

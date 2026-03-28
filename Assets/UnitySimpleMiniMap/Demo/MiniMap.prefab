@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 921245202726023197}
   - component: {fileID: 921245202726023198}
   - component: {fileID: 921245202726023199}
+  - component: {fileID: 7027965763153576827}
   m_Layer: 5
   m_Name: MiniMap
   m_TagString: Untagged
@@ -74,6 +75,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 921245202726023186}
   m_CullTransparentMesh: 0
+--- !u!225 &7027965763153576827
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 921245202726023186}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &921245203039697192
 GameObject:
   m_ObjectHideFlags: 0
