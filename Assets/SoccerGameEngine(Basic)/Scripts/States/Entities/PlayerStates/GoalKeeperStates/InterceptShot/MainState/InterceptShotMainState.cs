@@ -26,6 +26,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public float  BallInitialVelocity { get; set; }
         public Vector3 BallInitialPosition { get; set; }
         public Vector3 ShotTarget { get; set; }
+        public bool ForceRebound { get; set; }
+        public float SaveQuality { get; set; }
 
         public override void Enter()
         {
@@ -105,8 +107,22 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             float catchChance = Owner.EvaluateGoalKeeperCatchChance(ballSpeed);
             bool isCaught = Owner.TryCatchBallAsGoalKeeper(ballSpeed);
 
+            if (SaveQuality > 0f)
+            {
+                float qualityBias = Mathf.Clamp(SaveQuality, 0.1f, 0.95f);
+                isCaught = Random.value <= qualityBias;
+            }
+
             if (isCaught)
             {
+                if (ForceRebound)
+                {
+                    TriggerRebound(ballSpeed);
+                    LogGoalKeeperDebug("Ball reached keeper control distance -> Parried rebound");
+                    Machine.ChangeState<TendGoalMainState>();
+                    return true;
+                }
+
                 LogGoalKeeperDebug("Ball reached keeper control distance -> Caught (chance: "
                     + catchChance.ToString("0.00") + ", speed: " + ballSpeed.ToString("0.00")
                     + ") -> ControlBall");
@@ -123,6 +139,27 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             return false;
         }
 
+        void TriggerRebound(float ballSpeed)
+        {
+            Ball.Instance.Owner = null;
+            Ball.Instance.Rigidbody.isKinematic = false;
+
+            Vector3 awayFromGoal = (Owner.Position - Owner.TeamGoal.Position).normalized;
+            if (awayFromGoal.sqrMagnitude <= 0.0001f)
+                awayFromGoal = Owner.transform.forward;
+
+            Vector3 side = Vector3.Cross(Vector3.up, awayFromGoal).normalized;
+            float sign = Random.value <= 0.5f ? -1f : 1f;
+            Vector3 direction = (awayFromGoal + side * sign * Random.Range(0.2f, 0.65f)).normalized;
+
+            Vector3 target = Owner.Position + direction * Random.Range(4f, 10f);
+            target.y = 0f;
+            float power = Mathf.Max(3f, (ballSpeed * 0.5f) + Random.Range(2f, 4f));
+
+            Ball.Instance.Kick(target, power);
+            Owner.GoalKeeperPickupBlockedUntil = Mathf.Max(Owner.GoalKeeperPickupBlockedUntil, Time.time + GoalKeeperCatchRetryDelay);
+        }
+
         public override void Exit()
         {
             base.Exit();
@@ -132,6 +169,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             // reset steering
             Owner.RPGMovement.SetSteeringOff();
             Owner.RPGMovement.SetTrackingOff();
+
+            ForceRebound = false;
+            SaveQuality = 0f;
 
             LogGoalKeeperDebug("Exit InterceptShot");
         }

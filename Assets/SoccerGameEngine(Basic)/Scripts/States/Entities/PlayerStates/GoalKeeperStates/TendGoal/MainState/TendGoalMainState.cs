@@ -17,8 +17,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
     {
         const float LooseBallAutoCollectDistance = 10f;
         const float GoalKeeperCatchRetryDelay = 0.15f;
-        const float BaseSaveAttemptChance = 0.5f;
-        const float SaveAttemptSkillInfluence = 0.15f;
+        const float SaveQualityMin = 0.05f;
+        const float SaveQualityMax = 0.95f;
 
         int _goalLayerMask;
         float _timeSinceLastUpdate;
@@ -30,6 +30,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         float _pendingBallVelocity;
         Vector3 _pendingBallInitialPosition;
         Vector3 _pendingShotTarget;
+        bool _pendingForceRebound;
+        float _pendingSaveQuality;
 
         void UpdateGoalKeeperControlIcons(bool isNearOrHasBall)
         {
@@ -51,6 +53,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             _lastPickupBlockedLogTime = -10f;
             _hasPendingIntercept = false;
             _pendingInterceptDelay = 0f;
+            _pendingForceRebound = false;
+            _pendingSaveQuality = 0f;
 
             //set the rpg movement
             Owner.RPGMovement.SetSteeringOn();
@@ -147,17 +151,23 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                     ballRelativePosToGoal.z = Owner.TendGoalDistance;
                     ballRelativePosToGoal.x /= 3f;
                     ballRelativePosToGoal.x = Mathf.Clamp(ballRelativePosToGoal.x, -2.14f, 2.14f);
-                    _steeringTarget = Owner.TeamGoal.transform.TransformPoint(ballRelativePosToGoal);
+                    MatchDifficultyProfile profile = GetRuntimeProfile();
+                    Vector3 target = Owner.TeamGoal.transform.TransformPoint(ballRelativePosToGoal);
+                    float positioningBlend = Mathf.Clamp01(profile.GKPositioningResponsiveness * Time.deltaTime * 1.8f);
+                    _steeringTarget = Vector3.Lerp(_steeringTarget, target, positioningBlend);
                     _steeringTarget = Owner.ClampGoalKeeperTargetToHomeRadius(_steeringTarget);
 
                     //add some noise to the target
-                    float limit = 1f - Owner.GoalKeeping;
+                    float limit = Mathf.Max(0.05f, 1f - Owner.GoalKeeping);
                     _steeringTarget.x += Random.Range(-limit, limit);
                     _steeringTarget.z += Random.Range(-limit, limit);
                 }
 
                 //reset the time 
-                _timeSinceLastUpdate = 2f * (1f - Owner.GoalKeeping);
+                MatchDifficultyProfile updateProfile = GetRuntimeProfile();
+                float baseUpdateDelay = 2f * (1f - Owner.GoalKeeping);
+                float delayedUpdate = Mathf.Lerp(baseUpdateDelay, baseUpdateDelay + 0.2f, 1f - Mathf.Clamp01(updateProfile.GKPositioningResponsiveness / 2f));
+                _timeSinceLastUpdate = Mathf.Max(0.08f, delayedUpdate);
                 if (_timeSinceLastUpdate == 0f)
                     _timeSinceLastUpdate = 2f * 0.1f;
             }
@@ -235,11 +245,21 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                         return;
                     }
 
+                    EvaluateShotContext(initial, target, velocity,
+                        out float saveQuality,
+                        out bool forceMistake,
+                        out bool forceRebound,
+                        out Vector3 diveAdjustedTarget);
+
                     _hasPendingIntercept = true;
                     _pendingBallInitialPosition = initial;
                     _pendingBallVelocity = velocity;
-                    _pendingShotTarget = target;
+                    _pendingShotTarget = diveAdjustedTarget;
                     _pendingInterceptDelay = GetRandomReactionDelay();
+                    if (forceMistake)
+                        _pendingInterceptDelay += Random.Range(0.05f, 0.16f);
+                    _pendingForceRebound = forceRebound;
+                    _pendingSaveQuality = saveQuality;
 
                     LogGoalKeeperDebug("Shot on target -> queued intercept in " + _pendingInterceptDelay.ToString("0.00") + "s");
                 }
@@ -261,6 +281,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             interceptShotState.BallInitialPosition = _pendingBallInitialPosition;
             interceptShotState.BallInitialVelocity = _pendingBallVelocity;
             interceptShotState.ShotTarget = _pendingShotTarget;
+            interceptShotState.ForceRebound = _pendingForceRebound;
+            interceptShotState.SaveQuality = _pendingSaveQuality;
 
             LogGoalKeeperDebug("Transition -> InterceptShot (delayed)");
             Machine.ChangeState<InterceptShotMainState>();
@@ -268,9 +290,103 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
         bool ShouldAttemptSave()
         {
-            float keeperSkillOffset = (Owner.GoalKeeping - 0.75f) * SaveAttemptSkillInfluence;
-            float saveAttemptChance = Mathf.Clamp01(BaseSaveAttemptChance + keeperSkillOffset);
+            MatchDifficultyProfile profile = GetRuntimeProfile();
+            float saveAttemptChance = Mathf.Clamp01(0.35f + (Owner.GoalKeeping * 0.35f) - (profile.GKMistakeChance * 0.45f));
             return Random.value <= saveAttemptChance;
+        }
+
+        void EvaluateShotContext(
+            Vector3 initial,
+            Vector3 target,
+            float shotVelocity,
+            out float saveQuality,
+            out bool forceMistake,
+            out bool forceRebound,
+            out Vector3 diveAdjustedTarget)
+        {
+            MatchDifficultyProfile profile = GetRuntimeProfile();
+
+            Vector3 shotDirection = (target - initial);
+            float shotDistance = shotDirection.magnitude;
+            if (shotDirection.sqrMagnitude > 0.0001f)
+                shotDirection.Normalize();
+            else
+                shotDirection = Owner.TeamGoal.transform.forward;
+
+            float speedN = Mathf.Clamp01(Mathf.Max(0f, shotVelocity) / 40f);
+            float distancePressure = 1f - Mathf.Clamp01(shotDistance / 24f);
+
+            Vector3 goalLocalTarget = Owner.TeamGoal.transform.InverseTransformPoint(target);
+            float lateralHardness = Mathf.Clamp01(Mathf.Abs(goalLocalTarget.x) / 2.5f);
+
+            Vector3 keeperToTarget = target - Owner.Position;
+            keeperToTarget.y = 0f;
+            Vector3 keeperFacing = Vector3.Scale(Owner.transform.forward, new Vector3(1f, 0f, 1f));
+            if (keeperFacing.sqrMagnitude <= 0.0001f)
+                keeperFacing = Owner.TeamGoal.transform.forward;
+            keeperFacing.Normalize();
+
+            float anglePenalty = 1f - ((Vector3.Dot(keeperFacing, keeperToTarget.normalized) + 1f) * 0.5f);
+            float positioningPenalty = Mathf.Clamp01(Vector3.Distance(Owner.Position, _steeringTarget) / 4f);
+
+            float baseSaveChance =
+                0.60f
+                + (Owner.GoalKeeping * 0.22f)
+                - (speedN * 0.20f)
+                - (distancePressure * 0.18f)
+                - (lateralHardness * 0.14f)
+                - (anglePenalty * 0.12f)
+                - (positioningPenalty * 0.12f);
+
+            bool likelyUserShot = IsLikelyUserShot(initial);
+            if (likelyUserShot)
+                baseSaveChance -= profile.GKShotForgiveness;
+
+            float pressureBoost = MatchManager.Instance != null ? MatchManager.Instance.DdaAssistStrength : 0f;
+            float mistakeChance = Mathf.Clamp01(profile.GKMistakeChance + (positioningPenalty * 0.25f) + (pressureBoost * 0.12f));
+            forceMistake = Random.value <= mistakeChance;
+
+            if (forceMistake)
+                baseSaveChance -= Random.Range(0.08f, 0.18f);
+
+            saveQuality = Mathf.Clamp(baseSaveChance, SaveQualityMin, SaveQualityMax);
+
+            bool saveWillSucceed = Random.value <= saveQuality;
+            if (!saveWillSucceed)
+            {
+                forceMistake = true;
+                forceRebound = false;
+                diveAdjustedTarget = target;
+                return;
+            }
+
+            float reboundChance = Mathf.Clamp01(profile.GKReboundChance + (forceMistake ? 0.12f : 0f));
+            forceRebound = Random.value <= reboundChance;
+
+            diveAdjustedTarget = ApplyDiveImprecision(target, goalLocalTarget.x, profile, forceMistake);
+        }
+
+        Vector3 ApplyDiveImprecision(Vector3 target, float targetLocalX, MatchDifficultyProfile profile, bool forceMistake)
+        {
+            Vector3 adjusted = target;
+
+            int desiredDive = targetLocalX < -0.15f ? -1 : (targetLocalX > 0.15f ? 1 : 0);
+            int selectedDive = desiredDive;
+            if (Random.value <= profile.GKWrongDiveChance || forceMistake)
+            {
+                if (desiredDive == 0)
+                    selectedDive = Random.value <= 0.5f ? -1 : 1;
+                else
+                    selectedDive = -desiredDive;
+            }
+
+            if (selectedDive != 0)
+            {
+                float diveOffset = forceMistake ? Random.Range(0.55f, 1.05f) : Random.Range(0.20f, 0.55f);
+                adjusted += Owner.TeamGoal.transform.right * selectedDive * diveOffset;
+            }
+
+            return adjusted;
         }
 
         bool TryCatchBallAndControl(string context)
@@ -287,6 +403,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             if (isCaught)
             {
+                MatchDifficultyProfile profile = GetRuntimeProfile();
+                float reboundChance = Mathf.Clamp01(profile.GKReboundChance + (1f - Owner.GoalKeeping) * 0.15f);
+                if (Random.value <= reboundChance)
+                {
+                    TriggerRebound(ballSpeed, "TendGoal catch converted to rebound");
+                    return false;
+                }
+
                 LogGoalKeeperDebug(context + " -> Caught ball (chance: " + catchChance.ToString("0.00")
                     + ", speed: " + ballSpeed.ToString("0.00") + ") -> ControlBall");
                 Machine.ChangeState<ControlBallMainState>();
@@ -304,10 +428,75 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
         float GetRandomReactionDelay()
         {
+            MatchDifficultyProfile profile = GetRuntimeProfile();
+            float minDelay = profile.GKReactionDelayMin;
+            float maxDelay = Mathf.Max(minDelay, profile.GKReactionDelayMax);
+            float delay = Random.Range(minDelay, maxDelay);
+
             float skillPenalty = Mathf.Clamp01(1f - Owner.GoalKeeping);
-            float baseDelay = Random.Range(0.05f, 0.24f);
-            float extraDelay = Random.Range(0.02f, 0.22f) * skillPenalty;
-            return baseDelay + extraDelay;
+            delay += Random.Range(0f, 0.12f) * skillPenalty;
+            return delay;
+        }
+
+        void TriggerRebound(float ballSpeed, string context)
+        {
+            if (Ball.Instance == null)
+                return;
+
+            Ball.Instance.Owner = null;
+            Ball.Instance.Rigidbody.isKinematic = false;
+
+            Vector3 awayFromGoal = (Owner.Position - Owner.TeamGoal.Position).normalized;
+            if (awayFromGoal.sqrMagnitude <= 0.0001f)
+                awayFromGoal = Owner.transform.forward;
+
+            Vector3 lateral = Vector3.Cross(Vector3.up, awayFromGoal).normalized;
+            float lateralSign = Random.value <= 0.5f ? -1f : 1f;
+            Vector3 reboundDirection = (awayFromGoal + lateral * lateralSign * Random.Range(0.25f, 0.7f)).normalized;
+            Vector3 reboundTarget = Owner.Position + reboundDirection * Random.Range(4f, 10f);
+            reboundTarget.y = 0f;
+
+            float reboundPower = Mathf.Max(3f, (ballSpeed * 0.45f) + Random.Range(2f, 4.5f));
+            Ball.Instance.Kick(reboundTarget, reboundPower);
+
+            Owner.GoalKeeperPickupBlockedUntil = Mathf.Max(Owner.GoalKeeperPickupBlockedUntil, Time.time + 0.2f);
+            LogGoalKeeperDebug(context + " -> rebound target: " + reboundTarget + ", power: " + reboundPower.ToString("0.00"));
+        }
+
+        bool IsLikelyUserShot(Vector3 initial)
+        {
+            if (Owner.OppositionMembers == null)
+                return false;
+
+            float sqrRadius = 2.6f * 2.6f;
+            for (int i = 0; i < Owner.OppositionMembers.Count; i++)
+            {
+                Player opp = Owner.OppositionMembers[i];
+                if (opp == null || !opp.IsUserControlled)
+                    continue;
+
+                if ((opp.Position - initial).sqrMagnitude <= sqrRadius)
+                    return true;
+            }
+
+            return false;
+        }
+
+        MatchDifficultyProfile GetRuntimeProfile()
+        {
+            if (MatchManager.Instance != null)
+                return MatchManager.Instance.RuntimeDifficultyProfile;
+
+            return new MatchDifficultyProfile
+            {
+                GKReactionDelayMin = 0.12f,
+                GKReactionDelayMax = 0.25f,
+                GKMistakeChance = 0.1f,
+                GKReboundChance = 0.3f,
+                GKPositioningResponsiveness = 1.1f,
+                GKWrongDiveChance = 0.1f,
+                GKShotForgiveness = 0.08f
+            };
         }
 
         void LogGoalKeeperDebug(string message)

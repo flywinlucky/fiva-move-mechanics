@@ -70,6 +70,27 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         [Range(0f, 0.5f)]
         public float AIBadTouchChance;
+
+        [Range(0.05f, 0.7f)]
+        public float GKReactionDelayMin;
+
+        [Range(0.08f, 0.9f)]
+        public float GKReactionDelayMax;
+
+        [Range(0f, 0.35f)]
+        public float GKMistakeChance;
+
+        [Range(0f, 0.6f)]
+        public float GKReboundChance;
+
+        [Range(0.1f, 2.5f)]
+        public float GKPositioningResponsiveness;
+
+        [Range(0f, 0.4f)]
+        public float GKWrongDiveChance;
+
+        [Range(0f, 0.25f)]
+        public float GKShotForgiveness;
     }
 
     [RequireComponent(typeof(MatchManagerFSM))]
@@ -126,7 +147,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             AIDefensiveGapChance = 0.20f,
             AIPlayerAdvantageRadius = 2.30f,
             AIPlayerInterceptionAssist = 0.18f,
-            AIBadTouchChance = 0.14f
+            AIBadTouchChance = 0.14f,
+            GKReactionDelayMin = 0.20f,
+            GKReactionDelayMax = 0.40f,
+            GKMistakeChance = 0.18f,
+            GKReboundChance = 0.38f,
+            GKPositioningResponsiveness = 0.85f,
+            GKWrongDiveChance = 0.20f,
+            GKShotForgiveness = 0.14f
         };
 
         [SerializeField]
@@ -148,7 +176,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             AIDefensiveGapChance = 0.10f,
             AIPlayerAdvantageRadius = 1.80f,
             AIPlayerInterceptionAssist = 0.08f,
-            AIBadTouchChance = 0.08f
+            AIBadTouchChance = 0.08f,
+            GKReactionDelayMin = 0.12f,
+            GKReactionDelayMax = 0.25f,
+            GKMistakeChance = 0.11f,
+            GKReboundChance = 0.30f,
+            GKPositioningResponsiveness = 1.15f,
+            GKWrongDiveChance = 0.11f,
+            GKShotForgiveness = 0.08f
         };
 
         [SerializeField]
@@ -170,7 +205,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             AIDefensiveGapChance = 0.03f,
             AIPlayerAdvantageRadius = 1.40f,
             AIPlayerInterceptionAssist = 0.02f,
-            AIBadTouchChance = 0.03f
+            AIBadTouchChance = 0.03f,
+            GKReactionDelayMin = 0.08f,
+            GKReactionDelayMax = 0.15f,
+            GKMistakeChance = 0.06f,
+            GKReboundChance = 0.22f,
+            GKPositioningResponsiveness = 1.45f,
+            GKWrongDiveChance = 0.06f,
+            GKShotForgiveness = 0.04f
         };
 
         [SerializeField]
@@ -467,6 +509,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             profile.AIPlayerAdvantageRadius = Mathf.Clamp(profile.AIPlayerAdvantageRadius, 0.5f, 4f);
             profile.AIPlayerInterceptionAssist = Mathf.Clamp(profile.AIPlayerInterceptionAssist, 0f, 0.4f);
             profile.AIBadTouchChance = Mathf.Clamp(profile.AIBadTouchChance, 0f, 0.5f);
+            profile.GKReactionDelayMin = Mathf.Clamp(profile.GKReactionDelayMin, 0.05f, 0.7f);
+            profile.GKReactionDelayMax = Mathf.Clamp(profile.GKReactionDelayMax, 0.08f, 0.9f);
+            if (profile.GKReactionDelayMax < profile.GKReactionDelayMin)
+                profile.GKReactionDelayMax = profile.GKReactionDelayMin;
+
+            profile.GKMistakeChance = Mathf.Clamp(profile.GKMistakeChance, 0f, 0.35f);
+            profile.GKReboundChance = Mathf.Clamp(profile.GKReboundChance, 0f, 0.6f);
+            profile.GKPositioningResponsiveness = Mathf.Clamp(profile.GKPositioningResponsiveness, 0.1f, 2.5f);
+            profile.GKWrongDiveChance = Mathf.Clamp(profile.GKWrongDiveChance, 0f, 0.4f);
+            profile.GKShotForgiveness = Mathf.Clamp(profile.GKShotForgiveness, 0f, 0.25f);
         }
 
         void ApplyDifficultyToActiveTeams()
@@ -555,6 +607,20 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 profile.AIChaseSlowdownWhenBehind -= assist * 0.08f;
                 profile.AIPlayerInterceptionAssist += assist * _ddaMaxPlayerAssistBoost;
                 profile.AIPlayerAdvantageRadius += assist * 0.8f;
+
+                // Goalkeeper auto-balance: help struggling players score, tighten subtly when dominating.
+                profile.GKReactionDelayMin += assist * 0.08f;
+                profile.GKReactionDelayMax += assist * 0.12f;
+                profile.GKMistakeChance += assist * 0.08f;
+                profile.GKReboundChance += assist * 0.10f;
+                profile.GKWrongDiveChance += assist * 0.06f;
+                profile.GKShotForgiveness += assist * 0.08f;
+                profile.GKPositioningResponsiveness -= assist * 0.20f;
+
+                profile.GKMistakeChance -= challenge * 0.03f;
+                profile.GKReboundChance -= challenge * 0.03f;
+                profile.GKWrongDiveChance -= challenge * 0.02f;
+                profile.GKPositioningResponsiveness += challenge * 0.10f;
 
                 // If player dominates, tighten AI slightly but keep behavior fair.
                 profile.AIErrorChanceBase -= challenge * 0.01f;
