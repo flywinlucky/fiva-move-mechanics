@@ -19,11 +19,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
         MatchDifficultyProfile _difficultyProfile;
         float _nextDecisionTime;
+        float _rearChaseTime;
+        float _turnDelayUntil;
+        Vector3 _lastCarrierForward;
+
+        const float RearChaseLimiterSeconds = 1.35f;
+        const float PersonalSpaceBuffer = 0.95f;
 
         MatchDifficultyProfile GetDifficultyProfile()
         {
             if (MatchManager.Instance != null)
-                return MatchManager.Instance.CurrentDifficultyProfile;
+                return MatchManager.Instance.RuntimeDifficultyProfile;
 
             return new MatchDifficultyProfile
             {
@@ -106,6 +112,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 carrierForward = Vector3.forward;
             carrierForward.Normalize();
 
+            if (_lastCarrierForward.sqrMagnitude <= 0.0001f)
+                _lastCarrierForward = carrierForward;
+
+            float turnDot = Vector3.Dot(_lastCarrierForward, carrierForward);
+            if (turnDot <= 0.75f)
+                _turnDelayUntil = Mathf.Max(_turnDelayUntil, Time.time + Random.Range(0.15f, 0.3f));
+
+            _lastCarrierForward = carrierForward;
+
             Vector3 fromCarrierToChaser = Owner.Position - carrier.Position;
             fromCarrierToChaser.y = 0f;
             carrierDistance = fromCarrierToChaser.magnitude;
@@ -137,6 +152,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 predictedCarrierPosition += sideDirection * sideSign * _difficultyProfile.AICarrierSideStepDistance;
             }
 
+            // Personal space buffer keeps AI from permanently sitting on the carrier's back.
+            float desiredSpacing = Mathf.Max(PersonalSpaceBuffer, Owner.Radius + carrier.Radius + 0.25f);
+            if (carrierDistance < desiredSpacing)
+            {
+                Vector3 spacingTarget = carrier.Position - (carrierForward * desiredSpacing);
+                predictedCarrierPosition = Vector3.Lerp(predictedCarrierPosition, spacingTarget, 0.75f);
+            }
+
             return predictedCarrierPosition;
         }
 
@@ -146,6 +169,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             _difficultyProfile = GetDifficultyProfile();
             _nextDecisionTime = Time.time + Random.Range(_difficultyProfile.AIReactionDelayMin, _difficultyProfile.AIReactionDelayMax);
+            _rearChaseTime = 0f;
+            _turnDelayUntil = 0f;
+            _lastCarrierForward = Vector3.zero;
 
             Owner.SetCanPassPreviewVisible(false);
 
@@ -205,6 +231,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             else
                 SteeringTarget = Ball.Instance.NormalizedPosition;
 
+            if (isDirectlyBehindCarrier)
+                _rearChaseTime += Time.deltaTime;
+            else
+                _rearChaseTime = Mathf.Max(0f, _rearChaseTime - (Time.deltaTime * 1.35f));
+
             //check if ball is within control distance
             float pressure01 = isOpponentCarrier ? ComputePressure01(ballOwner) : 0f;
             float aiErrorChance = Mathf.Clamp01(_difficultyProfile.AIErrorChanceBase + (_difficultyProfile.AIPressureErrorBoost * pressure01));
@@ -215,6 +246,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                     && carrierDistance <= _difficultyProfile.AIBehindStickBreakDistance;
 
                 bool shouldHesitateTackle = !decisionTick || Random.value <= (aiErrorChance * 0.65f);
+
+                if (isDirectlyBehindCarrier && _rearChaseTime >= 0.35f)
+                    shouldHesitateTackle = true;
 
                 if (ballOwner != null && ballOwner.IsUserControlled)
                     shouldHesitateTackle |= Random.value <= _difficultyProfile.AIPlayerInterceptionAssist;
@@ -242,6 +276,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             float chaseSpeedMultiplier = 1f;
             if (isDirectlyBehindCarrier && carrierDistance <= _difficultyProfile.AIBehindStickBreakDistance)
                 chaseSpeedMultiplier = _difficultyProfile.AIChaseSlowdownWhenBehind;
+
+            if (_rearChaseTime >= RearChaseLimiterSeconds)
+                chaseSpeedMultiplier *= 0.75f;
+
+            if (Time.time < _turnDelayUntil)
+            {
+                chaseSpeedMultiplier *= 0.82f;
+                if (hasBallCarrier)
+                {
+                    // During sudden turn reactions, avoid instant mirror movement.
+                    SteeringTarget = Vector3.Lerp(SteeringTarget, ballOwner.Position, 0.3f);
+                }
+            }
 
             if (isOpponentCarrier && ballOwner != null && ballOwner.IsUserControlled)
                 chaseSpeedMultiplier *= (1f - (_difficultyProfile.AIPlayerInterceptionAssist * 0.55f));

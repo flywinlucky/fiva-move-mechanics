@@ -83,6 +83,30 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [SerializeField]
         bool _enableGoalkeeperDebug;
 
+        [Header("Dynamic Difficulty (DDA)")]
+        [SerializeField]
+        bool _enableDynamicDifficulty = true;
+
+        [SerializeField]
+        [Range(0.2f, 8f)]
+        float _ddaSmoothingSpeed = 2.25f;
+
+        [SerializeField]
+        [Range(4f, 35f)]
+        float _ddaNoTouchPenaltySeconds = 13f;
+
+        [SerializeField]
+        [Range(0f, 0.6f)]
+        float _ddaMaxReactionDelayBoost = 0.24f;
+
+        [SerializeField]
+        [Range(0f, 0.4f)]
+        float _ddaMaxMistakeBoost = 0.18f;
+
+        [SerializeField]
+        [Range(0f, 0.4f)]
+        float _ddaMaxPlayerAssistBoost = 0.20f;
+
         [SerializeField]
         MatchDifficultyProfile _casualProfile = new MatchDifficultyProfile
         {
@@ -395,6 +419,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         /// </summary>
         public Tick OnTick;
 
+        float _userNoTouchTimer;
+        float _ddaStrength;
+        float _playerPerformanceScore = 0.5f;
+        bool _wasUserTeamInPossession;
+        int _userSuccessfulPasses;
+        int _userBallLosses;
+        int _userShotsOnTarget;
+        int _consecutiveUserMistakes;
+
         public override void Awake()
         {
             base.Awake();
@@ -498,8 +531,147 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             }
         }
 
+        public MatchDifficultyProfile RuntimeDifficultyProfile
+        {
+            get
+            {
+                MatchDifficultyProfile profile = CurrentDifficultyProfile;
+                if (!_enableDynamicDifficulty)
+                    return profile;
+
+                float assist = Mathf.Clamp01(_ddaStrength);
+                float challenge = 1f - assist;
+
+                profile.AIReactionDelayMin += Mathf.Lerp(-0.02f, _ddaMaxReactionDelayBoost, assist);
+                profile.AIReactionDelayMax += Mathf.Lerp(-0.02f, _ddaMaxReactionDelayBoost + 0.08f, assist);
+
+                profile.AIErrorChanceBase += Mathf.Lerp(-0.02f, _ddaMaxMistakeBoost, assist);
+                profile.AIPressureErrorBoost += Mathf.Lerp(-0.03f, _ddaMaxMistakeBoost, assist);
+                profile.AIDecisionHesitationChance += Mathf.Lerp(-0.02f, _ddaMaxMistakeBoost * 0.8f, assist);
+                profile.AIBadTouchChance += assist * (_ddaMaxMistakeBoost * 0.85f);
+                profile.AIDefensiveGapChance += assist * (_ddaMaxMistakeBoost * 0.75f);
+
+                profile.AIUnderPressureDribbleSlowdown -= assist * 0.12f;
+                profile.AIChaseSlowdownWhenBehind -= assist * 0.08f;
+                profile.AIPlayerInterceptionAssist += assist * _ddaMaxPlayerAssistBoost;
+                profile.AIPlayerAdvantageRadius += assist * 0.8f;
+
+                // If player dominates, tighten AI slightly but keep behavior fair.
+                profile.AIErrorChanceBase -= challenge * 0.01f;
+                profile.AIPressureErrorBoost -= challenge * 0.015f;
+
+                ClampDifficultyProfile(ref profile);
+                return profile;
+            }
+        }
+
+        public float PlayerPerformanceScore => Mathf.Clamp01(_playerPerformanceScore);
+        public float DdaAssistStrength => Mathf.Clamp01(_ddaStrength);
+
+        public void NotifyUserSuccessfulPass()
+        {
+            _userSuccessfulPasses++;
+            _consecutiveUserMistakes = Mathf.Max(0, _consecutiveUserMistakes - 1);
+        }
+
+        public void NotifyUserShotOnTarget()
+        {
+            _userShotsOnTarget++;
+            _consecutiveUserMistakes = Mathf.Max(0, _consecutiveUserMistakes - 1);
+        }
+
+        public void NotifyUserBallLoss()
+        {
+            _userBallLosses++;
+            _consecutiveUserMistakes++;
+        }
+
+        public void ResetDynamicDifficultySession()
+        {
+            _userNoTouchTimer = 0f;
+            _ddaStrength = 0f;
+            _playerPerformanceScore = 0.5f;
+            _wasUserTeamInPossession = false;
+            _userSuccessfulPasses = 0;
+            _userBallLosses = 0;
+            _userShotsOnTarget = 0;
+            _consecutiveUserMistakes = 0;
+        }
+
+        void UpdateDynamicDifficulty(float deltaTime)
+        {
+            if (!_enableDynamicDifficulty || deltaTime <= 0f)
+                return;
+
+            Team userTeam = UserControlledTeam;
+            if (userTeam == null)
+                return;
+
+            bool userTeamInPossession = Ball.Instance != null
+                && Ball.Instance.Owner != null
+                && Ball.Instance.Owner.IsTeamInControl == userTeam.IsUserControlled;
+
+            bool aiTeamInPossession = Ball.Instance != null
+                && Ball.Instance.Owner != null
+                && !userTeamInPossession;
+
+            if (userTeamInPossession)
+                _userNoTouchTimer = 0f;
+            else
+                _userNoTouchTimer += deltaTime;
+
+            if (_wasUserTeamInPossession && aiTeamInPossession)
+                NotifyUserBallLoss();
+
+            _wasUserTeamInPossession = userTeamInPossession;
+
+            float passScore = Mathf.Clamp01(_userSuccessfulPasses / 10f);
+            float shotsScore = Mathf.Clamp01(_userShotsOnTarget / 4f);
+            float ballLossPenalty = Mathf.Clamp01(_userBallLosses / 7f);
+            float noTouchPenalty = Mathf.Clamp01(_userNoTouchTimer / Mathf.Max(1f, _ddaNoTouchPenaltySeconds));
+            float mistakesPenalty = Mathf.Clamp01(_consecutiveUserMistakes / 5f);
+
+            int userGoals = userTeam.Goals;
+            int aiGoals = userTeam == TeamAway ? TeamHome.Goals : TeamAway.Goals;
+            float scoreDiffNormalized = Mathf.Clamp((userGoals - aiGoals) / 3f, -1f, 1f);
+            float scoreDiffScore = (scoreDiffNormalized + 1f) * 0.5f;
+
+            float targetPerformance =
+                (passScore * 0.26f)
+                + (shotsScore * 0.24f)
+                + (scoreDiffScore * 0.28f)
+                + ((1f - ballLossPenalty) * 0.10f)
+                + ((1f - noTouchPenalty) * 0.06f)
+                + ((1f - mistakesPenalty) * 0.06f);
+
+            targetPerformance = Mathf.Clamp01(targetPerformance);
+
+            float lerpT = 1f - Mathf.Exp(-Mathf.Max(0.2f, _ddaSmoothingSpeed) * deltaTime);
+            _playerPerformanceScore = Mathf.Lerp(_playerPerformanceScore, targetPerformance, lerpT);
+
+            // Low performance => more assist. High performance => less assist.
+            float targetAssist = 1f - _playerPerformanceScore;
+            _ddaStrength = Mathf.Lerp(_ddaStrength, targetAssist, lerpT);
+        }
+
+        Team UserControlledTeam
+        {
+            get
+            {
+                if (_teamAway != null && _teamAway.IsUserControlled)
+                    return _teamAway;
+
+                if (_teamHome != null && _teamHome.IsUserControlled)
+                    return _teamHome;
+
+                return null;
+            }
+        }
+
         private void Update()
         {
+            UpdateDynamicDifficulty(Time.deltaTime);
+
 #if UNITY_EDITOR
             // Editor-only debug shortcut for quickly toggling possession.
             if (Input.GetKeyDown(KeyCode.P))

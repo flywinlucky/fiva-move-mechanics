@@ -59,6 +59,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             Owner.CurrentHalf = 1;
             Owner.IsSuddenDeath = false;
             Owner.NextStopTime = Owner.RegulationDurationSeconds;
+            Owner.ResetDynamicDifficultySession();
 
             TimeManager.Instance.Minutes = 0;
             TimeManager.Instance.Seconds = 0;

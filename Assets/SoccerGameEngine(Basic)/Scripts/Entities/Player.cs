@@ -1,4 +1,5 @@
 ﻿using Assets.SimpleSteering.Scripts.Movement;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
@@ -1547,6 +1548,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             if (receiver == null)
                 receiver = GetRandomTeamMemberInRadius(Mathf.Max(20f, _distancePassMax * _casualPassFallbackRangeMultiplier));
 
+            if (IsUserControlled && receiver != null && MatchManager.Instance != null)
+                MatchManager.Instance.NotifyUserSuccessfulPass();
+
             float finalPower = power;
             if (_playerType == PlayerTypes.Goalkeeper)
                 finalPower = Mathf.Max(0f, power * _goalKeeperPassPowerMultiplier);
@@ -1581,6 +1585,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public void MakeShot(Vector3 from, Vector3 to, float power, float time)
         {
             float shotPower = Mathf.Max(0f, power * _shotPowerMultiplier);
+
+            if (IsUserControlled && OppGoal != null && OppGoal.IsPositionWithinGoalMouthFrustrum(to) && MatchManager.Instance != null)
+                MatchManager.Instance.NotifyUserShotOnTarget();
 
             //launch the ball
             Ball.Instance.Kick(to, shotPower);

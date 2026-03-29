@@ -18,7 +18,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         MatchDifficultyProfile GetDifficultyProfile()
         {
             if (MatchManager.Instance != null)
-                return MatchManager.Instance.CurrentDifficultyProfile;
+                return MatchManager.Instance.RuntimeDifficultyProfile;
 
             return new MatchDifficultyProfile
             {
