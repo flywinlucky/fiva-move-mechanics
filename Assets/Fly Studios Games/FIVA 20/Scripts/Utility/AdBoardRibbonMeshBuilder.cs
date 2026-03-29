@@ -90,6 +90,7 @@ public class AdBoardRibbonMeshBuilder : MonoBehaviour
     Mesh generatedMesh;
     MeshRenderer meshRenderer;
     Material runtimeMaterial;
+    bool ownsRuntimeMaterialInstance;
     int activeTextureIndex = -1;
     float nextTextureSwitchTime;
     Vector2 scrollOffset;
@@ -132,11 +133,13 @@ public class AdBoardRibbonMeshBuilder : MonoBehaviour
 
     void OnDestroy()
     {
-        if (runtimeMaterial != null)
+        if (ownsRuntimeMaterialInstance && runtimeMaterial != null)
         {
             Destroy(runtimeMaterial);
             runtimeMaterial = null;
         }
+
+        ownsRuntimeMaterialInstance = false;
     }
 
     void Update()
@@ -348,7 +351,18 @@ public class AdBoardRibbonMeshBuilder : MonoBehaviour
         if (meshRenderer == null)
             return;
 
-        Material[] materials = meshRenderer.materials;
+        Material[] materials;
+        if (Application.isPlaying)
+        {
+            materials = meshRenderer.materials;
+            ownsRuntimeMaterialInstance = true;
+        }
+        else
+        {
+            materials = meshRenderer.sharedMaterials;
+            ownsRuntimeMaterialInstance = false;
+        }
+
         if (materials == null || materials.Length == 0)
             return;
 
