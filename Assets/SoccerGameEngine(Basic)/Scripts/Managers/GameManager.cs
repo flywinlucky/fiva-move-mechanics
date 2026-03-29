@@ -44,10 +44,26 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         private void Awake()
         {
+            SoundManager.Instance.PlayAmbienceLoop(false);
+
             // register the game manager to some events
             Ball.Instance.OnBallLaunched += SoundManager.Instance.PlayBallKickedSound;
+            Ball.Instance.OnBallShot += SoundManager.Instance.PlayShotSound;
             MatchManager.Instance.OnGoalScored += SoundManager.Instance.PlayGoalScoredSound;
             MatchManager.Instance.OnPostHit += SoundManager.Instance.PlayPostHitSound;
+            MatchManager.Instance.OnMatchPlayStart += SoundManager.Instance.PlayMatchStart;
+
+            if (MatchManager.Instance.TeamAway != null)
+            {
+                MatchManager.Instance.TeamAway.OnLostPossession += Instance_OnTeamAwayLostPossession;
+                MatchManager.Instance.TeamAway.OnGainPossession += Instance_OnTeamAwayGainPossession;
+            }
+
+            if (MatchManager.Instance.TeamHome != null)
+            {
+                MatchManager.Instance.TeamHome.OnLostPossession += Instance_OnTeamHomeLostPossession;
+                MatchManager.Instance.TeamHome.OnGainPossession += Instance_OnTeamHomeGainPossession;
+            }
 
             //register managers to listen to me
             OnContinueToSecondHalf += MatchManager.Instance.Instance_OnContinueToSecondHalf;
@@ -113,6 +129,30 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             _matchOnPanel.TxtScores.text = message;
         }
 
+        void Instance_OnTeamAwayLostPossession()
+        {
+            if (MatchManager.Instance.TeamAway != null && MatchManager.Instance.TeamAway.IsUserControlled)
+                SoundManager.Instance.PlayBallLost();
+        }
+
+        void Instance_OnTeamHomeLostPossession()
+        {
+            if (MatchManager.Instance.TeamHome != null && MatchManager.Instance.TeamHome.IsUserControlled)
+                SoundManager.Instance.PlayBallLost();
+        }
+
+        void Instance_OnTeamAwayGainPossession()
+        {
+            if (MatchManager.Instance.TeamAway != null && MatchManager.Instance.TeamAway.IsUserControlled)
+                SoundManager.Instance.PlayBallRecovered();
+        }
+
+        void Instance_OnTeamHomeGainPossession()
+        {
+            if (MatchManager.Instance.TeamHome != null && MatchManager.Instance.TeamHome.IsUserControlled)
+                SoundManager.Instance.PlayBallRecovered();
+        }
+
         private void Instance_OnPostHit(Vector3 worldPoint)
         {
             if (_cameraController == null)
@@ -135,11 +175,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             StopSuddenDeathPanelAutoHide();
             SetSuddenDeathPanelActive(false);
             _matchOnPanel.Root.gameObject.SetActive(true);
+            SoundManager.Instance.PlayAmbienceLoop(true);
         }
 
         private void Instance_OnMatchPlayStop()
         {
             _matchOnPanel.Root.gameObject.SetActive(false);
+            SoundManager.Instance.PlayAmbienceLoop(false);
         }
 
         private void Instance_OnTick(int half, int minutes, int seconds)
@@ -193,6 +235,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         private void Instance_OnMessageSwitchToMatchOn()
         {
+            SoundManager.Instance.PlayMatchStart();
+
             if (_delayedMatchStartCoroutine != null)
                 StopCoroutine(_delayedMatchStartCoroutine);
 

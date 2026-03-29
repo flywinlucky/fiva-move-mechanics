@@ -80,6 +80,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             Ball.Instance.Rigidbody.isKinematic = true;
             Ball.Instance.Trap();
 
+            if (SoundManager.Instance != null)
+                SoundManager.Instance.PlayGKCatch();
+
             // notify team possession so teammates spread into attack shape
             ControlBallDel temp = Owner.OnControlBall;
             if (temp != null)
