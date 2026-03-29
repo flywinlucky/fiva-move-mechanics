@@ -128,6 +128,23 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [Range(0f, 0.4f)]
         float _ddaMaxPlayerAssistBoost = 0.20f;
 
+        [Header("AI Attacker Spectacle")]
+        [SerializeField]
+        [Range(6f, 8f)]
+        float mercyZoneRadius = 7f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        float longShotProbability = 0.75f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        float postHitChance = 0.22f;
+
+        [SerializeField]
+        [Range(0f, 0.8f)]
+        float aiHesitationTime = 0.22f;
+
         [SerializeField]
         MatchDifficultyProfile _casualProfile = new MatchDifficultyProfile
         {
@@ -425,6 +442,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         /// <param name="minutes">the current minutes</param>
         /// <param name="seconds">the currenct seconds</param>
         public delegate void Tick(int half, int minutes, int seconds);
+        public delegate void PostHit(Vector3 worldPoint);
 
         /// <summary>
         /// Event that is raised when a goal is scored
@@ -461,6 +479,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         /// </summary>
         public Tick OnTick;
 
+        public PostHit OnPostHit;
+
         float _userNoTouchTimer;
         float _ddaStrength;
         float _playerPerformanceScore = 0.5f;
@@ -469,12 +489,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         int _userBallLosses;
         int _userShotsOnTarget;
         int _consecutiveUserMistakes;
+        int _aiDangerousShotCounter;
+        int _nextAIPostShotTrigger = 4;
 
         public override void Awake()
         {
             base.Awake();
 
             FSM = GetComponent<MatchManagerFSM>();
+            _nextAIPostShotTrigger = UnityEngine.Random.Range(4, 6);
         }
 
         private void OnValidate()
@@ -633,6 +656,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         public float PlayerPerformanceScore => Mathf.Clamp01(_playerPerformanceScore);
         public float DdaAssistStrength => Mathf.Clamp01(_ddaStrength);
+        public float MercyZoneRadius => Mathf.Clamp(mercyZoneRadius, 6f, 8f);
+        public float LongShotProbability => Mathf.Clamp01(longShotProbability);
+        public float PostHitChance => Mathf.Clamp01(postHitChance);
+        public float AiHesitationTime => Mathf.Clamp(aiHesitationTime, 0f, 0.8f);
 
         public void NotifyUserSuccessfulPass()
         {
@@ -662,6 +689,30 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             _userBallLosses = 0;
             _userShotsOnTarget = 0;
             _consecutiveUserMistakes = 0;
+            _aiDangerousShotCounter = 0;
+            _nextAIPostShotTrigger = UnityEngine.Random.Range(4, 6);
+        }
+
+        public bool RegisterAIDangerousShotAndCheckPostTrigger()
+        {
+            _aiDangerousShotCounter++;
+
+            bool thresholdTrigger = _aiDangerousShotCounter >= _nextAIPostShotTrigger;
+            if (thresholdTrigger)
+            {
+                _aiDangerousShotCounter = 0;
+                _nextAIPostShotTrigger = UnityEngine.Random.Range(4, 6);
+                return true;
+            }
+
+            return UnityEngine.Random.value <= PostHitChance;
+        }
+
+        public void NotifyAIPostHit(Vector3 worldPoint)
+        {
+            PostHit temp = OnPostHit;
+            if (temp != null)
+                temp.Invoke(worldPoint);
         }
 
         void UpdateDynamicDifficulty(float deltaTime)

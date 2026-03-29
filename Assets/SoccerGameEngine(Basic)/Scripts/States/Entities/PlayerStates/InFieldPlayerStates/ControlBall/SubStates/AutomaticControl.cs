@@ -17,6 +17,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         MatchDifficultyProfile _difficultyProfile;
         float _nextDecisionTime;
         float _badTouchSlowUntil;
+        float _longShotHesitationUntil;
 
         MatchDifficultyProfile GetDifficultyProfile()
         {
@@ -68,6 +69,97 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             return Mathf.Clamp01(nearbyCount / 3f);
         }
 
+        bool IsShootingAtUserGoal()
+        {
+            if (Owner.OppGoal == null || Owner.OppositionMembers == null)
+                return false;
+
+            for (int i = 0; i < Owner.OppositionMembers.Count; i++)
+            {
+                Player opponent = Owner.OppositionMembers[i];
+                if (opponent != null && opponent.IsUserControlled)
+                    return true;
+            }
+
+            return false;
+        }
+
+        bool IsInMercyZone()
+        {
+            if (MatchManager.Instance == null || Owner.OppGoal == null)
+                return false;
+
+            return Vector3.Distance(Owner.Position, Owner.OppGoal.Position) <= MatchManager.Instance.MercyZoneRadius;
+        }
+
+        bool HasOpenLongShotLane()
+        {
+            if (Owner.OppGoal == null || Owner.OppositionMembers == null)
+                return false;
+
+            Vector3 from = Owner.Position;
+            Vector3 to = Owner.OppGoal.ShotTargetReferencePoint;
+            Vector3 segment = to - from;
+            float segmentLength = segment.magnitude;
+            if (segmentLength <= 0.001f)
+                return false;
+
+            Vector3 direction = segment / segmentLength;
+            float blockRadius = 1.35f;
+
+            for (int i = 0; i < Owner.OppositionMembers.Count; i++)
+            {
+                Player defender = Owner.OppositionMembers[i];
+                if (defender == null || defender.PlayerType == PlayerTypes.Goalkeeper)
+                    continue;
+
+                Vector3 toDefender = defender.Position - from;
+                float projection = Vector3.Dot(toDefender, direction);
+                if (projection <= 1f || projection >= segmentLength)
+                    continue;
+
+                Vector3 nearest = from + (direction * projection);
+                float distanceFromLane = Vector3.Distance(defender.Position, nearest);
+                if (distanceFromLane <= blockRadius)
+                    return false;
+            }
+
+            return true;
+        }
+
+        bool TryMercyPassOrReposition()
+        {
+            if (Owner.OppGoal == null)
+                return false;
+
+            Vector3 awayFromGoal = Owner.Position - Owner.OppGoal.Position;
+            awayFromGoal.y = 0f;
+            if (awayFromGoal.sqrMagnitude <= 0.0001f)
+                awayFromGoal = -Owner.transform.forward;
+            awayFromGoal.Normalize();
+
+            Vector3 lateral = Vector3.Cross(Vector3.up, awayFromGoal).normalized;
+            if (lateral.sqrMagnitude <= 0.0001f)
+                lateral = Vector3.right;
+
+            bool hasPass = Owner.CanPassInDirection(awayFromGoal, false)
+                || Owner.CanPassInDirection((awayFromGoal + lateral).normalized, false)
+                || Owner.CanPassInDirection((awayFromGoal - lateral).normalized, true);
+
+            if (hasPass)
+            {
+                Owner.MarkAutomaticKickCommand(KickType.Pass);
+                SuperMachine.ChangeState<KickBallMainState>();
+                return true;
+            }
+
+            Vector3 dribbleOutTarget = Owner.Position + awayFromGoal * 3.5f + lateral * (((Owner.GetInstanceID() & 1) == 0) ? 1.4f : -1.4f);
+            Owner.RPGMovement.SetMoveTarget(dribbleOutTarget);
+            Owner.RPGMovement.SetRotateFacePosition(dribbleOutTarget);
+
+            return false;
+        }
+
         public override void Enter()
         {
             base.Enter();
@@ -81,6 +173,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             _difficultyProfile = GetDifficultyProfile();
             _nextDecisionTime = Time.time + Random.Range(_difficultyProfile.AIReactionDelayMin, _difficultyProfile.AIReactionDelayMax);
             _badTouchSlowUntil = 0f;
+            _longShotHesitationUntil = 0f;
 
             //set the steering
             Owner.RPGMovement.SetMoveTarget(Owner.OppGoal.transform.position);
@@ -136,22 +229,35 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             if (Owner.CanScore())
             {
-                //go to kick-ball state
-                Owner.MarkAutomaticKickCommand(KickType.Shot);
-                SuperMachine.ChangeState<KickBallMainState>();
+                bool shootingAtUserGoal = IsShootingAtUserGoal();
+                if (!(shootingAtUserGoal && IsInMercyZone()))
+                {
+                    //go to kick-ball state
+                    Owner.MarkAutomaticKickCommand(KickType.Shot);
+                    SuperMachine.ChangeState<KickBallMainState>();
+                }
             }
             else
             {
                 // occasional long-range shots to make AI attack less linear
                 float distanceToGoal = Vector3.Distance(Owner.OppGoal.Position, Owner.Position);
-                bool isWithinLongShotRange = distanceToGoal <= Owner.DistanceShotMaxValid * 1.6f;
+                bool isWithinLongShotRange = distanceToGoal >= 18f && distanceToGoal <= 25f;
                 if (isWithinLongShotRange)
                 {
-                    float longShotChance = distanceToGoal <= Owner.DistanceShotMaxValid ? 0.22f : 0.12f;
-                    bool shouldTryLongShot = Random.value <= longShotChance;
+                    bool hasOpenLane = HasOpenLongShotLane();
+                    float longShotChance = MatchManager.Instance != null ? MatchManager.Instance.LongShotProbability : 0.75f;
+                    bool shouldTryLongShot = hasOpenLane && Random.value <= longShotChance;
 
                     if (shouldTryLongShot && Owner.CanScore(false, false))
                     {
+                        float hesitation = MatchManager.Instance != null ? MatchManager.Instance.AiHesitationTime : 0.2f;
+                        if (_longShotHesitationUntil <= 0f)
+                            _longShotHesitationUntil = Time.time + hesitation + Random.Range(0.03f, 0.1f);
+
+                        if (Time.time < _longShotHesitationUntil)
+                            return;
+
+                        _longShotHesitationUntil = 0f;
                         Owner.MarkAutomaticKickCommand(KickType.Shot);
                         SuperMachine.ChangeState<KickBallMainState>();
                         return;
@@ -161,6 +267,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             if (SuperMachine.IsCurrentState<KickBallMainState>())
                 return;
+
+            if (IsShootingAtUserGoal() && IsInMercyZone())
+            {
+                if (TryMercyPassOrReposition())
+                    return;
+
+                maxPassTime = Mathf.Min(maxPassTime, 0.12f);
+            }
 
             if (maxPassTime <= 0 || Owner.IsThreatened())  //try passing if threatened or depleted wait time
             {

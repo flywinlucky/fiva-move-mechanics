@@ -342,8 +342,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             if (likelyUserShot)
                 baseSaveChance -= profile.GKShotForgiveness;
 
+            bool userKeeperLongRangeSupport = IsUserKeeperFacingAiLongShot(initial, shotDistance);
+            if (userKeeperLongRangeSupport)
+                baseSaveChance += 0.10f;
+
             float pressureBoost = MatchManager.Instance != null ? MatchManager.Instance.DdaAssistStrength : 0f;
             float mistakeChance = Mathf.Clamp01(profile.GKMistakeChance + (positioningPenalty * 0.25f) + (pressureBoost * 0.12f));
+            if (userKeeperLongRangeSupport)
+                mistakeChance *= 0.72f;
             forceMistake = Random.value <= mistakeChance;
 
             if (forceMistake)
@@ -361,6 +367,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             }
 
             float reboundChance = Mathf.Clamp01(profile.GKReboundChance + (forceMistake ? 0.12f : 0f));
+            if (userKeeperLongRangeSupport)
+                reboundChance = Mathf.Clamp01(reboundChance + 0.12f);
             forceRebound = Random.value <= reboundChance;
 
             diveAdjustedTarget = ApplyDiveImprecision(target, goalLocalTarget.x, profile, forceMistake);
@@ -480,6 +488,42 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             }
 
             return false;
+        }
+
+        bool IsUserKeeperFacingAiLongShot(Vector3 initial, float shotDistance)
+        {
+            if (shotDistance < 18f)
+                return false;
+
+            if (Owner.TeamMembers == null)
+                return false;
+
+            bool defendingUserSide = false;
+            for (int i = 0; i < Owner.TeamMembers.Count; i++)
+            {
+                Player mate = Owner.TeamMembers[i];
+                if (mate != null && mate.IsUserControlled)
+                {
+                    defendingUserSide = true;
+                    break;
+                }
+            }
+
+            if (!defendingUserSide)
+                return false;
+
+            if (Owner.OppositionMembers != null)
+            {
+                float sqr = 3.2f * 3.2f;
+                for (int i = 0; i < Owner.OppositionMembers.Count; i++)
+                {
+                    Player opp = Owner.OppositionMembers[i];
+                    if (opp != null && (opp.Position - initial).sqrMagnitude <= sqr)
+                        return true;
+                }
+            }
+
+            return true;
         }
 
         MatchDifficultyProfile GetRuntimeProfile()

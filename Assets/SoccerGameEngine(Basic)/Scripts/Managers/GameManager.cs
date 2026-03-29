@@ -1,4 +1,5 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Controllers;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities;
 using System;
 using System.Collections;
@@ -23,6 +24,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         MatchOnPanel _matchOnPanel;
 
         [SerializeField]
+        CameraController _cameraController;
+
+        [SerializeField]
         SuddenDeathPanel _suddenDeathPanel;
 
         /// <summary>
@@ -43,6 +47,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             // register the game manager to some events
             Ball.Instance.OnBallLaunched += SoundManager.Instance.PlayBallKickedSound;
             MatchManager.Instance.OnGoalScored += SoundManager.Instance.PlayGoalScoredSound;
+            MatchManager.Instance.OnPostHit += SoundManager.Instance.PlayPostHitSound;
 
             //register managers to listen to me
             OnContinueToSecondHalf += MatchManager.Instance.Instance_OnContinueToSecondHalf;
@@ -57,6 +62,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             MatchManager.Instance.OnFinishBroadcastHalfStart += _Instance_OnFinishBroadcastHalfStart;
             MatchManager.Instance.OnFinishBroadcastMatchStart += Instance_OnFinishBroadcastMatchStart;
             MatchManager.Instance.OnGoalScored += Instance_OnGoalScored;
+            MatchManager.Instance.OnPostHit += Instance_OnPostHit;
             MatchManager.Instance.OnEnterSuddenDeath += Instance_OnEnterSuddenDeath;
             MatchManager.Instance.OnMatchOver += Instance_OnMatchOver;
             MatchManager.Instance.OnMatchPlayStart += Instance_OnMatchPlayStart;
@@ -105,6 +111,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         {
             //show the text
             _matchOnPanel.TxtScores.text = message;
+        }
+
+        private void Instance_OnPostHit(Vector3 worldPoint)
+        {
+            if (_cameraController == null)
+                _cameraController = FindObjectOfType<CameraController>();
+
+            if (_cameraController != null)
+                _cameraController.Shake(0.14f, 0.22f);
         }
 
         private void Instance_OnMatchOver(string message)

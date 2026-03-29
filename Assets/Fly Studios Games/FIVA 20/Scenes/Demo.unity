@@ -371,6 +371,7 @@ MonoBehaviour:
     TxtScores: {fileID: 1073404032}
     TxtTime: {fileID: 605288239}
     Root: {fileID: 2031502556}
+  _cameraController: {fileID: 0}
   _suddenDeathPanel:
     TxtInfo: {fileID: 681301748}
     Root: {fileID: 1669918580}
@@ -868,7 +869,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 82a08eb2528a76b4c901bc33d5e5cba9, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -1067,7 +1068,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 42.861847, y: 10.9006}
+  m_AnchoredPosition: {x: 42.861816, y: 10.900574}
   m_SizeDelta: {x: 85.723694, y: 21.8012}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &233224637
@@ -7387,6 +7388,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _difficulty: 0
   _enableGoalkeeperDebug: 1
+  _enableDynamicDifficulty: 1
+  _ddaSmoothingSpeed: 2.25
+  _ddaNoTouchPenaltySeconds: 13
+  _ddaMaxReactionDelayBoost: 0.24
+  _ddaMaxMistakeBoost: 0.18
+  _ddaMaxPlayerAssistBoost: 0.2
+  mercyZoneRadius: 7
+  longShotProbability: 0.75
+  postHitChance: 0.22
+  aiHesitationTime: 0.22
   _casualProfile:
     PassMaxMultiplier: 1.35
     PassMinMultiplier: 0.7
@@ -7395,6 +7406,23 @@ MonoBehaviour:
     AIBehindDotThreshold: -0.35
     AIBehindStickBreakDistance: 1.8
     AIChaseSlowdownWhenBehind: 0.87
+    AIReactionDelayMin: 0.18
+    AIReactionDelayMax: 0.4
+    AIErrorChanceBase: 0.12
+    AIPressureErrorBoost: 0.22
+    AIDecisionHesitationChance: 0.18
+    AIUnderPressureDribbleSlowdown: 0.82
+    AIDefensiveGapChance: 0.2
+    AIPlayerAdvantageRadius: 2.3
+    AIPlayerInterceptionAssist: 0.18
+    AIBadTouchChance: 0.14
+    GKReactionDelayMin: 0.2
+    GKReactionDelayMax: 0.4
+    GKMistakeChance: 0.18
+    GKReboundChance: 0.38
+    GKPositioningResponsiveness: 0.85
+    GKWrongDiveChance: 0.2
+    GKShotForgiveness: 0.14
   _normalProfile:
     PassMaxMultiplier: 1.15
     PassMinMultiplier: 0.85
@@ -7403,6 +7431,23 @@ MonoBehaviour:
     AIBehindDotThreshold: -0.3
     AIBehindStickBreakDistance: 1.25
     AIChaseSlowdownWhenBehind: 0.93
+    AIReactionDelayMin: 0.1
+    AIReactionDelayMax: 0.22
+    AIErrorChanceBase: 0.06
+    AIPressureErrorBoost: 0.12
+    AIDecisionHesitationChance: 0.08
+    AIUnderPressureDribbleSlowdown: 0.9
+    AIDefensiveGapChance: 0.1
+    AIPlayerAdvantageRadius: 1.8
+    AIPlayerInterceptionAssist: 0.08
+    AIBadTouchChance: 0.08
+    GKReactionDelayMin: 0.12
+    GKReactionDelayMax: 0.25
+    GKMistakeChance: 0.11
+    GKReboundChance: 0.3
+    GKPositioningResponsiveness: 1.15
+    GKWrongDiveChance: 0.11
+    GKShotForgiveness: 0.08
   _hardProfile:
     PassMaxMultiplier: 1
     PassMinMultiplier: 1
@@ -7411,6 +7456,23 @@ MonoBehaviour:
     AIBehindDotThreshold: -0.2
     AIBehindStickBreakDistance: 0.9
     AIChaseSlowdownWhenBehind: 0.98
+    AIReactionDelayMin: 0.04
+    AIReactionDelayMax: 0.12
+    AIErrorChanceBase: 0.02
+    AIPressureErrorBoost: 0.06
+    AIDecisionHesitationChance: 0.03
+    AIUnderPressureDribbleSlowdown: 0.96
+    AIDefensiveGapChance: 0.03
+    AIPlayerAdvantageRadius: 1.4
+    AIPlayerInterceptionAssist: 0.02
+    AIBadTouchChance: 0.03
+    GKReactionDelayMin: 0.08
+    GKReactionDelayMax: 0.15
+    GKMistakeChance: 0.06
+    GKReboundChance: 0.22
+    GKPositioningResponsiveness: 1.45
+    GKWrongDiveChance: 0.06
+    GKShotForgiveness: 0.04
   _distancePassMax: 25
   _distancePassMin: 8
   _distanceShotValidMax: 30

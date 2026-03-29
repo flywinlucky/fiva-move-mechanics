@@ -52,6 +52,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Controllers
         Vector3 _followVelocity;
         float _fixedY;
         bool _offsetInitialized;
+        float _shakeDuration;
+        float _shakeTimer;
+        float _shakeMagnitude;
 
         private void Awake()
         {
@@ -78,12 +81,27 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Controllers
 
             desiredPosition = ClampToFieldBounds(desiredPosition);
 
+            if (_shakeTimer > 0f)
+            {
+                _shakeTimer -= Time.deltaTime;
+                float t = Mathf.Clamp01(_shakeTimer / Mathf.Max(0.01f, _shakeDuration));
+                Vector2 noise = Random.insideUnitCircle * (_shakeMagnitude * t);
+                desiredPosition += new Vector3(noise.x, noise.y, 0f);
+            }
+
             transform.position = Vector3.SmoothDamp(transform.position,
                 desiredPosition,
                 ref _followVelocity,
                 _smoothTime,
                 _maxFollowSpeed,
                 Time.deltaTime);
+        }
+
+        public void Shake(float duration, float magnitude)
+        {
+            _shakeDuration = Mathf.Max(0.01f, duration);
+            _shakeTimer = _shakeDuration;
+            _shakeMagnitude = Mathf.Max(0f, magnitude);
         }
 
         void ResolveTargetIfNeeded()

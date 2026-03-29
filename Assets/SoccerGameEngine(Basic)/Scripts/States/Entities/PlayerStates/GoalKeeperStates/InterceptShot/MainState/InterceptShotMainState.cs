@@ -150,7 +150,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             Vector3 side = Vector3.Cross(Vector3.up, awayFromGoal).normalized;
             float sign = Random.value <= 0.5f ? -1f : 1f;
-            Vector3 direction = (awayFromGoal + side * sign * Random.Range(0.2f, 0.65f)).normalized;
+            bool userLongRangeSupport = IsUserKeeperLongRangeContext();
+            float lateralAmount = userLongRangeSupport
+                ? Random.Range(0.55f, 1.05f)
+                : Random.Range(0.2f, 0.65f);
+            float forwardAmount = userLongRangeSupport ? 0.45f : 1f;
+            Vector3 direction = (awayFromGoal * forwardAmount + side * sign * lateralAmount).normalized;
 
             Vector3 target = Owner.Position + direction * Random.Range(4f, 10f);
             target.y = 0f;
@@ -158,6 +163,28 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             Ball.Instance.Kick(target, power);
             Owner.GoalKeeperPickupBlockedUntil = Mathf.Max(Owner.GoalKeeperPickupBlockedUntil, Time.time + GoalKeeperCatchRetryDelay);
+        }
+
+        bool IsUserKeeperLongRangeContext()
+        {
+            if (Owner.TeamMembers == null)
+                return false;
+
+            bool defendingUserSide = false;
+            for (int i = 0; i < Owner.TeamMembers.Count; i++)
+            {
+                Player mate = Owner.TeamMembers[i];
+                if (mate != null && mate.IsUserControlled)
+                {
+                    defendingUserSide = true;
+                    break;
+                }
+            }
+
+            if (!defendingUserSide)
+                return false;
+
+            return Vector3.Distance(BallInitialPosition, ShotTarget) >= 18f;
         }
 
         public override void Exit()
