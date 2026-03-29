@@ -137,6 +137,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [SerializeField]
         Transform _transformCentreSpot;
 
+        [Header("Match Format")]
+        [SerializeField]
+        int _regulationDurationSeconds = 180;
+
         /// <summary>
         /// A reference to how long each half length is in actual time(m)
         /// </summary>
@@ -156,6 +160,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         /// A reference to the current game half in play
         /// </summary>
         public int CurrentHalf { get; set; }
+
+        /// <summary>
+        /// True while the match is in golden-goal mode.
+        /// </summary>
+        public bool IsSuddenDeath { get; set; }
 
         /// <summary>
         /// Property to get or set this instance's fsm
@@ -221,6 +230,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         /// Raised when match play starts
         /// </summary>
         public Action OnMatchPlayStart;
+
+        /// <summary>
+        /// Raised when regulation ends in a draw and the decisive round is about to start.
+        /// </summary>
+        public Action OnEnterSuddenDeath;
 
         /// <summary>
         /// Raised when match play stops
@@ -458,6 +472,22 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         public Team TeamAway { get => _teamAway; }
         public Team TeamHome { get => _teamHome; }
+        public int RegulationDurationSeconds
+        {
+            get => Mathf.Max(1, _regulationDurationSeconds);
+            set => _regulationDurationSeconds = Mathf.Max(1, value);
+        }
+
+        public bool IsScoreDraw
+        {
+            get
+            {
+                if (_teamAway == null || _teamHome == null)
+                    return true;
+
+                return _teamAway.Goals == _teamHome.Goals;
+            }
+        }
 
         /// <summary>
         /// Property to access the team root transform

@@ -57,10 +57,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
 
             //set some variables
             Owner.CurrentHalf = 1;
-            Owner.NextStopTime = Owner.NormalHalfLength;
+            Owner.IsSuddenDeath = false;
+            Owner.NextStopTime = Owner.RegulationDurationSeconds;
 
-            //calculate some variables
-            TimeManager.Instance.TimeUpdateFrequency = Owner.ActualHalfLength / Owner.NormalHalfLength;
+            TimeManager.Instance.Minutes = 0;
+            TimeManager.Instance.Seconds = 0;
+            TimeManager.Instance.TimeUpdateFrequency = 1f;
 
             //enable the teams
             Owner.TeamAway.gameObject.SetActive(true);

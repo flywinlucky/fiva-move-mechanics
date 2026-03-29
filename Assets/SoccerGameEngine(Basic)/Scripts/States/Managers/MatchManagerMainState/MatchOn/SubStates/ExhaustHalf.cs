@@ -117,13 +117,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             if (_hasTriggeredMatchStop)
                 return;
 
+            int elapsedSeconds = (minutes * 60) + seconds;
+            int remainingSeconds = Mathf.Max(0, Owner.RegulationDurationSeconds - elapsedSeconds);
+            int remainingMinutes = remainingSeconds / 60;
+            int remainingOnlySeconds = remainingSeconds % 60;
+
             //raise the on tick event of the match manager
             Tick temp = Owner.OnTick;
-            if (temp != null) temp.Invoke(Owner.CurrentHalf, minutes, seconds);
+            if (temp != null) temp.Invoke(Owner.CurrentHalf, remainingMinutes, remainingOnlySeconds);
 
-            //compare the next stop time and the current time
-            //stop game if current time is now equal to the next stop time
-            if (minutes >= Owner.NextStopTime)
+            //stop regulation at 00:00; sudden death has no time limit.
+            if (!Owner.IsSuddenDeath && elapsedSeconds >= Owner.RegulationDurationSeconds)
             {
                 _hasTriggeredMatchStop = true;
 

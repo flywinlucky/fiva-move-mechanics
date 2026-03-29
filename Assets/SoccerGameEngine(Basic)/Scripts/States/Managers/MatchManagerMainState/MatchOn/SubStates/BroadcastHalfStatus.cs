@@ -51,13 +51,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
         public void RaiseTheHalfStartEvent()
         {
             //prepare an empty string
-            string message = string.Empty;
-
-            //set the message
-            if (Owner.CurrentHalf == 1)
-                message = "First Half";
-            else
-                message = "Second Half";
+            string message = Owner.IsSuddenDeath ? "Golden Goal" : "Kick Off";
 
             //raise the event
             BroadcastHalfStart temp = Owner.OnBroadcastHalfStart;

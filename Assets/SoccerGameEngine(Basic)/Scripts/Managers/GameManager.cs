@@ -1,6 +1,7 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities;
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -13,12 +14,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
     public class GameManager : MonoBehaviour
     {
         [SerializeField]
-        HalfTimePanel _halfTimePanel;
-
-        [SerializeField]
-        MainPanel _mainPanel;
-
-        [SerializeField]
         MatchInfoPanel _matchInfoPanel;
 
         [SerializeField]
@@ -26,6 +21,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         [SerializeField]
         MatchOnPanel _matchOnPanel;
+
+        [SerializeField]
+        SuddenDeathPanel _suddenDeathPanel;
 
         /// <summary>
         /// Event raised when continuing to second half
@@ -36,6 +34,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         /// Event raised when switching to match on
         /// </summary>
         public Action OnMessageSwitchToMatchOn;
+
+        Coroutine _delayedMatchStartCoroutine;
+        Coroutine _suddenDeathPanelAutoHideCoroutine;
 
         private void Awake()
         {
@@ -50,18 +51,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             //listen to match manager events
             MatchManager.Instance.OnBroadcastHalfStart += Instance_OnBroadcastHalfStart;
             MatchManager.Instance.OnBroadcastMatchStart += Instance_OnBroadcastMatchStart;
-            MatchManager.Instance.OnEnterHalfTime += Instance_OnEnterHalfTime;
             MatchManager.Instance.OnEnterWaitForMatchOnInstruction += Instance_OnEnterWaitForMatchOnInstruction;
-            MatchManager.Instance.OnExitHalfTime += Instance_OnExitHalfTime;
             MatchManager.Instance.OnExitMatchOver += Instance_OnExitMatchOver;
             MatchManager.Instance.OnExitWaitForMatchOnInstruction += Instance_OnExitWaitForMatchOnInstruction;
             MatchManager.Instance.OnFinishBroadcastHalfStart += _Instance_OnFinishBroadcastHalfStart;
             MatchManager.Instance.OnFinishBroadcastMatchStart += Instance_OnFinishBroadcastMatchStart;
             MatchManager.Instance.OnGoalScored += Instance_OnGoalScored;
+            MatchManager.Instance.OnEnterSuddenDeath += Instance_OnEnterSuddenDeath;
             MatchManager.Instance.OnMatchOver += Instance_OnMatchOver;
             MatchManager.Instance.OnMatchPlayStart += Instance_OnMatchPlayStart;
             MatchManager.Instance.OnMatchPlayStop += Instance_OnMatchPlayStop;
             MatchManager.Instance.OnTick += Instance_OnTick;
+
+            Instance_OnMessageSwitchToMatchOn();
         }
 
         private void Instance_OnBroadcastHalfStart(string message)
@@ -74,20 +76,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             ShowInfoPanel(message);
         }
 
-        private void Instance_OnEnterHalfTime(string message)
-        {
-            _halfTimePanel.TxtInfo.text = message;
-            _halfTimePanel.Root.gameObject.SetActive(true);
-        }
-
         private void Instance_OnEnterWaitForMatchOnInstruction()
         {
-            _mainPanel.Root.gameObject.SetActive(true);
-        }
 
-        private void Instance_OnExitHalfTime()
-        {
-            _halfTimePanel.Root.gameObject.SetActive(false);
         }
 
         private void Instance_OnExitMatchOver()
@@ -97,7 +88,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         private void Instance_OnExitWaitForMatchOnInstruction()
         {
-            _mainPanel.Root.gameObject.SetActive(false);
+
         }
 
         private void _Instance_OnFinishBroadcastHalfStart()
@@ -118,12 +109,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         private void Instance_OnMatchOver(string message)
         {
+            StopSuddenDeathPanelAutoHide();
+            SetSuddenDeathPanelActive(false);
             _matchOverPanel.TxtInfo.text = message;
             _matchOverPanel.Root.gameObject.SetActive(true);
         }
 
         private void Instance_OnMatchPlayStart()
         {
+            StopSuddenDeathPanelAutoHide();
+            SetSuddenDeathPanelActive(false);
             _matchOnPanel.Root.gameObject.SetActive(true);
         }
 
@@ -134,19 +129,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         private void Instance_OnTick(int half, int minutes, int seconds)
         {
-            //declare the string
-            string timeInfo = string.Empty;
-
-            //prepare the message
-            string infoHalf = half == 1 ? "1st" : "2nd";
-
-            timeInfo = string.Format("{0} {1}:{2}", 
-                infoHalf, 
-                minutes.ToString("00"), 
-                seconds.ToString("00"));
-
             //set the ui
-            _matchOnPanel.TxtTime.text = timeInfo;
+            _matchOnPanel.TxtTime.text = string.Format("{0}:{1}",
+                minutes.ToString("00"),
+                seconds.ToString("00"));
         }
 
         private void HideInfoPanel()
@@ -154,14 +140,55 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             _matchInfoPanel.Root.gameObject.SetActive(false);
         }
 
+        private void Instance_OnEnterSuddenDeath()
+        {
+            SetSuddenDeathPanelActive(true);
+
+            StopSuddenDeathPanelAutoHide();
+            _suddenDeathPanelAutoHideCoroutine = StartCoroutine(AutoHideSuddenDeathPanel());
+        }
+
+        void SetSuddenDeathPanelActive(bool isActive)
+        {
+            if (_suddenDeathPanel.Root != null)
+                _suddenDeathPanel.Root.gameObject.SetActive(isActive);
+        }
+
+        IEnumerator AutoHideSuddenDeathPanel()
+        {
+            yield return new WaitForSeconds(3f);
+
+            SetSuddenDeathPanelActive(false);
+            _suddenDeathPanelAutoHideCoroutine = null;
+        }
+
+        void StopSuddenDeathPanelAutoHide()
+        {
+            if (_suddenDeathPanelAutoHideCoroutine == null)
+                return;
+
+            StopCoroutine(_suddenDeathPanelAutoHideCoroutine);
+            _suddenDeathPanelAutoHideCoroutine = null;
+        }
+
         public void Instance_OnContinueToSecondHalf()
         {
             ActionUtility.Invoke_Action(OnContinueToSecondHalf);
         }
 
-        public void Instance_OnMessageSwitchToMatchOn()
+        private void Instance_OnMessageSwitchToMatchOn()
         {
+            if (_delayedMatchStartCoroutine != null)
+                StopCoroutine(_delayedMatchStartCoroutine);
+
+            _delayedMatchStartCoroutine = StartCoroutine(DelayedMatchStart());
+        }
+
+        IEnumerator DelayedMatchStart()
+        {
+            yield return new WaitForSeconds(3f);
             ActionUtility.Invoke_Action(OnMessageSwitchToMatchOn);
+            _delayedMatchStartCoroutine = null;
         }
 
         /// <summary>
@@ -195,14 +222,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
     }
 
     [Serializable]
-    public struct HalfTimePanel
-    {
-        public Text TxtInfo;
-
-        public Transform Root;
-    }
-
-    [Serializable]
     public struct MainPanel
     {
         public Transform Root;
@@ -228,6 +247,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
     [Serializable]
     public struct MatchOverPanel
+    {
+        public Text TxtInfo;
+
+        public Transform Root;
+    }
+
+    [Serializable]
+    public struct SuddenDeathPanel
     {
         public Text TxtInfo;
 
