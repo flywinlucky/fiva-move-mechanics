@@ -18,6 +18,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         public Vector3 SteeringTarget { get; set; }
 
         MatchDifficultyProfile _difficultyProfile;
+        float _nextDecisionTime;
 
         MatchDifficultyProfile GetDifficultyProfile()
         {
@@ -32,8 +33,70 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 AICarrierSideStepDistance = 1.15f,
                 AIBehindDotThreshold = -0.3f,
                 AIBehindStickBreakDistance = 1.25f,
-                AIChaseSlowdownWhenBehind = 0.93f
+                AIChaseSlowdownWhenBehind = 0.93f,
+                AIReactionDelayMin = 0.1f,
+                AIReactionDelayMax = 0.22f,
+                AIErrorChanceBase = 0.06f,
+                AIPressureErrorBoost = 0.12f,
+                AIDecisionHesitationChance = 0.08f,
+                AIUnderPressureDribbleSlowdown = 0.9f,
+                AIDefensiveGapChance = 0.1f,
+                AIPlayerAdvantageRadius = 1.8f,
+                AIPlayerInterceptionAssist = 0.08f,
+                AIBadTouchChance = 0.08f
             };
+        }
+
+        bool IsDecisionTick()
+        {
+            if (Time.time < _nextDecisionTime)
+                return false;
+
+            float minDelay = Mathf.Max(0f, _difficultyProfile.AIReactionDelayMin);
+            float maxDelay = Mathf.Max(minDelay, _difficultyProfile.AIReactionDelayMax);
+            _nextDecisionTime = Time.time + Random.Range(minDelay, maxDelay);
+            return true;
+        }
+
+        float ComputePressure01(Player player)
+        {
+            if (player == null || player.OppositionMembers == null)
+                return 0f;
+
+            int nearbyCount = 0;
+            float pressureRadius = Mathf.Max(0.9f, player.DistanceThreatMax * 1.35f);
+            for (int i = 0; i < player.OppositionMembers.Count; i++)
+            {
+                Player opponent = player.OppositionMembers[i];
+                if (opponent == null)
+                    continue;
+
+                if ((opponent.Position - player.Position).sqrMagnitude <= pressureRadius * pressureRadius)
+                    nearbyCount++;
+            }
+
+            return Mathf.Clamp01(nearbyCount / 3f);
+        }
+
+        bool IsUserOpponentNearBall(float radius)
+        {
+            if (Ball.Instance == null || Owner.OppositionMembers == null)
+                return false;
+
+            float sqrRadius = Mathf.Max(0.25f, radius) * Mathf.Max(0.25f, radius);
+            Vector3 ballPosition = Ball.Instance.NormalizedPosition;
+
+            for (int i = 0; i < Owner.OppositionMembers.Count; i++)
+            {
+                Player opponent = Owner.OppositionMembers[i];
+                if (opponent == null || !opponent.IsUserControlled)
+                    continue;
+
+                if ((opponent.Position - ballPosition).sqrMagnitude <= sqrRadius)
+                    return true;
+            }
+
+            return false;
         }
 
         Vector3 GetCarrierPressingTarget(Player carrier, out bool isDirectlyBehindCarrier, out float carrierDistance)
@@ -82,6 +145,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             base.Enter();
 
             _difficultyProfile = GetDifficultyProfile();
+            _nextDecisionTime = Time.time + Random.Range(_difficultyProfile.AIReactionDelayMin, _difficultyProfile.AIReactionDelayMax);
 
             Owner.SetCanPassPreviewVisible(false);
 
@@ -106,6 +170,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             }
 
             _difficultyProfile = GetDifficultyProfile();
+            bool decisionTick = IsDecisionTick();
 
             Player ballOwner = Ball.Instance.Owner;
             bool hasBallCarrier = ballOwner != null && ballOwner != Owner;
@@ -141,12 +206,20 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 SteeringTarget = Ball.Instance.NormalizedPosition;
 
             //check if ball is within control distance
+            float pressure01 = isOpponentCarrier ? ComputePressure01(ballOwner) : 0f;
+            float aiErrorChance = Mathf.Clamp01(_difficultyProfile.AIErrorChanceBase + (_difficultyProfile.AIPressureErrorBoost * pressure01));
+
             if (isOpponentCarrier && Owner.IsBallWithinControlableDistance())
             {
                 bool shouldBlockRearTackle = isDirectlyBehindCarrier
                     && carrierDistance <= _difficultyProfile.AIBehindStickBreakDistance;
 
-                if (!shouldBlockRearTackle)
+                bool shouldHesitateTackle = !decisionTick || Random.value <= (aiErrorChance * 0.65f);
+
+                if (ballOwner != null && ballOwner.IsUserControlled)
+                    shouldHesitateTackle |= Random.value <= _difficultyProfile.AIPlayerInterceptionAssist;
+
+                if (!shouldBlockRearTackle && !shouldHesitateTackle)
                 {
                     //tackle player
                     SuperMachine.ChangeState<TackleMainState>();
@@ -155,14 +228,26 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             }
             else if (!hasBallCarrier && Owner.IsBallWithinControlableDistance())
             {
-                // control ball
-                SuperMachine.ChangeState<ControlBallMainState>();
-                return;
+                bool userNearBall = IsUserOpponentNearBall(_difficultyProfile.AIPlayerAdvantageRadius);
+                float interceptionAssistChance = userNearBall ? _difficultyProfile.AIPlayerInterceptionAssist : 0f;
+
+                if (decisionTick && Random.value > interceptionAssistChance)
+                {
+                    // control ball
+                    SuperMachine.ChangeState<ControlBallMainState>();
+                    return;
+                }
             }
 
             float chaseSpeedMultiplier = 1f;
             if (isDirectlyBehindCarrier && carrierDistance <= _difficultyProfile.AIBehindStickBreakDistance)
                 chaseSpeedMultiplier = _difficultyProfile.AIChaseSlowdownWhenBehind;
+
+            if (isOpponentCarrier && ballOwner != null && ballOwner.IsUserControlled)
+                chaseSpeedMultiplier *= (1f - (_difficultyProfile.AIPlayerInterceptionAssist * 0.55f));
+
+            if (!decisionTick)
+                chaseSpeedMultiplier *= 0.94f;
 
             bool isMoving = (SteeringTarget - Owner.Position).sqrMagnitude > 0.25f;
             bool wantsSprint = Owner.EvaluateAISprintIntent(isMoving, isOpponentCarrier);

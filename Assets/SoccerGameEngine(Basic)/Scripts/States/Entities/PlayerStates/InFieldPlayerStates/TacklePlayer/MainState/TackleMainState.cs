@@ -1,4 +1,5 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.ControlBall.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.GoToHome.MainState;
@@ -63,6 +64,25 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 chance += 0.1f;
             else if (!Owner.IsUserControlled && carrier.IsUserControlled)
                 chance -= 0.05f;
+
+            if (MatchManager.Instance != null)
+            {
+                MatchDifficulty difficulty = MatchManager.Instance.Difficulty;
+                if (!Owner.IsUserControlled && carrier.IsUserControlled)
+                {
+                    if (difficulty == MatchDifficulty.Casual)
+                        chance -= 0.12f;
+                    else if (difficulty == MatchDifficulty.Normal)
+                        chance -= 0.05f;
+                }
+                else if (Owner.IsUserControlled && !carrier.IsUserControlled)
+                {
+                    if (difficulty == MatchDifficulty.Casual)
+                        chance += 0.08f;
+                    else if (difficulty == MatchDifficulty.Normal)
+                        chance += 0.04f;
+                }
+            }
 
             float tackleReach = Mathf.Max(0.75f, Owner.BallControlDistance + Owner.Radius + 0.35f);
             float distanceToCarrier = Vector3.Distance(Owner.Position, carrier.Position);

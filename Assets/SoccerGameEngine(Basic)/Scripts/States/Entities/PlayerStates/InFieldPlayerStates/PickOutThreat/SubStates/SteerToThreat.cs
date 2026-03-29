@@ -1,4 +1,5 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.PickOutThreat.MainState;
 using RobustFSM.Base;
@@ -12,6 +13,45 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         Vector3 _steeringTarget;
 
         Player _newThreat;
+        Vector3 _defensiveErrorOffset;
+
+        MatchDifficultyProfile GetDifficultyProfile()
+        {
+            if (MatchManager.Instance != null)
+                return MatchManager.Instance.CurrentDifficultyProfile;
+
+            return new MatchDifficultyProfile
+            {
+                AIDefensiveGapChance = 0.1f
+            };
+        }
+
+        void RefreshDefensiveErrorOffset()
+        {
+            _defensiveErrorOffset = Vector3.zero;
+
+            if (Owner == null || Owner.IsUserControlled || Threat == null)
+                return;
+
+            MatchDifficultyProfile profile = GetDifficultyProfile();
+            if (Random.value > profile.AIDefensiveGapChance)
+                return;
+
+            Vector3 toGoal = Owner.TeamGoal.Position - Threat.Position;
+            toGoal.y = 0f;
+            if (toGoal.sqrMagnitude <= 0.0001f)
+                toGoal = Vector3.forward;
+
+            Vector3 lateral = Vector3.Cross(Vector3.up, toGoal.normalized);
+            if (lateral.sqrMagnitude <= 0.0001f)
+                lateral = Vector3.right;
+
+            float lateralSign = Random.value <= 0.5f ? -1f : 1f;
+            float lateralGap = Random.Range(0.35f, 1.05f);
+            float depthGap = Random.Range(-0.25f, 0.6f);
+
+            _defensiveErrorOffset = (lateral * lateralSign * lateralGap) + (toGoal.normalized * depthGap);
+        }
 
         public override void Enter()
         {
@@ -27,6 +67,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 Machine.ChangeState<SteerToHome>();
             else
             {
+                RefreshDefensiveErrorOffset();
                 _steeringTarget = Threat.Position;
 
                 // set threat is picked out
@@ -82,6 +123,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                         // update threat to new threat
                         Threat = _newThreat;
 
+                        RefreshDefensiveErrorOffset();
+
                         // pick out the new threat
                         Threat.SupportSpot.SetIsPickedOut(Owner);
 
@@ -114,6 +157,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             Vector3 steeringTarget = Threat.Position
                 + directionOfThreatToGoal.normalized
                 * (Owner.ThreatTrackDistance + Owner.Radius);
+
+            steeringTarget += _defensiveErrorOffset;
 
             // return result
             return steeringTarget;

@@ -40,6 +40,36 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         [Range(0.6f, 1.0f)]
         public float AIChaseSlowdownWhenBehind;
+
+        [Range(0f, 0.6f)]
+        public float AIReactionDelayMin;
+
+        [Range(0f, 0.8f)]
+        public float AIReactionDelayMax;
+
+        [Range(0f, 0.6f)]
+        public float AIErrorChanceBase;
+
+        [Range(0f, 0.6f)]
+        public float AIPressureErrorBoost;
+
+        [Range(0f, 0.5f)]
+        public float AIDecisionHesitationChance;
+
+        [Range(0.6f, 1f)]
+        public float AIUnderPressureDribbleSlowdown;
+
+        [Range(0f, 0.5f)]
+        public float AIDefensiveGapChance;
+
+        [Range(0.5f, 4f)]
+        public float AIPlayerAdvantageRadius;
+
+        [Range(0f, 0.4f)]
+        public float AIPlayerInterceptionAssist;
+
+        [Range(0f, 0.5f)]
+        public float AIBadTouchChance;
     }
 
     [RequireComponent(typeof(MatchManagerFSM))]
@@ -62,7 +92,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             AICarrierSideStepDistance = 1.50f,
             AIBehindDotThreshold = -0.35f,
             AIBehindStickBreakDistance = 1.80f,
-            AIChaseSlowdownWhenBehind = 0.87f
+            AIChaseSlowdownWhenBehind = 0.84f,
+            AIReactionDelayMin = 0.18f,
+            AIReactionDelayMax = 0.40f,
+            AIErrorChanceBase = 0.12f,
+            AIPressureErrorBoost = 0.22f,
+            AIDecisionHesitationChance = 0.18f,
+            AIUnderPressureDribbleSlowdown = 0.82f,
+            AIDefensiveGapChance = 0.20f,
+            AIPlayerAdvantageRadius = 2.30f,
+            AIPlayerInterceptionAssist = 0.18f,
+            AIBadTouchChance = 0.14f
         };
 
         [SerializeField]
@@ -74,7 +114,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             AICarrierSideStepDistance = 1.15f,
             AIBehindDotThreshold = -0.30f,
             AIBehindStickBreakDistance = 1.25f,
-            AIChaseSlowdownWhenBehind = 0.93f
+            AIChaseSlowdownWhenBehind = 0.91f,
+            AIReactionDelayMin = 0.10f,
+            AIReactionDelayMax = 0.22f,
+            AIErrorChanceBase = 0.06f,
+            AIPressureErrorBoost = 0.12f,
+            AIDecisionHesitationChance = 0.08f,
+            AIUnderPressureDribbleSlowdown = 0.90f,
+            AIDefensiveGapChance = 0.10f,
+            AIPlayerAdvantageRadius = 1.80f,
+            AIPlayerInterceptionAssist = 0.08f,
+            AIBadTouchChance = 0.08f
         };
 
         [SerializeField]
@@ -86,7 +136,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             AICarrierSideStepDistance = 0.85f,
             AIBehindDotThreshold = -0.20f,
             AIBehindStickBreakDistance = 0.90f,
-            AIChaseSlowdownWhenBehind = 0.98f
+            AIChaseSlowdownWhenBehind = 0.98f,
+            AIReactionDelayMin = 0.04f,
+            AIReactionDelayMax = 0.12f,
+            AIErrorChanceBase = 0.02f,
+            AIPressureErrorBoost = 0.06f,
+            AIDecisionHesitationChance = 0.03f,
+            AIUnderPressureDribbleSlowdown = 0.96f,
+            AIDefensiveGapChance = 0.03f,
+            AIPlayerAdvantageRadius = 1.40f,
+            AIPlayerInterceptionAssist = 0.02f,
+            AIBadTouchChance = 0.03f
         };
 
         [SerializeField]
@@ -361,6 +421,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             profile.AIBehindDotThreshold = Mathf.Clamp(profile.AIBehindDotThreshold, -1f, 0f);
             profile.AIBehindStickBreakDistance = Mathf.Max(0.1f, profile.AIBehindStickBreakDistance);
             profile.AIChaseSlowdownWhenBehind = Mathf.Clamp(profile.AIChaseSlowdownWhenBehind, 0.6f, 1f);
+            profile.AIReactionDelayMin = Mathf.Clamp(profile.AIReactionDelayMin, 0f, 0.6f);
+            profile.AIReactionDelayMax = Mathf.Clamp(profile.AIReactionDelayMax, 0f, 0.8f);
+            if (profile.AIReactionDelayMax < profile.AIReactionDelayMin)
+                profile.AIReactionDelayMax = profile.AIReactionDelayMin;
+
+            profile.AIErrorChanceBase = Mathf.Clamp01(profile.AIErrorChanceBase);
+            profile.AIPressureErrorBoost = Mathf.Clamp01(profile.AIPressureErrorBoost);
+            profile.AIDecisionHesitationChance = Mathf.Clamp01(profile.AIDecisionHesitationChance);
+            profile.AIUnderPressureDribbleSlowdown = Mathf.Clamp(profile.AIUnderPressureDribbleSlowdown, 0.6f, 1f);
+            profile.AIDefensiveGapChance = Mathf.Clamp(profile.AIDefensiveGapChance, 0f, 0.5f);
+            profile.AIPlayerAdvantageRadius = Mathf.Clamp(profile.AIPlayerAdvantageRadius, 0.5f, 4f);
+            profile.AIPlayerInterceptionAssist = Mathf.Clamp(profile.AIPlayerInterceptionAssist, 0f, 0.4f);
+            profile.AIBadTouchChance = Mathf.Clamp(profile.AIBadTouchChance, 0f, 0.5f);
         }
 
         void ApplyDifficultyToActiveTeams()

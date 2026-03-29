@@ -1,4 +1,5 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.KickBall.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
@@ -13,6 +14,59 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         int maxNumOfTries;
         float maxPassTime;
         Range rangePassTime = new Range(0.5f, 1f);
+        MatchDifficultyProfile _difficultyProfile;
+        float _nextDecisionTime;
+        float _badTouchSlowUntil;
+
+        MatchDifficultyProfile GetDifficultyProfile()
+        {
+            if (MatchManager.Instance != null)
+                return MatchManager.Instance.CurrentDifficultyProfile;
+
+            return new MatchDifficultyProfile
+            {
+                AIReactionDelayMin = 0.1f,
+                AIReactionDelayMax = 0.22f,
+                AIErrorChanceBase = 0.06f,
+                AIPressureErrorBoost = 0.12f,
+                AIDecisionHesitationChance = 0.08f,
+                AIUnderPressureDribbleSlowdown = 0.9f,
+                AIBadTouchChance = 0.08f
+            };
+        }
+
+        bool IsDecisionTick()
+        {
+            if (Time.time < _nextDecisionTime)
+                return false;
+
+            float minDelay = Mathf.Max(0f, _difficultyProfile.AIReactionDelayMin);
+            float maxDelay = Mathf.Max(minDelay, _difficultyProfile.AIReactionDelayMax);
+            _nextDecisionTime = Time.time + Random.Range(minDelay, maxDelay);
+            return true;
+        }
+
+        float ComputePressure01()
+        {
+            if (Owner.OppositionMembers == null)
+                return 0f;
+
+            int nearbyCount = 0;
+            float pressureRadius = Mathf.Max(0.9f, Owner.DistanceThreatMax * 1.35f);
+            float sqrRadius = pressureRadius * pressureRadius;
+
+            for (int i = 0; i < Owner.OppositionMembers.Count; i++)
+            {
+                Player opponent = Owner.OppositionMembers[i];
+                if (opponent == null)
+                    continue;
+
+                if ((opponent.Position - Owner.Position).sqrMagnitude <= sqrRadius)
+                    nearbyCount++;
+            }
+
+            return Mathf.Clamp01(nearbyCount / 3f);
+        }
 
         public override void Enter()
         {
@@ -24,6 +78,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             //set the range
             maxNumOfTries = Random.Range(1, 5);
             maxPassTime = Random.Range(rangePassTime.Min, rangePassTime.Max);
+            _difficultyProfile = GetDifficultyProfile();
+            _nextDecisionTime = Time.time + Random.Range(_difficultyProfile.AIReactionDelayMin, _difficultyProfile.AIReactionDelayMax);
+            _badTouchSlowUntil = 0f;
 
             //set the steering
             Owner.RPGMovement.SetMoveTarget(Owner.OppGoal.transform.position);
@@ -43,10 +100,26 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 return;
             }
 
+            _difficultyProfile = GetDifficultyProfile();
+            bool decisionTick = IsDecisionTick();
+            float pressure01 = ComputePressure01();
+
+            if (decisionTick)
+            {
+                float badTouchChance = Mathf.Clamp01(_difficultyProfile.AIBadTouchChance + pressure01 * _difficultyProfile.AIPressureErrorBoost * 0.35f);
+                if (Random.value <= badTouchChance)
+                    _badTouchSlowUntil = Time.time + Random.Range(0.2f, 0.45f);
+            }
+
             bool isMoving = Owner.OppGoal != null
                 && (Owner.OppGoal.transform.position - Owner.Position).sqrMagnitude > 0.25f;
             bool wantsSprint = Owner.EvaluateAISprintIntent(isMoving, Owner.IsThreatened());
-            Owner.ApplySprintToMovement(wantsSprint, isMoving, 0.95f);
+            float dribbleMultiplier = 0.95f;
+            dribbleMultiplier *= Mathf.Lerp(1f, _difficultyProfile.AIUnderPressureDribbleSlowdown, pressure01);
+            if (Time.time < _badTouchSlowUntil)
+                dribbleMultiplier *= 0.84f;
+
+            Owner.ApplySprintToMovement(wantsSprint, isMoving, dribbleMultiplier);
 
             //decrement time
             if(maxPassTime > 0)
@@ -91,6 +164,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             if (maxPassTime <= 0 || Owner.IsThreatened())  //try passing if threatened or depleted wait time
             {
+                float pressure01 = ComputePressure01();
+                float hesitationChance = Mathf.Clamp01(_difficultyProfile.AIDecisionHesitationChance + pressure01 * _difficultyProfile.AIPressureErrorBoost * 0.4f);
+                if (!IsDecisionTick() || Random.value <= hesitationChance)
+                {
+                    maxPassTime = Random.Range(0.12f, 0.3f);
+                    return;
+                }
+
                 // check if I still should consider pass safety
                 bool considerPassSafety = true;// maxNumOfTries > 0;
 
