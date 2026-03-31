@@ -892,7 +892,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 82a08eb2528a76b4c901bc33d5e5cba9, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -12047,32 +12047,32 @@ PrefabInstance:
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _passVolume
-      value: 1.25
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _shotVolume
-      value: 1.25
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _crowdVolume
-      value: 1.25
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _postHitVolume
-      value: 1.25
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _loseBallVolume
-      value: 1.25
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _netImpactVolume
-      value: 1.25
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
@@ -12082,12 +12082,12 @@ PrefabInstance:
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _gainControlVolume
-      value: 1.25
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _goalkeeperCatchVolume
-      value: 1.25
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1028995852988646006, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
