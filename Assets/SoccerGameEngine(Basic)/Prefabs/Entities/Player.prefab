@@ -740,6 +740,7 @@ MonoBehaviour:
   _teamMembers: []
   _pitchPoints: []
   _ballContrallableDistance: 1
+  _maxBallControlHeight: 1.15
   _ballTacklableDistance: 3
   _playerType: 0
   _iconUserControlled: {fileID: 7363217310203470874}
@@ -3187,7 +3188,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3152176039123243825
 Transform:
   m_ObjectHideFlags: 0
@@ -3850,6 +3851,36 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerDirection
       objectReference: {fileID: 0}
+    - target: {fileID: 5311639446664220384, guid: 213cab37b4a71a3458d82da7d3f2efc7,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.24015
+      objectReference: {fileID: 0}
+    - target: {fileID: 5311639446664220384, guid: 213cab37b4a71a3458d82da7d3f2efc7,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.24015
+      objectReference: {fileID: 0}
+    - target: {fileID: 5311639446664220384, guid: 213cab37b4a71a3458d82da7d3f2efc7,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.24015
+      objectReference: {fileID: 0}
+    - target: {fileID: 5311639446664220384, guid: 213cab37b4a71a3458d82da7d3f2efc7,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5311639446664220384, guid: 213cab37b4a71a3458d82da7d3f2efc7,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.667
+      objectReference: {fileID: 0}
+    - target: {fileID: 5311639446664220384, guid: 213cab37b4a71a3458d82da7d3f2efc7,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0
+      objectReference: {fileID: 0}
     - target: {fileID: 8938528325598302978, guid: 213cab37b4a71a3458d82da7d3f2efc7,
         type: 3}
       propertyPath: m_RootOrder
@@ -3938,7 +3969,7 @@ PrefabInstance:
     - target: {fileID: 4751522756732143351, guid: e5794df09c1c82b46a0915561f52aec7,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5021583222701741379, guid: e5794df09c1c82b46a0915561f52aec7,
         type: 3}

@@ -27,6 +27,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         bool _sprintHeld;
         bool _passQueued;
         bool _shootQueued;
+        int _takeKickOffBlockTapCount;
 
         bool ActionButtonsEnabled => _isMobileControls || _allowUiActionButtonsOnDesktop;
 
@@ -89,17 +90,32 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             return pressed;
         }
 
+        int ConsumeTakeKickOffBlockPressCountInternal()
+        {
+            if (!ActionButtonsEnabled)
+            {
+                _takeKickOffBlockTapCount = 0;
+                return 0;
+            }
+
+            int count = _takeKickOffBlockTapCount;
+            _takeKickOffBlockTapCount = 0;
+            return count;
+        }
+
         void ResetQueuedInputs()
         {
             _sprintHeld = false;
             _passQueued = false;
             _shootQueued = false;
+            _takeKickOffBlockTapCount = 0;
         }
 
         void ResetQueuedTapActions()
         {
             _passQueued = false;
             _shootQueued = false;
+            _takeKickOffBlockTapCount = 0;
         }
 
         public void SetMobileControlsEnabled(bool enabled)
@@ -142,6 +158,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 _shootQueued = true;
         }
 
+        public void PressTakeKickOffBlock()
+        {
+            if (ActionButtonsEnabled)
+                _takeKickOffBlockTapCount++;
+        }
+
         public static bool IsEnabled => Instance != null && Instance._isMobileControls;
 
         public static Vector2 ReadMovementInput()
@@ -162,6 +184,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         public static bool ConsumeShootPressed()
         {
             return Instance != null && Instance.ConsumeShootInternal();
+        }
+
+        public static int ConsumeTakeKickOffBlockPressCount()
+        {
+            return Instance != null ? Instance.ConsumeTakeKickOffBlockPressCountInternal() : 0;
         }
 
         public static void ClearQueuedTapActions()

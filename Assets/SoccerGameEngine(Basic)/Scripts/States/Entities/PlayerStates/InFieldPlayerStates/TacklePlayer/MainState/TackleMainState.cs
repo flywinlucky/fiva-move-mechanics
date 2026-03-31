@@ -74,6 +74,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                         chance -= 0.12f;
                     else if (difficulty == MatchDifficulty.Normal)
                         chance -= 0.05f;
+
+                    // QTE block button: without taps user keeps ball ~5%, with multiple taps up to ~70%.
+                    int blockTapCount = MobileControlsInput.ConsumeTakeKickOffBlockPressCount();
+                    float keepBallChance = blockTapCount <= 0
+                        ? 0.05f
+                        : Mathf.Lerp(0.35f, 0.70f, Mathf.Clamp01(blockTapCount / 4f));
+
+                    float tackleSuccessFromQte = 1f - keepBallChance;
+                    chance = Mathf.Lerp(chance, tackleSuccessFromQte, 0.9f);
                 }
                 else if (Owner.IsUserControlled && !carrier.IsUserControlled)
                 {
