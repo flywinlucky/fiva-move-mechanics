@@ -327,6 +327,7 @@ GameObject:
   m_Component:
   - component: {fileID: 37751768}
   - component: {fileID: 37751769}
+  - component: {fileID: 37751770}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -375,6 +376,27 @@ MonoBehaviour:
   _suddenDeathPanel:
     TxtInfo: {fileID: 681301748}
     Root: {fileID: 1669918580}
+--- !u!114 &37751770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 37751767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 104b37ca8e199524ab349b7710215a58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _minimapRect: {fileID: 1897884356}
+  _canvasGroup: {fileID: 2043270088}
+  _trackedTarget: {fileID: 546599439}
+  _autoTrackBall: 1
+  _visibleAlpha: 1
+  _fadedAlpha: 0.2
+  _fadeSmoothTime: 0.12
+  _screenPaddingPixels: 24
+  _targetYOffset: 0.2
 --- !u!1 &48337072
 GameObject:
   m_ObjectHideFlags: 0
@@ -869,7 +891,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
+        m_Texture: {fileID: 2800000, guid: 77a803fcdaf21c94abd36437857c3b09, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -10310,9 +10332,29 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 921245202726023198, guid: 9827a03c420e3594b831d7d9d1c22716,
         type: 3}
+      propertyPath: mapZoom
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 921245202726023198, guid: 9827a03c420e3594b831d7d9d1c22716,
+        type: 3}
+      propertyPath: invertAxisY
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 921245202726023198, guid: 9827a03c420e3594b831d7d9d1c22716,
+        type: 3}
+      propertyPath: defaultSprite
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 921245202726023198, guid: 9827a03c420e3594b831d7d9d1c22716,
+        type: 3}
       propertyPath: miniMapBounds
       value: 
       objectReference: {fileID: 267651794}
+    - target: {fileID: 921245202726023198, guid: 9827a03c420e3594b831d7d9d1c22716,
+        type: 3}
+      propertyPath: swapWorldAxes
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 921245203039697195, guid: 9827a03c420e3594b831d7d9d1c22716,
         type: 3}
       propertyPath: m_AnchorMax.x
@@ -11205,6 +11247,12 @@ MonoBehaviour:
   m_DeselectOnBackgroundClick: 1
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
+--- !u!225 &2043270088 stripped
+CanvasGroup:
+  m_CorrespondingSourceObject: {fileID: 7027965763153576827, guid: 9827a03c420e3594b831d7d9d1c22716,
+    type: 3}
+  m_PrefabInstance: {fileID: 1897884355}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2050966121
 GameObject:
   m_ObjectHideFlags: 0
