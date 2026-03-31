@@ -3018,7 +3018,6 @@ MonoBehaviour:
   gameSceneName: Game
   searchingMessage: Searching opponent...
   foundMessage: Opponent found!
-  tipRefreshIntervalSeconds: 1
   searchTips:
   - Passing quickly keeps possession and creates space.
   - "Don\u2019t sprint all the time control is more important than speed."
