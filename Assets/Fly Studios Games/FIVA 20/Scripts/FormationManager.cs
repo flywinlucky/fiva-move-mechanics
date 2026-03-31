@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
 using UnityEngine;
 
 namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
@@ -22,11 +23,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         public Team team_1;
         public Color formation_team_1_Color = Color.cyan;
         public TeamKitMaterials team_1_materials = new TeamKitMaterials();
+        public Color formation_team_1_goalkeeper_Color = Color.yellow;
+        public TeamKitMaterials team_1_goalkeeper_materials = new TeamKitMaterials();
 
         [Header("team 2 formation")]
         public Team team_2;
         public Color formation_team_2_Color = Color.red;
         public TeamKitMaterials team_2_materials = new TeamKitMaterials();
+        public Color formation_team_2_goalkeeper_Color = new Color(1f, 0.5f, 0f, 1f);
+        public TeamKitMaterials team_2_goalkeeper_materials = new TeamKitMaterials();
 
         [Header("Apply")]
         [SerializeField]
@@ -61,11 +66,27 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public void ApplyFormationDataToPlayers()
         {
-            ApplyTeamData(team_1, formation_team_1_Color, team_1_materials);
-            ApplyTeamData(team_2, formation_team_2_Color, team_2_materials);
+            ApplyTeamData(
+                team_1,
+                formation_team_1_Color,
+                team_1_materials,
+                formation_team_1_goalkeeper_Color,
+                team_1_goalkeeper_materials);
+
+            ApplyTeamData(
+                team_2,
+                formation_team_2_Color,
+                team_2_materials,
+                formation_team_2_goalkeeper_Color,
+                team_2_goalkeeper_materials);
         }
 
-        void ApplyTeamData(Team team, Color teamColor, TeamKitMaterials materials)
+        void ApplyTeamData(
+            Team team,
+            Color teamColor,
+            TeamKitMaterials materials,
+            Color goalkeeperColor,
+            TeamKitMaterials goalkeeperMaterials)
         {
             if (team == null || team.Players == null)
                 return;
@@ -76,16 +97,36 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 if (teamPlayer == null || teamPlayer.Player == null)
                     continue;
 
-                teamPlayer.Player.ApplyFormationWidget(teamColor);
+                bool isGoalkeeper = teamPlayer.Player.PlayerType == PlayerTypes.Goalkeeper;
+                TeamKitMaterials selectedMaterials = isGoalkeeper && HasAnyMaterial(goalkeeperMaterials)
+                    ? goalkeeperMaterials
+                    : materials;
+                Color selectedColor = isGoalkeeper
+                    ? goalkeeperColor
+                    : teamColor;
+
+                teamPlayer.Player.ApplyFormationWidget(selectedColor);
                 teamPlayer.Player.ApplyTeamMaterials(
-                    materials != null ? materials.body : null,
-                    materials != null ? materials.boots : null,
-                    materials != null ? materials.eyes : null,
-                    materials != null ? materials.gloaves : null,
-                    materials != null ? materials.head : null,
-                    materials != null ? materials.kitbody : null,
-                    materials != null ? materials.socks : null);
+                    selectedMaterials != null ? selectedMaterials.body : null,
+                    selectedMaterials != null ? selectedMaterials.boots : null,
+                    selectedMaterials != null ? selectedMaterials.eyes : null,
+                    selectedMaterials != null ? selectedMaterials.gloaves : null,
+                    selectedMaterials != null ? selectedMaterials.head : null,
+                    selectedMaterials != null ? selectedMaterials.kitbody : null,
+                    selectedMaterials != null ? selectedMaterials.socks : null);
             }
+        }
+
+        bool HasAnyMaterial(TeamKitMaterials materials)
+        {
+            return materials != null
+                && (materials.body != null
+                || materials.boots != null
+                || materials.eyes != null
+                || materials.gloaves != null
+                || materials.head != null
+                || materials.kitbody != null
+                || materials.socks != null);
         }
 
         bool HasAnyPlayers(Team team)
