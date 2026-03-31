@@ -17,6 +17,8 @@ public class TutorialManager : MonoBehaviour
         Completed
     }
 
+    [SerializeField]
+    public GameObject tutorialCanvas;
     [Header("Setup")]
     [SerializeField]
     bool runOnStart = true;

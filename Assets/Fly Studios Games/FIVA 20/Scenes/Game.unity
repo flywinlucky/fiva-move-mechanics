@@ -425,6 +425,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41343b26920e249459f4437a8a750cf2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tutorialCanvas: {fileID: 7113798072638559681}
   runOnStart: 1
   tutorialStepText: {fileID: 122961803}
   moveStepText: Move your player
@@ -997,7 +998,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 82a08eb2528a76b4c901bc33d5e5cba9, type: 3}
+        m_Texture: {fileID: 2800000, guid: d5345867c3444d9459d88bff378c4eeb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -12525,7 +12526,7 @@ GameObject:
   - component: {fileID: 7113798072638559708}
   - component: {fileID: 7113798072638559683}
   m_Layer: 0
-  m_Name: Stamina and name hood (1)
+  m_Name: tutorial notifi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
