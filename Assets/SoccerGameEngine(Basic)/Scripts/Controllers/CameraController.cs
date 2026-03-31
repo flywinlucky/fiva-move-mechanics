@@ -55,7 +55,26 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Controllers
         float _shakeDuration;
         float _shakeTimer;
         float _shakeMagnitude;
+        float _shakeElapsed;
+        Vector3 _shakeNoiseSeed;
+        Vector3 _currentShakeOffset;
+        Vector3 _shakeOffsetVelocity;
 
+        [Header("Shake")]
+        [SerializeField]
+        [Min(0.1f)]
+        float _shakeFrequency = 17f;
+
+        [SerializeField]
+        [Min(0.01f)]
+        float _shakeSmoothTime = 0.08f;
+
+        [SerializeField]
+        Vector3 _shakeAxisMultiplier = new Vector3(1f, 0.85f, 1f);
+
+        [Space]
+        public float duration = 0;
+        public float magnitude = 0;
         private void Awake()
         {
             _fixedY = transform.position.y;
@@ -63,6 +82,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Controllers
             ClampBoundsIfInvalid();
             ResolveTargetIfNeeded();
             InitializeOffsetIfNeeded();
+
+            _shakeNoiseSeed = new Vector3(
+                Random.Range(0f, 1000f),
+                Random.Range(0f, 1000f),
+                Random.Range(0f, 1000f));
 
             transform.position = ClampToFieldBounds(transform.position);
         }
@@ -84,9 +108,33 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Controllers
             if (_shakeTimer > 0f)
             {
                 _shakeTimer -= Time.deltaTime;
-                float t = Mathf.Clamp01(_shakeTimer / Mathf.Max(0.01f, _shakeDuration));
-                Vector2 noise = Random.insideUnitCircle * (_shakeMagnitude * t);
-                desiredPosition += new Vector3(noise.x, noise.y, 0f);
+                _shakeElapsed += Time.deltaTime;
+
+                float normalized = 1f - Mathf.Clamp01(_shakeTimer / Mathf.Max(0.01f, _shakeDuration));
+                float envelope = 1f - (normalized * normalized);
+                Vector3 targetOffset = EvaluateSmoothShakeOffset(envelope);
+
+                _currentShakeOffset = Vector3.SmoothDamp(
+                    _currentShakeOffset,
+                    targetOffset,
+                    ref _shakeOffsetVelocity,
+                    Mathf.Max(0.01f, _shakeSmoothTime),
+                    Mathf.Infinity,
+                    Time.deltaTime);
+
+                desiredPosition += _currentShakeOffset;
+            }
+            else if (_currentShakeOffset.sqrMagnitude > 0.000001f)
+            {
+                _currentShakeOffset = Vector3.SmoothDamp(
+                    _currentShakeOffset,
+                    Vector3.zero,
+                    ref _shakeOffsetVelocity,
+                    Mathf.Max(0.01f, _shakeSmoothTime),
+                    Mathf.Infinity,
+                    Time.deltaTime);
+
+                desiredPosition += _currentShakeOffset;
             }
 
             transform.position = Vector3.SmoothDamp(transform.position,
@@ -97,11 +145,54 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Controllers
                 Time.deltaTime);
         }
 
+        void Update()
+        {
+        if(Input.GetKeyDown(KeyCode.Space))
+            {
+                Shake(duration, magnitude);
+                Debug.Log("Camera shake triggered with duration: " + duration + " and magnitude: " + magnitude);
+            }
+        }
+
         public void Shake(float duration, float magnitude)
         {
-            _shakeDuration = Mathf.Max(0.01f, duration);
+            float incomingDuration = Mathf.Max(0.01f, duration);
+            float incomingMagnitude = Mathf.Max(0f, magnitude);
+
+            if (incomingMagnitude <= 0f)
+                return;
+
+            if (_shakeTimer > 0f)
+            {
+                _shakeTimer = Mathf.Max(_shakeTimer, incomingDuration);
+                _shakeDuration = Mathf.Max(_shakeDuration, _shakeTimer);
+                _shakeMagnitude = Mathf.Max(_shakeMagnitude, incomingMagnitude);
+                return;
+            }
+
+            _shakeDuration = incomingDuration;
             _shakeTimer = _shakeDuration;
-            _shakeMagnitude = Mathf.Max(0f, magnitude);
+            _shakeMagnitude = incomingMagnitude;
+            _shakeElapsed = 0f;
+            _shakeNoiseSeed = new Vector3(
+                Random.Range(0f, 1000f),
+                Random.Range(0f, 1000f),
+                Random.Range(0f, 1000f));
+        }
+
+        Vector3 EvaluateSmoothShakeOffset(float envelope)
+        {
+            float frequency = Mathf.Max(0.1f, _shakeFrequency);
+            float sampleTime = _shakeElapsed * frequency;
+
+            float noiseX = Mathf.PerlinNoise(_shakeNoiseSeed.x, sampleTime) * 2f - 1f;
+            float noiseY = Mathf.PerlinNoise(_shakeNoiseSeed.y, sampleTime + 23.17f) * 2f - 1f;
+            float noiseZ = Mathf.PerlinNoise(_shakeNoiseSeed.z, sampleTime + 47.71f) * 2f - 1f;
+
+            Vector3 axisNoise = new Vector3(noiseX, noiseY, noiseZ);
+            Vector3 scaledNoise = Vector3.Scale(axisNoise, _shakeAxisMultiplier);
+
+            return scaledNoise * (_shakeMagnitude * Mathf.Clamp01(envelope));
         }
 
         void ResolveTargetIfNeeded()
@@ -179,6 +270,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Controllers
         {
             _smoothTime = Mathf.Max(0.01f, _smoothTime);
             _maxFollowSpeed = Mathf.Max(0.1f, _maxFollowSpeed);
+            _shakeFrequency = Mathf.Max(0.1f, _shakeFrequency);
+            _shakeSmoothTime = Mathf.Max(0.01f, _shakeSmoothTime);
 
             ClampBoundsIfInvalid();
         }

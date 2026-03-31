@@ -371,7 +371,7 @@ MonoBehaviour:
     TxtScores: {fileID: 1073404032}
     TxtTime: {fileID: 605288239}
     Root: {fileID: 2031502556}
-  _cameraController: {fileID: 0}
+  _cameraController: {fileID: 963194229}
   _suddenDeathPanel:
     TxtInfo: {fileID: 681301748}
     Root: {fileID: 1669918580}
@@ -6634,14 +6634,19 @@ MonoBehaviour:
   _followBallOwnerWhenControlled: 1
   _captureOffsetOnStart: 1
   _followOffset: {x: 0, y: 0, z: 0}
-  _smoothTime: 0.3
-  _maxFollowSpeed: 100
+  _smoothTime: 0.45
+  _maxFollowSpeed: 80
   _keepInitialY: 1
   _minX: -45
   _maxX: 49.2
   _minZ: -65
   _maxZ: 65
   _drawBoundsGizmo: 1
+  _shakeFrequency: 17
+  _shakeSmoothTime: 0.08
+  _shakeAxisMultiplier: {x: 1, y: 0.85, z: 1}
+  duration: 0.4
+  magnitude: 20
 --- !u!4 &977541031 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4200073799722462495, guid: 93602d7634211b04f9088674182cf0c4,
@@ -7386,7 +7391,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c674e39cc4b6b2840be1dda753cbd786, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _difficulty: 0
+  _difficulty: 1
   _enableGoalkeeperDebug: 1
   _enableDynamicDifficulty: 1
   _ddaSmoothingSpeed: 2.25
@@ -11989,6 +11994,51 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: SoundManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: _passVolume
+      value: 1.11
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: _shotVolume
+      value: 1.13
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: _crowdVolume
+      value: 1.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: _postHitVolume
+      value: 1.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: _loseBallVolume
+      value: 1.19
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: _netImpactVolume
+      value: 1.19
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: _matchStartVolume
+      value: 0.34
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: _gainControlVolume
+      value: 1.19
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: _goalkeeperCatchVolume
+      value: 1.21
       objectReference: {fileID: 0}
     - target: {fileID: 1028995852988646006, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
