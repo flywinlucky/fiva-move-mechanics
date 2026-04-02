@@ -68,19 +68,26 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (MatchManager.Instance != null)
             {
                 MatchDifficulty difficulty = MatchManager.Instance.Difficulty;
+                MatchDifficultyProfile runtimeProfile = MatchManager.Instance.RuntimeDifficultyProfile;
+
                 if (!Owner.IsUserControlled && carrier.IsUserControlled)
                 {
+                    chance -= (runtimeProfile.AIPlayerInterceptionAssist * 0.55f);
+                    chance -= (runtimeProfile.AIErrorChanceBase * 0.20f);
+
                     if (difficulty == MatchDifficulty.Casual)
-                        chance -= 0.12f;
+                        chance -= 0.04f;
                     else if (difficulty == MatchDifficulty.Normal)
-                        chance -= 0.05f;
+                        chance += 0.01f;
                 }
                 else if (Owner.IsUserControlled && !carrier.IsUserControlled)
                 {
+                    chance += (runtimeProfile.AIPlayerInterceptionAssist * 0.30f);
+
                     if (difficulty == MatchDifficulty.Casual)
-                        chance += 0.08f;
+                        chance += 0.03f;
                     else if (difficulty == MatchDifficulty.Normal)
-                        chance += 0.04f;
+                        chance += 0.01f;
                 }
             }
 

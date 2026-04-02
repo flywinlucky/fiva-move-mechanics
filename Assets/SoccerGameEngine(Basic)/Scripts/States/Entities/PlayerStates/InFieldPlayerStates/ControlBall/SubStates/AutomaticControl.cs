@@ -13,11 +13,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
     {
         int maxNumOfTries;
         float maxPassTime;
-        Range rangePassTime = new Range(0.5f, 1f);
+        Range rangePassTime = new Range(0.85f, 1.65f);
         MatchDifficultyProfile _difficultyProfile;
         float _nextDecisionTime;
         float _badTouchSlowUntil;
         float _longShotHesitationUntil;
+        float _possessionElapsed;
+
+        const float MinPossessionBeforeNormalPass = 1.15f;
+        const float ForcedReleasePossessionSeconds = 4.5f;
 
         MatchDifficultyProfile GetDifficultyProfile()
         {
@@ -160,6 +164,143 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             return false;
         }
 
+        bool IsUnderRearUserPressure(float maxDistance = 2.4f)
+        {
+            if (Owner.OppositionMembers == null)
+                return false;
+
+            float sqrMaxDistance = Mathf.Max(0.5f, maxDistance) * Mathf.Max(0.5f, maxDistance);
+            Vector3 ownerForward = Vector3.Scale(Owner.transform.forward, new Vector3(1f, 0f, 1f));
+            if (ownerForward.sqrMagnitude <= 0.0001f)
+                ownerForward = Vector3.forward;
+            ownerForward.Normalize();
+
+            for (int i = 0; i < Owner.OppositionMembers.Count; i++)
+            {
+                Player opponent = Owner.OppositionMembers[i];
+                if (opponent == null || !opponent.IsUserControlled)
+                    continue;
+
+                Vector3 toOpponent = opponent.Position - Owner.Position;
+                toOpponent.y = 0f;
+                if (toOpponent.sqrMagnitude > sqrMaxDistance)
+                    continue;
+
+                float behindDot = Vector3.Dot(ownerForward, toOpponent.normalized);
+                if (behindDot <= -0.1f)
+                    return true;
+            }
+
+            return false;
+        }
+
+        Player GetBestForwardTeammate(float minGoalAdvantage = 2.5f)
+        {
+            if (Owner.TeamMembers == null || Owner.OppGoal == null)
+                return null;
+
+            float myDistanceToGoal = Vector3.Distance(Owner.Position, Owner.OppGoal.Position);
+            float requiredAdvantage = Mathf.Max(0.75f, minGoalAdvantage);
+
+            Player best = null;
+            float bestScore = float.MinValue;
+
+            for (int i = 0; i < Owner.TeamMembers.Count; i++)
+            {
+                Player teammate = Owner.TeamMembers[i];
+                if (teammate == null || teammate == Owner)
+                    continue;
+
+                if (teammate.PlayerType == PlayerTypes.Goalkeeper)
+                    continue;
+
+                float teammateDistance = Vector3.Distance(teammate.Position, Owner.OppGoal.Position);
+                float goalGain = myDistanceToGoal - teammateDistance;
+                if (goalGain < requiredAdvantage)
+                    continue;
+
+                float spacing = Vector3.Distance(teammate.Position, Owner.Position);
+                float score = (goalGain * 1.25f) + (Mathf.Clamp(spacing, 0f, 18f) * 0.06f);
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = teammate;
+                }
+            }
+
+            return best;
+        }
+
+        bool TryTeamPlayPass(float pressure01, float distanceToGoal, bool forcePass = false)
+        {
+            bool rearPressure = IsUnderRearUserPressure();
+            bool threatened = Owner.IsThreatened();
+            Player bestForwardTeammate = GetBestForwardTeammate(distanceToGoal >= 20f ? 2.2f : 1.4f);
+            bool hasBetterTeammateOption = bestForwardTeammate != null;
+            bool highStealPressure = rearPressure || (threatened && pressure01 >= 0.55f);
+
+            if (!forcePass && !highStealPressure && _possessionElapsed < MinPossessionBeforeNormalPass)
+                return false;
+
+            float passChance = 0.10f + (pressure01 * 0.26f);
+
+            // Requested behavior: ~50% random pass when AI feels chased from behind.
+            if (highStealPressure)
+                passChance = Mathf.Max(passChance, 0.50f);
+
+            if (threatened)
+                passChance = Mathf.Max(passChance, 0.28f + (pressure01 * 0.25f));
+
+            // Prevent ego dribbles from very far away when a better forward pass exists.
+            if (distanceToGoal >= 16f && hasBetterTeammateOption)
+                passChance = Mathf.Max(passChance, 0.35f + (pressure01 * 0.20f));
+            else if (distanceToGoal >= 24f)
+                passChance = Mathf.Max(passChance, 0.28f);
+
+            if (_possessionElapsed >= 3.2f && hasBetterTeammateOption)
+                passChance = Mathf.Max(passChance, 0.62f);
+
+            if (forcePass)
+                passChance = 1f;
+
+            passChance = Mathf.Clamp01(passChance);
+            if (passChance <= 0f || Random.value > passChance)
+                return false;
+
+            bool canPass = false;
+
+            if (bestForwardTeammate != null)
+            {
+                Vector3 preferredDirection = bestForwardTeammate.Position - Owner.Position;
+                preferredDirection.y = 0f;
+                if (preferredDirection.sqrMagnitude > 0.0001f)
+                    canPass = Owner.CanPassInDirection(preferredDirection.normalized, true);
+            }
+
+            if (!canPass)
+                canPass = Owner.CanPass(true);
+
+            if (!canPass)
+                canPass = Owner.CanPass(false);
+
+            if (!canPass && rearPressure)
+            {
+                Vector3 side = Vector3.Cross(Vector3.up, Owner.transform.forward).normalized;
+                if (side.sqrMagnitude <= 0.0001f)
+                    side = Vector3.right;
+
+                canPass = Owner.CanPassInDirection(side, true) || Owner.CanPassInDirection(-side, true);
+            }
+
+            if (!canPass)
+                return false;
+
+            Owner.MarkAutomaticKickCommand(KickType.Pass);
+            SuperMachine.ChangeState<KickBallMainState>();
+            return true;
+        }
+
         public override void Enter()
         {
             base.Enter();
@@ -174,6 +315,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             _nextDecisionTime = Time.time + Random.Range(_difficultyProfile.AIReactionDelayMin, _difficultyProfile.AIReactionDelayMax);
             _badTouchSlowUntil = 0f;
             _longShotHesitationUntil = 0f;
+            _possessionElapsed = 0f;
 
             //set the steering
             Owner.RPGMovement.SetMoveTarget(Owner.OppGoal.transform.position);
@@ -196,6 +338,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             _difficultyProfile = GetDifficultyProfile();
             bool decisionTick = IsDecisionTick();
             float pressure01 = ComputePressure01();
+            _possessionElapsed += Time.deltaTime;
 
             if (decisionTick)
             {
@@ -223,9 +366,23 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             base.ManualExecute();
 
+            _difficultyProfile = GetDifficultyProfile();
+            float pressure01 = ComputePressure01();
+            float distanceToGoal = Owner.OppGoal != null
+                ? Vector3.Distance(Owner.OppGoal.Position, Owner.Position)
+                : 0f;
+
+            bool mustReleaseBallNow = _possessionElapsed >= ForcedReleasePossessionSeconds
+                && distanceToGoal >= 14f
+                && GetBestForwardTeammate(1.2f) != null
+                && (pressure01 >= 0.45f || Owner.IsThreatened());
+
             //set the steering
             Owner.RPGMovement.SetMoveTarget(Owner.OppGoal.transform.position);
             Owner.RPGMovement.SetRotateFacePosition(Owner.OppGoal.transform.position);
+
+            if (TryTeamPlayPass(pressure01, distanceToGoal, mustReleaseBallNow))
+                return;
 
             if (Owner.CanScore())
             {
@@ -240,7 +397,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             else
             {
                 // occasional long-range shots to make AI attack less linear
-                float distanceToGoal = Vector3.Distance(Owner.OppGoal.Position, Owner.Position);
                 bool isWithinLongShotRange = distanceToGoal >= 18f && distanceToGoal <= 25f;
                 if (isWithinLongShotRange)
                 {
@@ -278,30 +434,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             if (maxPassTime <= 0 || Owner.IsThreatened())  //try passing if threatened or depleted wait time
             {
-                float pressure01 = ComputePressure01();
                 float hesitationChance = Mathf.Clamp01(_difficultyProfile.AIDecisionHesitationChance + pressure01 * _difficultyProfile.AIPressureErrorBoost * 0.4f);
-                if (!IsDecisionTick() || Random.value <= hesitationChance)
+                if (Random.value <= hesitationChance)
                 {
                     maxPassTime = Random.Range(0.12f, 0.3f);
                     return;
                 }
 
-                // check if I still should consider pass safety
-                bool considerPassSafety = true;// maxNumOfTries > 0;
-
-                //start considering passing if wait -time is less than zero
-                //find player to pass ball to if threatened or
-                //has spend alot of time controlling the ball
-                bool canPass = Owner.CanPass(considerPassSafety);
-                if (!canPass)
-                    canPass = Owner.CanPass(false);
-
-                if (canPass)
-                {
-                    //go to kick-ball state
-                    Owner.MarkAutomaticKickCommand(KickType.Pass);
-                    SuperMachine.ChangeState<KickBallMainState>();
-                }
+                if (TryTeamPlayPass(pressure01, distanceToGoal, true))
+                    return;
 
                 // decrement max num of tries
                 if (maxNumOfTries > 0)

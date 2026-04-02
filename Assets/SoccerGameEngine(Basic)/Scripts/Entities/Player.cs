@@ -133,15 +133,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [Header("Goalkeeper Catch")]
         [SerializeField]
         [Range(0f, 1f)]
-        float _goalKeeperCatchChance = 0.5f;
+        float _goalKeeperCatchChance = 0.62f;
 
         [SerializeField]
         [Range(0.1f, 30f)]
-        float _goalKeeperCatchSpeedReference = 12f;
+        float _goalKeeperCatchSpeedReference = 14f;
 
         [SerializeField]
         [Range(0f, 0.75f)]
-        float _goalKeeperCatchSpeedPenalty = 0.25f;
+        float _goalKeeperCatchSpeedPenalty = 0.22f;
 
         //[SerializeField]
         //[Range(0.1f, 5f)]
@@ -1338,9 +1338,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             float normalizedBallSpeed = Mathf.Clamp01(Mathf.Max(0f, ballSpeed) / speedReference);
             float speedPenalty = normalizedBallSpeed * Mathf.Clamp(_goalKeeperCatchSpeedPenalty, 0f, 0.75f);
 
-            float chance = Mathf.Clamp01(_goalKeeperCatchChance - speedPenalty);
+            float chance = Mathf.Clamp01(_goalKeeperCatchChance + ((_goalKeeping - 0.5f) * 0.18f) - speedPenalty);
 
-            return chance;
+            if (MatchManager.Instance != null)
+            {
+                MatchDifficultyProfile profile = MatchManager.Instance.RuntimeDifficultyProfile;
+                float profilePenalty = (profile.GKMistakeChance * 0.16f) + (profile.GKShotForgiveness * 0.12f);
+                chance -= profilePenalty;
+            }
+
+            return Mathf.Clamp(chance, 0.12f, 0.92f);
         }
 
         public bool TryCatchBallAsGoalKeeper(float ballSpeed)

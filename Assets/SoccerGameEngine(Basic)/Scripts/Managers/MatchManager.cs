@@ -148,59 +148,59 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [SerializeField]
         MatchDifficultyProfile _casualProfile = new MatchDifficultyProfile
         {
-            PassMaxMultiplier = 1.35f,
-            PassMinMultiplier = 0.70f,
-            AICarrierLeadTime = 0.20f,
-            AICarrierSideStepDistance = 1.50f,
+            PassMaxMultiplier = 1.25f,
+            PassMinMultiplier = 0.78f,
+            AICarrierLeadTime = 0.26f,
+            AICarrierSideStepDistance = 1.35f,
             AIBehindDotThreshold = -0.35f,
-            AIBehindStickBreakDistance = 1.80f,
-            AIChaseSlowdownWhenBehind = 0.84f,
-            AIReactionDelayMin = 0.18f,
-            AIReactionDelayMax = 0.40f,
-            AIErrorChanceBase = 0.12f,
-            AIPressureErrorBoost = 0.22f,
-            AIDecisionHesitationChance = 0.18f,
-            AIUnderPressureDribbleSlowdown = 0.82f,
-            AIDefensiveGapChance = 0.20f,
-            AIPlayerAdvantageRadius = 2.30f,
-            AIPlayerInterceptionAssist = 0.18f,
-            AIBadTouchChance = 0.14f,
-            GKReactionDelayMin = 0.20f,
-            GKReactionDelayMax = 0.40f,
-            GKMistakeChance = 0.18f,
-            GKReboundChance = 0.38f,
-            GKPositioningResponsiveness = 0.85f,
-            GKWrongDiveChance = 0.20f,
-            GKShotForgiveness = 0.14f
+            AIBehindStickBreakDistance = 1.55f,
+            AIChaseSlowdownWhenBehind = 0.90f,
+            AIReactionDelayMin = 0.12f,
+            AIReactionDelayMax = 0.28f,
+            AIErrorChanceBase = 0.09f,
+            AIPressureErrorBoost = 0.17f,
+            AIDecisionHesitationChance = 0.12f,
+            AIUnderPressureDribbleSlowdown = 0.86f,
+            AIDefensiveGapChance = 0.13f,
+            AIPlayerAdvantageRadius = 2.05f,
+            AIPlayerInterceptionAssist = 0.10f,
+            AIBadTouchChance = 0.10f,
+            GKReactionDelayMin = 0.16f,
+            GKReactionDelayMax = 0.32f,
+            GKMistakeChance = 0.12f,
+            GKReboundChance = 0.24f,
+            GKPositioningResponsiveness = 1.00f,
+            GKWrongDiveChance = 0.14f,
+            GKShotForgiveness = 0.07f
         };
 
         [SerializeField]
         MatchDifficultyProfile _normalProfile = new MatchDifficultyProfile
         {
-            PassMaxMultiplier = 1.15f,
-            PassMinMultiplier = 0.85f,
-            AICarrierLeadTime = 0.32f,
-            AICarrierSideStepDistance = 1.15f,
+            PassMaxMultiplier = 1.05f,
+            PassMinMultiplier = 0.92f,
+            AICarrierLeadTime = 0.40f,
+            AICarrierSideStepDistance = 1.00f,
             AIBehindDotThreshold = -0.30f,
-            AIBehindStickBreakDistance = 1.25f,
-            AIChaseSlowdownWhenBehind = 0.91f,
-            AIReactionDelayMin = 0.10f,
-            AIReactionDelayMax = 0.22f,
-            AIErrorChanceBase = 0.06f,
-            AIPressureErrorBoost = 0.12f,
-            AIDecisionHesitationChance = 0.08f,
-            AIUnderPressureDribbleSlowdown = 0.90f,
-            AIDefensiveGapChance = 0.10f,
-            AIPlayerAdvantageRadius = 1.80f,
-            AIPlayerInterceptionAssist = 0.08f,
-            AIBadTouchChance = 0.08f,
-            GKReactionDelayMin = 0.12f,
-            GKReactionDelayMax = 0.25f,
-            GKMistakeChance = 0.11f,
-            GKReboundChance = 0.30f,
-            GKPositioningResponsiveness = 1.15f,
-            GKWrongDiveChance = 0.11f,
-            GKShotForgiveness = 0.08f
+            AIBehindStickBreakDistance = 1.00f,
+            AIChaseSlowdownWhenBehind = 0.95f,
+            AIReactionDelayMin = 0.06f,
+            AIReactionDelayMax = 0.14f,
+            AIErrorChanceBase = 0.04f,
+            AIPressureErrorBoost = 0.08f,
+            AIDecisionHesitationChance = 0.05f,
+            AIUnderPressureDribbleSlowdown = 0.94f,
+            AIDefensiveGapChance = 0.06f,
+            AIPlayerAdvantageRadius = 1.55f,
+            AIPlayerInterceptionAssist = 0.04f,
+            AIBadTouchChance = 0.05f,
+            GKReactionDelayMin = 0.08f,
+            GKReactionDelayMax = 0.18f,
+            GKMistakeChance = 0.07f,
+            GKReboundChance = 0.18f,
+            GKPositioningResponsiveness = 1.28f,
+            GKWrongDiveChance = 0.07f,
+            GKShotForgiveness = 0.04f
         };
 
         [SerializeField]
@@ -615,6 +615,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                     return profile;
 
                 float assist = Mathf.Clamp01(_ddaStrength);
+                assist = Mathf.Min(assist, GetDifficultyAssistCap());
                 float challenge = 1f - assist;
 
                 profile.AIReactionDelayMin += Mathf.Lerp(-0.02f, _ddaMaxReactionDelayBoost, assist);
@@ -768,7 +769,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
             // Low performance => more assist. High performance => less assist.
             float targetAssist = 1f - _playerPerformanceScore;
+            targetAssist = Mathf.Min(targetAssist, GetDifficultyAssistCap());
             _ddaStrength = Mathf.Lerp(_ddaStrength, targetAssist, lerpT);
+        }
+
+        float GetDifficultyAssistCap()
+        {
+            if (_difficulty == MatchDifficulty.Hard)
+                return 0.25f;
+
+            if (_difficulty == MatchDifficulty.Normal)
+                return 0.45f;
+
+            return 0.65f;
         }
 
         Team UserControlledTeam
