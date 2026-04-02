@@ -286,7 +286,7 @@ Light:
   m_RenderMode: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 119
   m_RenderingLayerMask: 1
   m_Lightmapping: 1
   m_LightShadowCasterMode: 0
@@ -998,7 +998,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 82a08eb2528a76b4c901bc33d5e5cba9, type: 3}
+        m_Texture: {fileID: 2800000, guid: 77a803fcdaf21c94abd36437857c3b09, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -1910,7 +1910,7 @@ Light:
   m_RenderMode: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 119
   m_RenderingLayerMask: 1
   m_Lightmapping: 1
   m_LightShadowCasterMode: 0
@@ -5868,7 +5868,7 @@ Light:
   m_RenderMode: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 119
   m_RenderingLayerMask: 1
   m_Lightmapping: 1
   m_LightShadowCasterMode: 0
@@ -5953,7 +5953,7 @@ Light:
   m_RenderMode: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 119
   m_RenderingLayerMask: 1
   m_Lightmapping: 1
   m_LightShadowCasterMode: 0
@@ -6627,7 +6627,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 119
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -9721,7 +9721,7 @@ Light:
   m_RenderMode: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 119
   m_RenderingLayerMask: 1
   m_Lightmapping: 1
   m_LightShadowCasterMode: 0
@@ -12311,32 +12311,32 @@ PrefabInstance:
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _passVolume
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _shotVolume
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _crowdVolume
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _postHitVolume
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _loseBallVolume
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _netImpactVolume
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
@@ -12346,13 +12346,103 @@ PrefabInstance:
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _gainControlVolume
-      value: 1
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: shotSounds.Array.size
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: _goalkeeperCatchVolume
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: postHitSounds.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: loseBallSounds.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: netImpactSounds.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: postHitSounds.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: 289e9cfb9efc3334e88f459bec55f661, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: postHitSounds.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: 289e9cfb9efc3334e88f459bec55f661, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: loseBallSounds.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: e16460d8ae23e9f4592c5532fbc8bb6e, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: loseBallSounds.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: e16460d8ae23e9f4592c5532fbc8bb6e, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: matchStartWhistle.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: netImpactSounds.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: f54cbc4e043eb8345a0a9b447cfc6aa2, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: netImpactSounds.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: f54cbc4e043eb8345a0a9b447cfc6aa2, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: netImpactSounds.Array.data[2]
+      value: 
+      objectReference: {fileID: 8300000, guid: f54cbc4e043eb8345a0a9b447cfc6aa2, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: netImpactSounds.Array.data[3]
+      value: 
+      objectReference: {fileID: 8300000, guid: f54cbc4e043eb8345a0a9b447cfc6aa2, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: netImpactSounds.Array.data[4]
+      value: 
+      objectReference: {fileID: 8300000, guid: f54cbc4e043eb8345a0a9b447cfc6aa2, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: matchStartWhistle.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: b771f60553f1d2948884b581b4caf915, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: goalkeeperCatchSounds.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: goalkeeperCatchSounds.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: 40aa8eb573edd434d9650dd2824973a7, type: 3}
+    - target: {fileID: 1028995851947190071, guid: efe5955eecf6a614f9d137b3a80dd47a,
+        type: 3}
+      propertyPath: goalkeeperCatchSounds.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: 40aa8eb573edd434d9650dd2824973a7, type: 3}
     - target: {fileID: 1028995852988646006, guid: efe5955eecf6a614f9d137b3a80dd47a,
         type: 3}
       propertyPath: Loop

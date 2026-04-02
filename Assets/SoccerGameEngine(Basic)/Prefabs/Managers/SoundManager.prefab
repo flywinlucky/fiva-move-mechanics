@@ -320,38 +320,15 @@ MonoBehaviour:
   _goalkeeperCatchAS: {fileID: 3971716415191513362}
   _postHitAS: {fileID: 7387074914841444693}
   _matchAmbience: {fileID: 8185488798048939417}
-  matchStartWhistle:
-  - {fileID: 8300000, guid: 1fcb5fcda94f2db4abf5bd77e636268d, type: 3}
-  - {fileID: 8300000, guid: 7592a16ff0dc2164d84ad37a1364372b, type: 3}
-  - {fileID: 8300000, guid: b771f60553f1d2948884b581b4caf915, type: 3}
-  passSounds:
-  - {fileID: 8300000, guid: 4973b8f1b2d52ad488f5a1f2e6ea17d5, type: 3}
-  shotSounds:
-  - {fileID: 8300000, guid: 2d6037a191d36bc4abfa2a4ca145e125, type: 3}
-  - {fileID: 8300000, guid: 1c7041673e4f4834fb9476dd3af43528, type: 3}
-  netImpactSounds:
-  - {fileID: 8300000, guid: caec0067cea0a194fb3030ac8c415dd7, type: 3}
-  - {fileID: 8300000, guid: 2f7fb16a456750f4ebecca51cdd06d5e, type: 3}
-  - {fileID: 8300000, guid: 5caab63da38de74418e9ce2e7718ca72, type: 3}
-  - {fileID: 8300000, guid: b3336b99cd0abc745bf2b0876a74dfa7, type: 3}
-  - {fileID: 8300000, guid: 081fcb021c88dbe4596d8e7e337adbc7, type: 3}
-  - {fileID: 8300000, guid: f54cbc4e043eb8345a0a9b447cfc6aa2, type: 3}
-  crowdCheerSounds:
-  - {fileID: 8300000, guid: b771f60553f1d2948884b581b4caf915, type: 3}
-  loseBallSounds:
-  - {fileID: 8300000, guid: d57e6c6c58180844faa44b9a416faf84, type: 3}
-  - {fileID: 8300000, guid: aa96731aff35e1041bb8314e379cdc3e, type: 3}
-  - {fileID: 8300000, guid: e16460d8ae23e9f4592c5532fbc8bb6e, type: 3}
-  gainControlSounds:
-  - {fileID: 8300000, guid: d790c60a87154da4188097ecebd32c75, type: 3}
-  goalkeeperCatchSounds:
-  - {fileID: 8300000, guid: 46e6c3910468911419004785be2c2498, type: 3}
-  - {fileID: 8300000, guid: a6cdf0a9cc9a9d94bb54adee9259d5f5, type: 3}
-  - {fileID: 8300000, guid: 40aa8eb573edd434d9650dd2824973a7, type: 3}
-  postHitSounds:
-  - {fileID: 8300000, guid: 6c526776429d4564aa51070786a3fc58, type: 3}
-  - {fileID: 8300000, guid: fa89a3d28a985ff42bc7d523f68b5d78, type: 3}
-  - {fileID: 8300000, guid: 289e9cfb9efc3334e88f459bec55f661, type: 3}
+  matchStartWhistle: []
+  passSounds: []
+  shotSounds: []
+  netImpactSounds: []
+  crowdCheerSounds: []
+  loseBallSounds: []
+  gainControlSounds: []
+  goalkeeperCatchSounds: []
+  postHitSounds: []
   _minRandomPitch: 0.9
   _maxRandomPitch: 1.1
   _passSuppressAfterShotSeconds: 0.08
