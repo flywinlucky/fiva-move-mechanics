@@ -171,7 +171,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         float _maxBallControlHeight = 1.15f;
 
         [SerializeField]
-        float _ballTacklableDistance = 3f;
+        [Range(2.5f, 8f)]
+        float _ballTacklableDistance = 4f;
 
         [SerializeField]
         PlayerTypes _playerType;
@@ -1357,7 +1358,21 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public bool IsBallWithinTacklableDistance()
         {
-            return IsWithinDistance(Position, Ball.Instance.NormalizedPosition, _ballTacklableDistance);
+            if (Ball.Instance == null)
+                return false;
+
+            // 360 spherical take range around player; works from front/sides/back.
+            float tackleRadius = Mathf.Max(0.5f, _ballTacklableDistance + Radius);
+            if (IsWithinDistance(Position, Ball.Instance.NormalizedPosition, tackleRadius))
+                return true;
+
+            // If the ball carrier body blocks contact, allow take based on carrier distance too.
+            Player carrier = Ball.Instance.Owner;
+            if (carrier == null || carrier == this)
+                return false;
+
+            float carrierTakeRadius = Mathf.Max(tackleRadius, _ballTacklableDistance + Radius + carrier.Radius);
+            return IsWithinDistance(Position, carrier.Position, carrierTakeRadius);
         }
 
         public bool IsInfrontOfPlayer(Vector3 position)

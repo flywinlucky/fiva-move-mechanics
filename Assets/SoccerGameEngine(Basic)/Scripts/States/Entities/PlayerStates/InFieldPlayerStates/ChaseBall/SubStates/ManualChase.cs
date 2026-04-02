@@ -81,7 +81,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             //check if ball is within control distance
             if (Ball.Instance.Owner != null
                 && Ball.Instance.Owner != Owner
-                && Owner.IsBallWithinControlableDistance())
+                && Owner.IsBallWithinTacklableDistance())
             {
                 //tackle player
                 SuperMachine.ChangeState<TackleMainState>();

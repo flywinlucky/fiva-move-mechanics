@@ -7434,7 +7434,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c674e39cc4b6b2840be1dda753cbd786, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _difficulty: 2
+  _difficulty: 0
   _enableGoalkeeperDebug: 1
   _enableDynamicDifficulty: 1
   _ddaSmoothingSpeed: 2.25

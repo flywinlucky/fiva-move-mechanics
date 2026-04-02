@@ -240,7 +240,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             float pressure01 = isOpponentCarrier ? ComputePressure01(ballOwner) : 0f;
             float aiErrorChance = Mathf.Clamp01(_difficultyProfile.AIErrorChanceBase + (_difficultyProfile.AIPressureErrorBoost * pressure01));
 
-            if (isOpponentCarrier && Owner.IsBallWithinControlableDistance())
+            if (isOpponentCarrier && Owner.IsBallWithinTacklableDistance())
             {
                 bool shouldBlockRearTackle = isDirectlyBehindCarrier
                     && carrierDistance <= Mathf.Max(0.45f, _difficultyProfile.AIBehindStickBreakDistance * 0.45f)
