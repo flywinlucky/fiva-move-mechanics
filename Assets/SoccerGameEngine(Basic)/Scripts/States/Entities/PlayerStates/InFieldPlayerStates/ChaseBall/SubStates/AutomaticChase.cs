@@ -242,11 +242,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             if (isOpponentCarrier && Owner.IsBallWithinTacklableDistance())
             {
+                bool isUserCarrier = ballOwner != null && ballOwner.IsUserControlled;
                 bool shouldBlockRearTackle = isDirectlyBehindCarrier
                     && carrierDistance <= Mathf.Max(0.45f, _difficultyProfile.AIBehindStickBreakDistance * 0.45f)
-                    && _rearChaseTime < 0.18f;
+                    && _rearChaseTime < 0.18f
+                    && !isUserCarrier;
 
                 bool shouldHesitateTackle = !decisionTick || Random.value <= (aiErrorChance * 0.45f);
+
+                if (isUserCarrier)
+                    shouldHesitateTackle = false;
 
                 if (isDirectlyBehindCarrier && _rearChaseTime >= 0.35f)
                     shouldHesitateTackle |= Random.value <= 0.12f;

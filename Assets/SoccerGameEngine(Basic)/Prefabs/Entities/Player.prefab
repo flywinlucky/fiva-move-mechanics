@@ -4527,7 +4527,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f29617572097ba4889ef94cd9b88d20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duration: 0.25
+  duration: 0.1
   bounceForce: 1.15
 --- !u!1001 &3317492725794216459
 PrefabInstance:

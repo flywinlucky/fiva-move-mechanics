@@ -29,6 +29,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         bool _shootQueued;
         float _defendTapCharge;
         float _lastDefendTapTime;
+        int _defendTapSequence;
 
         const float DefendTapChargePerTap = 1f;
         const float DefendTapChargeMax = 8f;
@@ -116,6 +117,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             RefreshDefendCharge();
             _defendTapCharge = Mathf.Clamp(_defendTapCharge + DefendTapChargePerTap, 0f, DefendTapChargeMax);
             _lastDefendTapTime = Time.time;
+            _defendTapSequence++;
         }
 
         float ConsumeDefendDuelBonusInternal(bool userIsAttacker, float userStamina01, float opponentStamina01)
@@ -235,6 +237,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             return Instance.ConsumeDefendDuelBonusInternal(userIsAttacker,
                 Mathf.Clamp01(userStamina01),
                 Mathf.Clamp01(opponentStamina01));
+        }
+
+        public static int GetDefendTapSequence()
+        {
+            if (Instance == null)
+                return 0;
+
+            return Mathf.Max(0, Instance._defendTapSequence);
         }
 
         public static void ClearQueuedTapActions()

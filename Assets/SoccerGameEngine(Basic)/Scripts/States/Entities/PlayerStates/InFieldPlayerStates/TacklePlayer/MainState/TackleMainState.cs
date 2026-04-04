@@ -17,10 +17,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         float _duelElapsed;
         Player _carrier;
         Player _duelUserPlayer;
+        int _duelStartDefendTapSequence;
 
-        const float DuelWindowDurationSeconds = 2f;
-        const float FailedTackleResolveDelay = 0.25f;
-        const float CarrierDuelLockExtraSeconds = 0.4f;
+        const float DuelWindowDurationSeconds = 0.7f;
+        const float FailedTackleResolveDelay = 0.15f;
+        const float CarrierDuelLockExtraSeconds = 0.2f;
+        const float DuelBreakDistanceBuffer = 0.65f;
+        const float NoDefendTapAttackerWinChance = 0.8f;
 
         public override void Enter()
         {
@@ -30,6 +33,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             _isDuelWindowActive = false;
             _duelElapsed = 0f;
             _duelUserPlayer = null;
+            _duelStartDefendTapSequence = MobileControlsInput.GetDefendTapSequence();
 
             if (_carrier == null || _carrier == Owner)
             {
@@ -69,10 +73,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             {
                 if (!IsCarrierStillValidForDuel())
                 {
-                    _isDuelWindowActive = false;
-                    ClearDefendWidget();
-                    _isTackleSuccessful = false;
-                    _waitTime = FailedTackleResolveDelay;
+                    CancelCurrentDuel();
+                    return;
                 }
 
                 _duelElapsed += Time.deltaTime;
@@ -113,6 +115,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             if (_carrier == null || !IsCarrierStillValidForDuel())
             {
+                ReleaseCarrierDuelLockEarly();
                 _isTackleSuccessful = false;
                 _waitTime = FailedTackleResolveDelay;
                 return;
@@ -120,6 +123,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             // Dynamic duel result feels more natural than fixed 50/50.
             float tackleSuccessChance = EvaluateTackleSuccessChance(_carrier);
+
+            // If user carrier does not tap defend at least once during this duel, attacker gets a strong edge.
+            if (_carrier.IsUserControlled && !DidUserTapDefendDuringDuel())
+                tackleSuccessChance = Mathf.Max(tackleSuccessChance, NoDefendTapAttackerWinChance);
+
             _isTackleSuccessful = Random.value <= tackleSuccessChance;
 
             // Successful tackles resolve slightly faster for responsive casual feel.
@@ -129,11 +137,50 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 ActionUtility.Invoke_Action(_carrier.OnTackled);
         }
 
+        bool DidUserTapDefendDuringDuel()
+        {
+            return MobileControlsInput.GetDefendTapSequence() > _duelStartDefendTapSequence;
+        }
+
         bool IsCarrierStillValidForDuel()
         {
             return Ball.Instance != null
                 && _carrier != null
-                && Ball.Instance.Owner == _carrier;
+                && Ball.Instance.Owner == _carrier
+                && IsWithinDuelDistance();
+        }
+
+        bool IsWithinDuelDistance()
+        {
+            if (_carrier == null)
+                return false;
+
+            float attackerTackleReach = Mathf.Max(0.75f, Owner.BallControlDistance + Owner.Radius + 0.35f);
+            float carrierSafetyReach = Mathf.Max(0.75f, _carrier.BallControlDistance + _carrier.Radius + 0.35f);
+            float maxDuelDistance = Mathf.Max(attackerTackleReach, carrierSafetyReach) + DuelBreakDistanceBuffer;
+
+            Vector3 delta = Owner.Position - _carrier.Position;
+            delta.y = 0f;
+            return delta.sqrMagnitude <= (maxDuelDistance * maxDuelDistance);
+        }
+
+        void CancelCurrentDuel()
+        {
+            _isDuelWindowActive = false;
+            ClearDefendWidget();
+            _isTackleSuccessful = false;
+            _waitTime = FailedTackleResolveDelay;
+            ReleaseCarrierDuelLockEarly();
+        }
+
+        void ReleaseCarrierDuelLockEarly()
+        {
+            if (_carrier == null)
+                return;
+
+            float shortLock = Time.time + 0.1f;
+            if (_carrier.TackleDuelLockUntil > shortLock)
+                _carrier.TackleDuelLockUntil = shortLock;
         }
 
         void ClearDefendWidget()
