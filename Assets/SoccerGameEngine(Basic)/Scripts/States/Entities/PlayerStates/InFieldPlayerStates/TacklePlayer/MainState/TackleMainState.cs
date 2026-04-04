@@ -20,7 +20,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         int _duelStartDefendTapSequence;
         bool _duelWidgetClosedByDefendTap;
 
-        const float DuelWindowDurationSeconds = 0.8f;
+        const float DuelWindowDurationSeconds = 0.7f;
         const float FailedTackleResolveDelay = 0.15f;
         const float CarrierDuelLockExtraSeconds = 0.2f;
         const float DuelBreakDistanceBuffer = 0.15f;
