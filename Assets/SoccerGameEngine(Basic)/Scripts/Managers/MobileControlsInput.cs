@@ -31,6 +31,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         float _defendTapCharge;
         float _lastDefendTapTime;
         int _defendTapSequence;
+        float _lastUserInteractionTime;
 
         const float DefendTapChargePerTap = 1f;
         const float DefendTapChargeMax = 8f;
@@ -47,6 +48,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             }
 
             Instance = this;
+            _lastUserInteractionTime = Time.time;
         }
 
         void OnDestroy()
@@ -68,7 +70,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             if (_normalizeMovement && magnitude > 1f)
                 movement /= magnitude;
 
+            RegisterUserInteractionInternal();
+
             return movement;
+        }
+
+        void RegisterUserInteractionInternal()
+        {
+            _lastUserInteractionTime = Time.time;
         }
 
         bool ConsumePassInternal()
@@ -169,6 +178,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             _shootQueued = false;
             _defendQueued = false;
             _defendTapCharge = 0f;
+            _lastUserInteractionTime = Time.time;
         }
 
         void ResetQueuedTapActions()
@@ -195,6 +205,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         public void SetSprintPressed(bool pressed)
         {
             _sprintHeld = ActionButtonsEnabled && pressed;
+            if (_sprintHeld)
+                RegisterUserInteractionInternal();
         }
 
         public void SprintDown()
@@ -210,18 +222,25 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         public void PressPass()
         {
             if (ActionButtonsEnabled)
+            {
                 _passQueued = true;
+                RegisterUserInteractionInternal();
+            }
         }
 
         public void PressShoot()
         {
             if (ActionButtonsEnabled)
+            {
                 _shootQueued = true;
+                RegisterUserInteractionInternal();
+            }
         }
 
         public void PressDefend()
         {
             RegisterDefendTapInternal();
+            RegisterUserInteractionInternal();
         }
 
         public static bool IsEnabled => Instance != null && Instance._isMobileControls;
@@ -284,6 +303,22 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 return;
 
             Instance.ResetQueuedTapActions();
+        }
+
+        public static float SecondsSinceLastUserInteraction()
+        {
+            if (Instance == null)
+                return float.PositiveInfinity;
+
+            return Mathf.Max(0f, Time.time - Instance._lastUserInteractionTime);
+        }
+
+        public static void RegisterExternalInteraction()
+        {
+            if (Instance == null)
+                return;
+
+            Instance.RegisterUserInteractionInternal();
         }
 
         public bool IsMobileControls

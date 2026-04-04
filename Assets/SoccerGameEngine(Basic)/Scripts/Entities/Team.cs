@@ -89,6 +89,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         Transform _rootPlayers;
 
         public bool IsUserControlled { get => _isUserControlled; }
+        public bool IsManualControlEnabled { get; private set; } = true;
 
         public bool HasInitialKickOff { get; set; }
 
@@ -425,9 +426,21 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 if (teamPlayer == null || teamPlayer.Player == null)
                     continue;
 
-                bool shouldBeUserControlled = _isUserControlled && hasSelected && teamPlayer.Player == selected;
+                bool shouldBeUserControlled = _isUserControlled
+                    && IsManualControlEnabled
+                    && hasSelected
+                    && teamPlayer.Player == selected;
                 teamPlayer.Player.IsUserControlled = shouldBeUserControlled;
             }
+        }
+
+        public void SetManualControlEnabled(bool enabled)
+        {
+            if (IsManualControlEnabled == enabled)
+                return;
+
+            IsManualControlEnabled = enabled;
+            ApplySingleUserControlSelection(_controllingPlayer);
         }
     }
 

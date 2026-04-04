@@ -13,7 +13,8 @@ public class MobileControlsButtons : MonoBehaviour
     public TMP_Text defendButton_Text;
     [Space]
     public GameObject JoystickArea;
-
+    public GameObject Joystick_Text;
+    public GameObject Joystick_togle;
     [Header("Runtime")]
     [SerializeField]
     bool autoToggleShotButton = true;
@@ -35,9 +36,28 @@ public class MobileControlsButtons : MonoBehaviour
     [SerializeField]
     string idleModeText = "";
 
+    [Header("Auto Play")]
+    [SerializeField]
+    bool enableAutoPlayOnInactivity = true;
+
+    [SerializeField]
+    [Min(1f)]
+    float autoPlayDelaySeconds = 5f;
+
+    [SerializeField]
+    bool wakeUpOnAnyScreenTouch = true;
+
+    [SerializeField]
+    bool wakeUpOnAnyKey = true;
+
+    [SerializeField]
+    bool showJoystickTextOnlyDuringAutoPlay = true;
+
     float _nextRefreshTime;
     bool _lastShotButtonState;
     bool _lastDefendButtonState;
+    bool _autoPlayActive;
+    float _localLastInteractionTime;
 
     enum DefendButtonMode
     {
@@ -51,13 +71,17 @@ public class MobileControlsButtons : MonoBehaviour
         _nextRefreshTime = 0f;
         _lastShotButtonState = shotButton != null && shotButton.activeSelf;
         _lastDefendButtonState = defendButton != null && defendButton.activeSelf;
+        _localLastInteractionTime = Time.time;
 
         RefreshShotButton(force: true);
         RefreshDefendButton(force: true);
+        SetAutoPlayActive(false, force: true);
     }
 
     void Update()
     {
+        HandleAutoPlayState();
+
         if (!autoToggleShotButton && !autoToggleDefendButton)
             return;
 
@@ -70,6 +94,109 @@ public class MobileControlsButtons : MonoBehaviour
 
         if (autoToggleDefendButton)
             RefreshDefendButton(force: false);
+    }
+
+    void HandleAutoPlayState()
+    {
+        if (!enableAutoPlayOnInactivity)
+        {
+            SetAutoPlayActive(false);
+            return;
+        }
+
+        if (DetectAnyManualInteractionThisFrame())
+        {
+            RegisterManualInteraction();
+
+            if (_autoPlayActive)
+                SetAutoPlayActive(false);
+
+            return;
+        }
+
+        float inactivitySeconds = GetInactivitySeconds();
+        bool shouldEnableAutoPlay = inactivitySeconds >= Mathf.Max(1f, autoPlayDelaySeconds);
+        SetAutoPlayActive(shouldEnableAutoPlay);
+    }
+
+    float GetInactivitySeconds()
+    {
+        float localInactivity = Mathf.Max(0f, Time.time - _localLastInteractionTime);
+        float mobileInactivity = MobileControlsInput.SecondsSinceLastUserInteraction();
+
+        if (float.IsInfinity(mobileInactivity) || float.IsNaN(mobileInactivity))
+            return localInactivity;
+
+        return Mathf.Min(localInactivity, Mathf.Max(0f, mobileInactivity));
+    }
+
+    bool DetectAnyManualInteractionThisFrame()
+    {
+        if (wakeUpOnAnyScreenTouch)
+        {
+            if (Input.touchCount > 0)
+                return true;
+
+            if (Input.GetMouseButton(0) || Input.GetMouseButtonDown(0))
+                return true;
+        }
+
+        if (wakeUpOnAnyKey && Input.anyKeyDown)
+            return true;
+
+        return false;
+    }
+
+    void RegisterManualInteraction()
+    {
+        _localLastInteractionTime = Time.time;
+        MobileControlsInput.RegisterExternalInteraction();
+    }
+
+    void SetAutoPlayActive(bool active, bool force = false)
+    {
+        if (!force && _autoPlayActive == active)
+        {
+            ApplyManualControlStateToUserTeam();
+            return;
+        }
+
+        _autoPlayActive = active;
+
+        if (_autoPlayActive)
+            MobileControlsInput.ClearQueuedTapActions();
+
+        ApplyManualControlStateToUserTeam();
+
+        if (Joystick_Text != null && showJoystickTextOnlyDuringAutoPlay)
+            Joystick_Text.SetActive(_autoPlayActive);
+        if (Joystick_togle != null)
+        {
+            Joystick_togle.SetActive(!_autoPlayActive);
+        }
+    }
+
+    void ApplyManualControlStateToUserTeam()
+    {
+        Team userTeam = GetUserControlledTeam();
+        if (userTeam == null)
+            return;
+
+        userTeam.SetManualControlEnabled(!_autoPlayActive);
+    }
+
+    Team GetUserControlledTeam()
+    {
+        if (MatchManager.Instance == null)
+            return null;
+
+        if (MatchManager.Instance.TeamAway != null && MatchManager.Instance.TeamAway.IsUserControlled)
+            return MatchManager.Instance.TeamAway;
+
+        if (MatchManager.Instance.TeamHome != null && MatchManager.Instance.TeamHome.IsUserControlled)
+            return MatchManager.Instance.TeamHome;
+
+        return null;
     }
 
     void RefreshShotButton(bool force)
