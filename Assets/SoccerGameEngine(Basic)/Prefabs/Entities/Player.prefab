@@ -171,8 +171,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1033945607844079131}
+  - component: {fileID: 5212724738489917562}
   m_Layer: 6
-  m_Name: GameObject
+  m_Name: fake shadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -194,6 +195,19 @@ Transform:
   m_Father: {fileID: 2500224488907276373}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5212724738489917562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668845686807246494}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8337dca067fbd9479aee86c18e8e6ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shadowTransform: {fileID: 1033945607844079131}
 --- !u!1 &1028527150472925859
 GameObject:
   m_ObjectHideFlags: 0
@@ -206,7 +220,7 @@ GameObject:
   - component: {fileID: 827533954307795961}
   - component: {fileID: 5763238627227933348}
   m_Layer: 6
-  m_Name: Quad
+  m_Name: shadow Quad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
