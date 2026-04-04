@@ -27,6 +27,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         bool _sprintHeld;
         bool _passQueued;
         bool _shootQueued;
+        bool _defendQueued;
         float _defendTapCharge;
         float _lastDefendTapTime;
         int _defendTapSequence;
@@ -96,6 +97,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             return pressed;
         }
 
+        bool ConsumeDefendInternal()
+        {
+            if (!ActionButtonsEnabled)
+            {
+                _defendQueued = false;
+                return false;
+            }
+
+            bool pressed = _defendQueued;
+            _defendQueued = false;
+            return pressed;
+        }
+
         void RefreshDefendCharge()
         {
             if (_defendTapCharge <= 0f)
@@ -118,6 +132,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             _defendTapCharge = Mathf.Clamp(_defendTapCharge + DefendTapChargePerTap, 0f, DefendTapChargeMax);
             _lastDefendTapTime = Time.time;
             _defendTapSequence++;
+            _defendQueued = true;
         }
 
         float ConsumeDefendDuelBonusInternal(bool userIsAttacker, float userStamina01, float opponentStamina01)
@@ -152,6 +167,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             _sprintHeld = false;
             _passQueued = false;
             _shootQueued = false;
+            _defendQueued = false;
             _defendTapCharge = 0f;
         }
 
@@ -159,6 +175,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         {
             _passQueued = false;
             _shootQueued = false;
+            _defendQueued = false;
             _defendTapCharge = 0f;
         }
 
@@ -237,6 +254,20 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             return Instance.ConsumeDefendDuelBonusInternal(userIsAttacker,
                 Mathf.Clamp01(userStamina01),
                 Mathf.Clamp01(opponentStamina01));
+        }
+
+        public static bool ConsumeDefendPressed()
+        {
+            return Instance != null && Instance.ConsumeDefendInternal();
+        }
+
+        public static bool WasDefendTappedRecently(float maxAgeSeconds)
+        {
+            if (Instance == null)
+                return false;
+
+            float age = Time.time - Instance._lastDefendTapTime;
+            return age >= 0f && age <= Mathf.Max(0.01f, maxAgeSeconds);
         }
 
         public static int GetDefendTapSequence()

@@ -18,12 +18,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         Player _carrier;
         Player _duelUserPlayer;
         int _duelStartDefendTapSequence;
+        bool _duelWidgetClosedByDefendTap;
 
-        const float DuelWindowDurationSeconds = 1f;
+        const float DuelWindowDurationSeconds = 0.8f;
         const float FailedTackleResolveDelay = 0.15f;
         const float CarrierDuelLockExtraSeconds = 0.2f;
         const float DuelBreakDistanceBuffer = 0.15f;
         const float NoDefendTapAttackerWinChance = 0.8f;
+        const float AIAttackerMinWinChance = 0.7f;
+        const float UserTakeTapGuaranteedWinChance = 0.85f;
 
         public override void Enter()
         {
@@ -34,12 +37,21 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             _duelElapsed = 0f;
             _duelUserPlayer = null;
             _duelStartDefendTapSequence = MobileControlsInput.GetDefendTapSequence();
+            _duelWidgetClosedByDefendTap = false;
 
             if (_carrier == null || _carrier == Owner)
             {
                 _isTackleSuccessful = false;
                 _waitTime = FailedTackleResolveDelay;
                 return;
+            }
+
+            // If user initiated TAKE with a fresh tap, count that tap for this duel window.
+            if (Owner.IsUserControlled
+                && !_carrier.IsUserControlled
+                && MobileControlsInput.WasDefendTappedRecently(0.2f))
+            {
+                _duelStartDefendTapSequence = Mathf.Max(0, _duelStartDefendTapSequence - 1);
             }
 
             // Prevent concurrent duels on the same carrier from resolving ownership in opposite directions.
@@ -58,6 +70,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             {
                 _isDuelWindowActive = true;
                 _duelElapsed = 0f;
+                _duelWidgetClosedByDefendTap = false;
                 _duelUserPlayer.SetDefendWidgetState(true, 0f);
                 return;
             }
@@ -77,10 +90,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                     return;
                 }
 
+                if (!_duelWidgetClosedByDefendTap && DidUserTapDefendDuringDuel())
+                {
+                    _duelWidgetClosedByDefendTap = true;
+                    HideAndResetDuelWidget();
+                }
+
                 _duelElapsed += Time.deltaTime;
                 float progress = Mathf.Clamp01(_duelElapsed / DuelWindowDurationSeconds);
 
-                if (_duelUserPlayer != null)
+                if (_duelUserPlayer != null && !_duelWidgetClosedByDefendTap)
                     _duelUserPlayer.SetDefendWidgetState(true, progress);
 
                 if (_duelElapsed < DuelWindowDurationSeconds)
@@ -132,7 +151,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             // In TAKE mode, one or more taps should give user a strong minimum steal chance.
             if (Owner.IsUserControlled && !_carrier.IsUserControlled && DidUserTapDefendDuringDuel())
-                tackleSuccessChance = Mathf.Max(tackleSuccessChance, runtimeProfile.UserTakeTapMinWinChance);
+                tackleSuccessChance = Mathf.Max(
+                    tackleSuccessChance,
+                    Mathf.Max(runtimeProfile.UserTakeTapMinWinChance, UserTakeTapGuaranteedWinChance));
+
+            // Requested balance: when AI attacks user carrier, keep a stable 70% minimum steal chance.
+            if (!Owner.IsUserControlled && _carrier.IsUserControlled)
+                tackleSuccessChance = Mathf.Max(tackleSuccessChance, AIAttackerMinWinChance);
 
             _isTackleSuccessful = Random.value <= tackleSuccessChance;
 
@@ -140,7 +165,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             _waitTime = _isTackleSuccessful ? 0.18f : FailedTackleResolveDelay;
 
             if (_isTackleSuccessful)
+            {
                 ActionUtility.Invoke_Action(_carrier.OnTackled);
+
+                // Re-attach ball immediately to the tackle winner to avoid detached/loose-frame state.
+                if (Ball.Instance != null)
+                {
+                    Ball.Instance.Owner = Owner;
+                    if (Ball.Instance.Rigidbody != null)
+                        Ball.Instance.Rigidbody.isKinematic = true;
+
+                    Owner.PlaceBallInfronOfMe();
+                }
+            }
         }
 
         bool DidUserTapDefendDuringDuel()
@@ -170,6 +207,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             float carrierBodyAllowance = Mathf.Max(0.15f, _carrier.Radius * 0.65f);
             float maxDuelDistance = attackerTackleReach + carrierBodyAllowance + DuelBreakDistanceBuffer;
 
+            // Keep user-initiated TAKE duels stable while both players move at speed.
+            if (Owner.IsUserControlled && !_carrier.IsUserControlled && DidUserTapDefendDuringDuel())
+                maxDuelDistance += 0.22f;
+
             Vector3 delta = Owner.Position - _carrier.Position;
             delta.y = 0f;
             return delta.sqrMagnitude <= (maxDuelDistance * maxDuelDistance);
@@ -198,6 +239,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         {
             if (_duelUserPlayer != null)
                 _duelUserPlayer.ResetDefendWidget();
+        }
+
+        void HideAndResetDuelWidget()
+        {
+            if (_duelUserPlayer == null)
+                return;
+
+            _duelUserPlayer.SetDefendWidgetState(false, 0f);
         }
 
         float EvaluateTackleSuccessChance(Player carrier)
@@ -319,7 +368,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 AITackleEngageDistanceScale = 0.78f,
                 UserDuelControlBonus = 0.10f,
                 AIDefendMissChance = 0.20f,
-                UserTakeTapMinWinChance = 0.80f
+                UserTakeTapMinWinChance = 0.90f
             };
         }
 

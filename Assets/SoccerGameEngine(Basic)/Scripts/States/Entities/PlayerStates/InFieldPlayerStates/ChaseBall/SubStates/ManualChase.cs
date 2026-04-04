@@ -83,9 +83,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 && Ball.Instance.Owner != Owner
                 && Owner.IsBallWithinTacklableDistance())
             {
-                //tackle player
-                SuperMachine.ChangeState<TackleMainState>();
-                return;
+                bool takePressed = Input.GetKeyDown(KeyCode.E)
+                    || MobileControlsInput.ConsumeDefendPressed();
+
+                if (takePressed)
+                {
+                    // Start tackle only on explicit user action; do not auto-stop on proximity.
+                    SuperMachine.ChangeState<TackleMainState>();
+                    return;
+                }
             }
             else if (Owner.IsBallWithinControlableDistance())
             {

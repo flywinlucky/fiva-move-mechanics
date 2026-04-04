@@ -13,15 +13,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
     {
         int maxNumOfTries;
         float maxPassTime;
-        Range rangePassTime = new Range(0.85f, 1.65f);
+        Range rangePassTime = new Range(1.15f, 2.35f);
         MatchDifficultyProfile _difficultyProfile;
         float _nextDecisionTime;
         float _badTouchSlowUntil;
         float _longShotHesitationUntil;
         float _possessionElapsed;
 
-        const float MinPossessionBeforeNormalPass = 1.15f;
-        const float ForcedReleasePossessionSeconds = 4.5f;
+        const float MinPossessionBeforeNormalPass = 1.65f;
+        const float ForcedReleasePossessionSeconds = 5.4f;
 
         MatchDifficultyProfile GetDifficultyProfile()
         {
@@ -247,10 +247,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             // Requested behavior: ~50% random pass when AI feels chased from behind.
             if (highStealPressure)
-                passChance = Mathf.Max(passChance, 0.50f);
+                passChance = Mathf.Max(passChance, 0.34f);
 
             if (threatened)
-                passChance = Mathf.Max(passChance, 0.28f + (pressure01 * 0.25f));
+                passChance = Mathf.Max(passChance, 0.22f + (pressure01 * 0.20f));
 
             // Prevent ego dribbles from very far away when a better forward pass exists.
             if (distanceToGoal >= 16f && hasBetterTeammateOption)
@@ -259,7 +259,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 passChance = Mathf.Max(passChance, 0.28f);
 
             if (_possessionElapsed >= 3.2f && hasBetterTeammateOption)
-                passChance = Mathf.Max(passChance, 0.62f);
+                passChance = Mathf.Max(passChance, 0.48f);
 
             if (forcePass)
                 passChance = 1f;
@@ -441,12 +441,20 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                     return;
                 }
 
-                if (TryTeamPlayPass(pressure01, distanceToGoal, true))
+                bool userRearPressure = IsUnderRearUserPressure(2.8f);
+                bool shouldForcePass = maxPassTime <= -0.45f
+                    || (_possessionElapsed >= ForcedReleasePossessionSeconds && pressure01 >= 0.55f)
+                    || (!userRearPressure && pressure01 >= 0.85f && _possessionElapsed >= 2.2f);
+
+                if (TryTeamPlayPass(pressure01, distanceToGoal, shouldForcePass))
                     return;
 
                 // decrement max num of tries
                 if (maxNumOfTries > 0)
                     --maxNumOfTries;
+
+                // Avoid per-frame instant re-attempt loops that feel like panic auto-pass.
+                maxPassTime = Random.Range(0.1f, 0.22f);
             }
         }
 
