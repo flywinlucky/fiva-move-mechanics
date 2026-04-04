@@ -6,6 +6,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 {
@@ -297,9 +298,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
     [Serializable]
     public struct MatchOnPanel
     {
-        public Text TxtScores;
+        public TMP_Text TxtScores;
 
-        public Text TxtTime;
+        public TMP_Text TxtTime;
 
         public Transform Root;
     }

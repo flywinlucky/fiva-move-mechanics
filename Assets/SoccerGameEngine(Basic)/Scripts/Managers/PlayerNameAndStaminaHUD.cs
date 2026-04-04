@@ -1,17 +1,18 @@
 using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 {
     public class PlayerNameAndStaminaHUD : MonoBehaviour
     {
         [Header("User Corner")]
-        public Text UserNameText;
+        public TMP_Text UserNameText;
         public Slider UserStaminaSlider;
 
         [Header("Opponent Corner")]
-        public Text OpponentNameText;
+        public TMP_Text OpponentNameText;
         public Slider OpponentStaminaSlider;
 
         [Header("UI Text")]
@@ -113,7 +114,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             return closest;
         }
 
-        void SetPlayerUI(Player player, Text nameText, Slider staminaSlider)
+        void SetPlayerUI(Player player, TMP_Text nameText, Slider staminaSlider)
         {
             if (nameText != null)
                 nameText.text = player != null ? GetDisplayName(player) : EmptyNameText;
