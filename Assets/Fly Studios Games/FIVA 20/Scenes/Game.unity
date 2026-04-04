@@ -998,7 +998,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
+        m_Texture: {fileID: 2800000, guid: d5345867c3444d9459d88bff378c4eeb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -1456,10 +1456,14 @@ MonoBehaviour:
   passButton: {fileID: 2050966121}
   sprintButton: {fileID: 2018473878}
   defendButton: {fileID: 1814650963}
+  defendButton_Text: {fileID: 569908881}
   JoystickArea: {fileID: 1576243919}
   autoToggleShotButton: 1
   autoToggleDefendButton: 1
   refreshInterval: 0.12
+  defendModeText: DEFEND
+  takeModeText: TAKE
+  idleModeText: 
 --- !u!1001 &334838146
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7603,6 +7607,10 @@ MonoBehaviour:
     AIPlayerAdvantageRadius: 2.3
     AIPlayerInterceptionAssist: 0.18
     AIBadTouchChance: 0.14
+    AITackleEngageDistanceScale: 0.68
+    UserDuelControlBonus: 0.14
+    AIDefendMissChance: 0.3
+    UserTakeTapMinWinChance: 0.85
     GKReactionDelayMin: 0.2
     GKReactionDelayMax: 0.4
     GKMistakeChance: 0.18
@@ -7628,6 +7636,10 @@ MonoBehaviour:
     AIPlayerAdvantageRadius: 1.8
     AIPlayerInterceptionAssist: 0.08
     AIBadTouchChance: 0.08
+    AITackleEngageDistanceScale: 0.78
+    UserDuelControlBonus: 0.1
+    AIDefendMissChance: 0.2
+    UserTakeTapMinWinChance: 0.8
     GKReactionDelayMin: 0.12
     GKReactionDelayMax: 0.25
     GKMistakeChance: 0.11
@@ -7653,6 +7665,10 @@ MonoBehaviour:
     AIPlayerAdvantageRadius: 1.4
     AIPlayerInterceptionAssist: 0.02
     AIBadTouchChance: 0.03
+    AITackleEngageDistanceScale: 0.88
+    UserDuelControlBonus: 0.06
+    AIDefendMissChance: 0.12
+    UserTakeTapMinWinChance: 0.75
     GKReactionDelayMin: 0.08
     GKReactionDelayMax: 0.15
     GKMistakeChance: 0.06
