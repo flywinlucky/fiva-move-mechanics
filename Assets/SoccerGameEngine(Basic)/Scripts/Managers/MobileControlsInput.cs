@@ -27,6 +27,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         bool _sprintHeld;
         bool _passQueued;
         bool _shootQueued;
+        float _defendTapCharge;
+        float _lastDefendTapTime;
+
+        const float DefendTapChargePerTap = 1f;
+        const float DefendTapChargeMax = 8f;
+        const float DefendTapDecayPerSecond = 1.2f;
 
         bool ActionButtonsEnabled => _isMobileControls || _allowUiActionButtonsOnDesktop;
 
@@ -89,17 +95,69 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             return pressed;
         }
 
+        void RefreshDefendCharge()
+        {
+            if (_defendTapCharge <= 0f)
+                return;
+
+            float elapsed = Mathf.Max(0f, Time.time - _lastDefendTapTime);
+            if (elapsed <= 0f)
+                return;
+
+            _defendTapCharge = Mathf.Max(0f, _defendTapCharge - (elapsed * DefendTapDecayPerSecond));
+            _lastDefendTapTime = Time.time;
+        }
+
+        void RegisterDefendTapInternal()
+        {
+            if (!ActionButtonsEnabled)
+                return;
+
+            RefreshDefendCharge();
+            _defendTapCharge = Mathf.Clamp(_defendTapCharge + DefendTapChargePerTap, 0f, DefendTapChargeMax);
+            _lastDefendTapTime = Time.time;
+        }
+
+        float ConsumeDefendDuelBonusInternal(bool userIsAttacker, float userStamina01, float opponentStamina01)
+        {
+            if (!ActionButtonsEnabled)
+                return 0f;
+
+            RefreshDefendCharge();
+            if (_defendTapCharge <= 0.001f)
+                return 0f;
+
+            float tapPower01 = Mathf.Clamp01(_defendTapCharge / DefendTapChargeMax);
+            float staminaDelta = Mathf.Clamp(userStamina01 - opponentStamina01, -1f, 1f);
+
+            float staminaFactor = Mathf.Lerp(0.9f, 1.15f, (staminaDelta + 1f) * 0.5f);
+            float minBonus = userIsAttacker ? 0.04f : 0.03f;
+            float maxBonus = userIsAttacker ? 0.24f : 0.22f;
+            float bonus = Mathf.Lerp(minBonus, maxBonus, tapPower01) * staminaFactor;
+
+            float randomAdaptiveBoost = Random.Range(0f, 0.03f) * tapPower01;
+            bonus += randomAdaptiveBoost;
+
+            float consumeAmount = userIsAttacker ? 1.9f : 1.6f;
+            _defendTapCharge = Mathf.Max(0f, _defendTapCharge - consumeAmount);
+            _lastDefendTapTime = Time.time;
+
+            return Mathf.Clamp(bonus, 0f, 0.30f);
+        }
+
         void ResetQueuedInputs()
         {
             _sprintHeld = false;
             _passQueued = false;
             _shootQueued = false;
+            _defendTapCharge = 0f;
         }
 
         void ResetQueuedTapActions()
         {
             _passQueued = false;
             _shootQueued = false;
+            _defendTapCharge = 0f;
         }
 
         public void SetMobileControlsEnabled(bool enabled)
@@ -142,6 +200,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 _shootQueued = true;
         }
 
+        public void PressDefend()
+        {
+            RegisterDefendTapInternal();
+        }
+
         public static bool IsEnabled => Instance != null && Instance._isMobileControls;
 
         public static Vector2 ReadMovementInput()
@@ -162,6 +225,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         public static bool ConsumeShootPressed()
         {
             return Instance != null && Instance.ConsumeShootInternal();
+        }
+
+        public static float ConsumeDefendDuelBonus(bool userIsAttacker, float userStamina01, float opponentStamina01)
+        {
+            if (Instance == null)
+                return 0f;
+
+            return Instance.ConsumeDefendDuelBonusInternal(userIsAttacker,
+                Mathf.Clamp01(userStamina01),
+                Mathf.Clamp01(opponentStamina01));
         }
 
         public static void ClearQueuedTapActions()

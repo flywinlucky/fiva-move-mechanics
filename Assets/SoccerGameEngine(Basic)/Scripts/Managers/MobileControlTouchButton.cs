@@ -7,7 +7,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
     {
         SprintHold,
         PassTap,
-        ShootTap
+        ShootTap,
+        DefendTap
     }
 
     [DisallowMultipleComponent]
@@ -138,6 +139,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
                 case MobileControlActionType.ShootTap:
                     MobileControlsInput.Instance.PressShoot();
+                    break;
+
+                case MobileControlActionType.DefendTap:
+                    MobileControlsInput.Instance.PressDefend();
                     break;
             }
         }

@@ -91,6 +91,26 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 }
             }
 
+            // Mobile defend mini-battle: taps improve user chance to win the current duel.
+            if (Owner.IsUserControlled && !carrier.IsUserControlled)
+            {
+                float userAttackBonus = MobileControlsInput.ConsumeDefendDuelBonus(
+                    userIsAttacker: true,
+                    userStamina01: Owner.CurrentStaminaNormalized,
+                    opponentStamina01: carrier.CurrentStaminaNormalized);
+
+                chance += userAttackBonus;
+            }
+            else if (!Owner.IsUserControlled && carrier.IsUserControlled)
+            {
+                float userRetainBonus = MobileControlsInput.ConsumeDefendDuelBonus(
+                    userIsAttacker: false,
+                    userStamina01: carrier.CurrentStaminaNormalized,
+                    opponentStamina01: Owner.CurrentStaminaNormalized);
+
+                chance -= userRetainBonus;
+            }
+
             float tackleReach = Mathf.Max(0.75f, Owner.BallControlDistance + Owner.Radius + 0.35f);
             float distanceToCarrier = Vector3.Distance(Owner.Position, carrier.Position);
             float proximity = 1f - Mathf.Clamp01(distanceToCarrier / tackleReach);

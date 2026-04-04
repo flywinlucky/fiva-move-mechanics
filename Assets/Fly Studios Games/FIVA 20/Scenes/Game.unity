@@ -998,7 +998,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: d5345867c3444d9459d88bff378c4eeb, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -1410,7 +1410,7 @@ GameObject:
   - component: {fileID: 334229669}
   - component: {fileID: 334229670}
   m_Layer: 5
-  m_Name: Image
+  m_Name: mobile button root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1455,8 +1455,10 @@ MonoBehaviour:
   shotButton: {fileID: 1322117651}
   passButton: {fileID: 2050966121}
   sprintButton: {fileID: 2018473878}
+  defendButton: {fileID: 1814650963}
   JoystickArea: {fileID: 1576243919}
   autoToggleShotButton: 1
+  autoToggleDefendButton: 1
   refreshInterval: 0.12
 --- !u!1001 &334838146
 PrefabInstance:
@@ -10179,7 +10181,7 @@ GameObject:
   - component: {fileID: 1814650966}
   - component: {fileID: 1814650965}
   m_Layer: 5
-  m_Name: shot button (1)
+  m_Name: defend button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10218,7 +10220,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f200d3496efdefb408c2710de87b69d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _action: 2
+  _action: 3
 --- !u!114 &1814650966
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10284,7 +10286,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: f9a14c077e35b364db08c92522b55a1a, type: 3}
-  m_Type: 0
+  m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
