@@ -125,6 +125,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             fromCarrierToChaser.y = 0f;
             carrierDistance = fromCarrierToChaser.magnitude;
 
+            float engageDistance = Mathf.Max(1.1f, Owner.BallTacklableDistance * 0.75f);
+            if (carrierDistance <= engageDistance)
+            {
+                isDirectlyBehindCarrier = false;
+                return carrier.Position;
+            }
+
             isDirectlyBehindCarrier = false;
             if (carrierDistance > 0.0001f)
             {
@@ -243,27 +250,34 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (isOpponentCarrier && Owner.IsBallWithinTacklableDistance())
             {
                 bool isUserCarrier = ballOwner != null && ballOwner.IsUserControlled;
-                bool shouldBlockRearTackle = isDirectlyBehindCarrier
-                    && carrierDistance <= Mathf.Max(0.45f, _difficultyProfile.AIBehindStickBreakDistance * 0.45f)
-                    && _rearChaseTime < 0.18f
-                    && !isUserCarrier;
+                float userCarrierEngageDistance = Mathf.Max(0.65f,
+                    Owner.BallTacklableDistance * Mathf.Clamp(_difficultyProfile.AITackleEngageDistanceScale, 0.4f, 1.1f));
+                bool canEngageUserCarrier = !isUserCarrier || carrierDistance <= userCarrierEngageDistance;
 
-                bool shouldHesitateTackle = !decisionTick || Random.value <= (aiErrorChance * 0.45f);
-
-                if (isUserCarrier)
-                    shouldHesitateTackle = false;
-
-                if (isDirectlyBehindCarrier && _rearChaseTime >= 0.35f)
-                    shouldHesitateTackle |= Random.value <= 0.12f;
-
-                if (ballOwner != null && ballOwner.IsUserControlled)
-                    shouldHesitateTackle |= Random.value <= _difficultyProfile.AIPlayerInterceptionAssist;
-
-                if (!shouldBlockRearTackle && !shouldHesitateTackle)
+                if (canEngageUserCarrier)
                 {
-                    //tackle player
-                    SuperMachine.ChangeState<TackleMainState>();
-                    return;
+                    bool shouldBlockRearTackle = isDirectlyBehindCarrier
+                        && carrierDistance <= Mathf.Max(0.45f, _difficultyProfile.AIBehindStickBreakDistance * 0.45f)
+                        && _rearChaseTime < 0.18f
+                        && !isUserCarrier;
+
+                    bool shouldHesitateTackle = !decisionTick || Random.value <= (aiErrorChance * 0.45f);
+
+                    if (isUserCarrier)
+                        shouldHesitateTackle = false;
+
+                    if (isDirectlyBehindCarrier && _rearChaseTime >= 0.35f)
+                        shouldHesitateTackle |= Random.value <= 0.12f;
+
+                    if (!isUserCarrier && ballOwner != null && ballOwner.IsUserControlled)
+                        shouldHesitateTackle |= Random.value <= _difficultyProfile.AIPlayerInterceptionAssist;
+
+                    if (!shouldBlockRearTackle && !shouldHesitateTackle)
+                    {
+                        //tackle player
+                        SuperMachine.ChangeState<TackleMainState>();
+                        return;
+                    }
                 }
             }
             else if (!hasBallCarrier && Owner.IsBallWithinControlableDistance())

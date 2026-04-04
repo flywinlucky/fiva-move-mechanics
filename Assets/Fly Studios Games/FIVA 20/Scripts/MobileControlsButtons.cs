@@ -1,6 +1,7 @@
 using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
+using TMPro;
 using UnityEngine;
 
 public class MobileControlsButtons : MonoBehaviour
@@ -9,7 +10,7 @@ public class MobileControlsButtons : MonoBehaviour
     public GameObject passButton;
     public GameObject sprintButton;
     public GameObject defendButton;
-   
+    public TMP_Text defendButton_Text;
     [Space]
     public GameObject JoystickArea;
 
@@ -24,9 +25,26 @@ public class MobileControlsButtons : MonoBehaviour
     [Range(0.05f, 1f)]
     float refreshInterval = 0.12f;
 
+    [Header("Defend Button Text")]
+    [SerializeField]
+    string defendModeText = "DEFEND";
+
+    [SerializeField]
+    string takeModeText = "TAKE";
+
+    [SerializeField]
+    string idleModeText = "";
+
     float _nextRefreshTime;
     bool _lastShotButtonState;
     bool _lastDefendButtonState;
+
+    enum DefendButtonMode
+    {
+        None,
+        Defend,
+        Take
+    }
 
     void Start()
     {
@@ -73,6 +91,8 @@ public class MobileControlsButtons : MonoBehaviour
             return;
 
         bool canDefendNow = CanCurrentUserContestBall();
+        UpdateDefendButtonText(canDefendNow);
+
         if (!force && canDefendNow == _lastDefendButtonState)
             return;
 
@@ -143,5 +163,52 @@ public class MobileControlsButtons : MonoBehaviour
         }
 
         return false;
+    }
+
+    void UpdateDefendButtonText(bool buttonVisible)
+    {
+        if (defendButton_Text == null)
+            return;
+
+        if (!buttonVisible)
+        {
+            defendButton_Text.text = idleModeText;
+            return;
+        }
+
+        DefendButtonMode mode = ResolveDefendButtonMode();
+        if (mode == DefendButtonMode.Take)
+            defendButton_Text.text = takeModeText;
+        else if (mode == DefendButtonMode.Defend)
+            defendButton_Text.text = defendModeText;
+        else
+            defendButton_Text.text = idleModeText;
+    }
+
+    DefendButtonMode ResolveDefendButtonMode()
+    {
+        if (Ball.Instance == null || Ball.Instance.Owner == null)
+            return DefendButtonMode.None;
+
+        Player ballOwner = Ball.Instance.Owner;
+        if (ballOwner.PlayerType == PlayerTypes.Goalkeeper)
+            return DefendButtonMode.None;
+
+        if (ballOwner.IsUserControlled)
+            return DefendButtonMode.Defend;
+
+        if (ballOwner.OppositionMembers == null)
+            return DefendButtonMode.None;
+
+        foreach (Player challenger in ballOwner.OppositionMembers)
+        {
+            if (challenger == null || !challenger.IsUserControlled)
+                continue;
+
+            if (challenger.IsBallWithinTacklableDistance())
+                return DefendButtonMode.Take;
+        }
+
+        return DefendButtonMode.None;
     }
 }

@@ -71,6 +71,18 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [Range(0f, 0.5f)]
         public float AIBadTouchChance;
 
+        [Range(0.4f, 1.1f)]
+        public float AITackleEngageDistanceScale;
+
+        [Range(0f, 0.35f)]
+        public float UserDuelControlBonus;
+
+        [Range(0f, 0.65f)]
+        public float AIDefendMissChance;
+
+        [Range(0.5f, 0.95f)]
+        public float UserTakeTapMinWinChance;
+
         [Range(0.05f, 0.7f)]
         public float GKReactionDelayMin;
 
@@ -165,6 +177,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             AIPlayerAdvantageRadius = 2.05f,
             AIPlayerInterceptionAssist = 0.10f,
             AIBadTouchChance = 0.10f,
+            AITackleEngageDistanceScale = 0.68f,
+            UserDuelControlBonus = 0.14f,
+            AIDefendMissChance = 0.30f,
+            UserTakeTapMinWinChance = 0.85f,
             GKReactionDelayMin = 0.16f,
             GKReactionDelayMax = 0.32f,
             GKMistakeChance = 0.12f,
@@ -194,6 +210,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             AIPlayerAdvantageRadius = 1.55f,
             AIPlayerInterceptionAssist = 0.04f,
             AIBadTouchChance = 0.05f,
+            AITackleEngageDistanceScale = 0.78f,
+            UserDuelControlBonus = 0.10f,
+            AIDefendMissChance = 0.20f,
+            UserTakeTapMinWinChance = 0.80f,
             GKReactionDelayMin = 0.08f,
             GKReactionDelayMax = 0.18f,
             GKMistakeChance = 0.07f,
@@ -223,6 +243,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             AIPlayerAdvantageRadius = 1.40f,
             AIPlayerInterceptionAssist = 0.02f,
             AIBadTouchChance = 0.03f,
+            AITackleEngageDistanceScale = 0.88f,
+            UserDuelControlBonus = 0.06f,
+            AIDefendMissChance = 0.12f,
+            UserTakeTapMinWinChance = 0.75f,
             GKReactionDelayMin = 0.08f,
             GKReactionDelayMax = 0.15f,
             GKMistakeChance = 0.06f,
@@ -532,6 +556,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             profile.AIPlayerAdvantageRadius = Mathf.Clamp(profile.AIPlayerAdvantageRadius, 0.5f, 4f);
             profile.AIPlayerInterceptionAssist = Mathf.Clamp(profile.AIPlayerInterceptionAssist, 0f, 0.4f);
             profile.AIBadTouchChance = Mathf.Clamp(profile.AIBadTouchChance, 0f, 0.5f);
+            profile.AITackleEngageDistanceScale = Mathf.Clamp(profile.AITackleEngageDistanceScale, 0.4f, 1.1f);
+            profile.UserDuelControlBonus = Mathf.Clamp(profile.UserDuelControlBonus, 0f, 0.35f);
+            profile.AIDefendMissChance = Mathf.Clamp(profile.AIDefendMissChance, 0f, 0.65f);
+            profile.UserTakeTapMinWinChance = Mathf.Clamp(profile.UserTakeTapMinWinChance, 0.5f, 0.95f);
             profile.GKReactionDelayMin = Mathf.Clamp(profile.GKReactionDelayMin, 0.05f, 0.7f);
             profile.GKReactionDelayMax = Mathf.Clamp(profile.GKReactionDelayMax, 0.08f, 0.9f);
             if (profile.GKReactionDelayMax < profile.GKReactionDelayMin)
@@ -631,6 +659,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 profile.AIChaseSlowdownWhenBehind -= assist * 0.08f;
                 profile.AIPlayerInterceptionAssist += assist * _ddaMaxPlayerAssistBoost;
                 profile.AIPlayerAdvantageRadius += assist * 0.8f;
+                profile.AITackleEngageDistanceScale -= assist * 0.18f;
+                profile.UserDuelControlBonus += assist * 0.12f;
+                profile.AIDefendMissChance += assist * 0.20f;
+                profile.UserTakeTapMinWinChance += assist * 0.08f;
 
                 // Goalkeeper auto-balance: help struggling players score, tighten subtly when dominating.
                 profile.GKReactionDelayMin += assist * 0.08f;
@@ -649,6 +681,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 // If player dominates, tighten AI slightly but keep behavior fair.
                 profile.AIErrorChanceBase -= challenge * 0.01f;
                 profile.AIPressureErrorBoost -= challenge * 0.015f;
+                profile.AITackleEngageDistanceScale += challenge * 0.05f;
+                profile.UserDuelControlBonus -= challenge * 0.03f;
+                profile.AIDefendMissChance -= challenge * 0.04f;
+                profile.UserTakeTapMinWinChance -= challenge * 0.04f;
 
                 ClampDifficultyProfile(ref profile);
                 return profile;

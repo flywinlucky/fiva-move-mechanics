@@ -19,10 +19,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
         Player _duelUserPlayer;
         int _duelStartDefendTapSequence;
 
-        const float DuelWindowDurationSeconds = 0.7f;
+        const float DuelWindowDurationSeconds = 1f;
         const float FailedTackleResolveDelay = 0.15f;
         const float CarrierDuelLockExtraSeconds = 0.2f;
-        const float DuelBreakDistanceBuffer = 0.65f;
+        const float DuelBreakDistanceBuffer = 0.15f;
         const float NoDefendTapAttackerWinChance = 0.8f;
 
         public override void Enter()
@@ -128,6 +128,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (_carrier.IsUserControlled && !DidUserTapDefendDuringDuel())
                 tackleSuccessChance = Mathf.Max(tackleSuccessChance, NoDefendTapAttackerWinChance);
 
+            MatchDifficultyProfile runtimeProfile = GetRuntimeDifficultyProfile();
+
+            // In TAKE mode, one or more taps should give user a strong minimum steal chance.
+            if (Owner.IsUserControlled && !_carrier.IsUserControlled && DidUserTapDefendDuringDuel())
+                tackleSuccessChance = Mathf.Max(tackleSuccessChance, runtimeProfile.UserTakeTapMinWinChance);
+
             _isTackleSuccessful = Random.value <= tackleSuccessChance;
 
             // Successful tackles resolve slightly faster for responsive casual feel.
@@ -155,9 +161,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             if (_carrier == null)
                 return false;
 
-            float attackerTackleReach = Mathf.Max(0.75f, Owner.BallControlDistance + Owner.Radius + 0.35f);
-            float carrierSafetyReach = Mathf.Max(0.75f, _carrier.BallControlDistance + _carrier.Radius + 0.35f);
-            float maxDuelDistance = Mathf.Max(attackerTackleReach, carrierSafetyReach) + DuelBreakDistanceBuffer;
+            MatchDifficultyProfile runtimeProfile = GetRuntimeDifficultyProfile();
+            float attackerScale = (!Owner.IsUserControlled && _carrier.IsUserControlled)
+                ? Mathf.Clamp(runtimeProfile.AITackleEngageDistanceScale, 0.4f, 1.1f)
+                : 1f;
+
+            float attackerTackleReach = Mathf.Max(0.75f, Owner.BallTacklableDistance * attackerScale + Owner.Radius);
+            float carrierBodyAllowance = Mathf.Max(0.15f, _carrier.Radius * 0.65f);
+            float maxDuelDistance = attackerTackleReach + carrierBodyAllowance + DuelBreakDistanceBuffer;
 
             Vector3 delta = Owner.Position - _carrier.Position;
             delta.y = 0f;
@@ -195,6 +206,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 return 0f;
 
             float chance = 0.55f;
+            MatchDifficultyProfile runtimeProfile = GetRuntimeDifficultyProfile();
 
             // Mild assist for user feel without making tackles unfair.
             if (Owner.IsUserControlled && !carrier.IsUserControlled)
@@ -202,10 +214,23 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             else if (!Owner.IsUserControlled && carrier.IsUserControlled)
                 chance -= 0.05f;
 
+            if (Owner.IsUserControlled && !carrier.IsUserControlled)
+            {
+                chance += runtimeProfile.UserDuelControlBonus;
+
+                // Simulate occasional AI defensive input miss.
+                if (Random.value <= runtimeProfile.AIDefendMissChance)
+                    chance += 0.10f;
+            }
+            else if (!Owner.IsUserControlled && carrier.IsUserControlled)
+            {
+                chance -= runtimeProfile.UserDuelControlBonus * 0.75f;
+            }
+
             if (MatchManager.Instance != null)
             {
                 MatchDifficulty difficulty = MatchManager.Instance.Difficulty;
-                MatchDifficultyProfile runtimeProfile = MatchManager.Instance.RuntimeDifficultyProfile;
+                runtimeProfile = MatchManager.Instance.RuntimeDifficultyProfile;
 
                 if (!Owner.IsUserControlled && carrier.IsUserControlled)
                 {
@@ -248,7 +273,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 chance -= userRetainBonus;
             }
 
-            float tackleReach = Mathf.Max(0.75f, Owner.BallControlDistance + Owner.Radius + 0.35f);
+            float tackleReach = Mathf.Max(0.75f, Owner.BallTacklableDistance + Owner.Radius);
             float distanceToCarrier = Vector3.Distance(Owner.Position, carrier.Position);
             float proximity = 1f - Mathf.Clamp01(distanceToCarrier / tackleReach);
             chance += proximity * 0.2f;
@@ -282,6 +307,20 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 return Mathf.Max(0f, player.RPGMovement.CurrentSpeed);
 
             return Mathf.Max(0f, player.ActualSpeed);
+        }
+
+        MatchDifficultyProfile GetRuntimeDifficultyProfile()
+        {
+            if (MatchManager.Instance != null)
+                return MatchManager.Instance.RuntimeDifficultyProfile;
+
+            return new MatchDifficultyProfile
+            {
+                AITackleEngageDistanceScale = 0.78f,
+                UserDuelControlBonus = 0.10f,
+                AIDefendMissChance = 0.20f,
+                UserTakeTapMinWinChance = 0.80f
+            };
         }
 
         Player Owner => ((InFieldPlayerFSM)SuperMachine).Owner;

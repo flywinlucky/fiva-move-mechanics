@@ -1849,6 +1849,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         }
 
         public float BallControlDistance { get => _ballControlDistance; set => _ballControlDistance = value; }
+        public float BallTacklableDistance
+        {
+            get => Mathf.Max(0.5f, _ballTacklableDistance);
+            set => _ballTacklableDistance = Mathf.Max(0.5f, value);
+        }
         public Goal OppGoal { get => _oppGoal; set => _oppGoal = value; }
         public float BallPassArriveVelocity { get => _ballPassArriveVelocity; set => _ballPassArriveVelocity = value; }
         public List<SupportSpot> PlayerSupportSpots { get => _pitchPoints; set => _pitchPoints = value; }
