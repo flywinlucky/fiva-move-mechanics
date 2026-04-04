@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Fly Studios Games/FIVA 20/Scenes/Main Menu.unity
+    guid: e2a2aacf208775c499eb78148779fa9a
+  - enabled: 1
     path: Assets/Fly Studios Games/FIVA 20/Scenes/Game.unity
     guid: b3b153902959a374aa7a495a600aab05
   m_configObjects: {}
