@@ -13,31 +13,82 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
     {
         bool _isTackleSuccessful;
         float _waitTime;
+        bool _isDuelWindowActive;
+        float _duelElapsed;
+        Player _carrier;
+        Player _duelUserPlayer;
+
+        const float DuelWindowDurationSeconds = 2f;
+        const float FailedTackleResolveDelay = 0.25f;
+        const float CarrierDuelLockExtraSeconds = 0.4f;
 
         public override void Enter()
         {
             base.Enter();
 
-            Player carrier = Ball.Instance != null ? Ball.Instance.Owner : null;
+            _carrier = Ball.Instance != null ? Ball.Instance.Owner : null;
+            _isDuelWindowActive = false;
+            _duelElapsed = 0f;
+            _duelUserPlayer = null;
 
-            // Dynamic duel result feels more natural than fixed 50/50.
-            float tackleSuccessChance = EvaluateTackleSuccessChance(carrier);
-            _isTackleSuccessful = carrier != null && Random.value <= tackleSuccessChance;
-
-            // Successful tackles resolve slightly faster for responsive casual feel.
-            _waitTime = _isTackleSuccessful ? 0.18f : 0.25f;
-
-            //if tackle is successful, then message the ball owner
-            //that he has been tackled
-            if(_isTackleSuccessful)
+            if (_carrier == null || _carrier == Owner)
             {
-                ActionUtility.Invoke_Action(carrier.OnTackled);
+                _isTackleSuccessful = false;
+                _waitTime = FailedTackleResolveDelay;
+                return;
             }
+
+            // Prevent concurrent duels on the same carrier from resolving ownership in opposite directions.
+            if (Time.time < _carrier.TackleDuelLockUntil)
+            {
+                _isTackleSuccessful = false;
+                _waitTime = FailedTackleResolveDelay;
+                return;
+            }
+
+            float duelLockDuration = DuelWindowDurationSeconds + CarrierDuelLockExtraSeconds;
+            _carrier.TackleDuelLockUntil = Mathf.Max(_carrier.TackleDuelLockUntil, Time.time + duelLockDuration);
+
+            _duelUserPlayer = Owner.IsUserControlled ? Owner : (_carrier.IsUserControlled ? _carrier : null);
+            if (_duelUserPlayer != null)
+            {
+                _isDuelWindowActive = true;
+                _duelElapsed = 0f;
+                _duelUserPlayer.SetDefendWidgetState(true, 0f);
+                return;
+            }
+
+            ResolveTackleDuel();
         }
 
         public override void Execute()
         {
             base.Execute();
+
+            if (_isDuelWindowActive)
+            {
+                if (!IsCarrierStillValidForDuel())
+                {
+                    _isDuelWindowActive = false;
+                    ClearDefendWidget();
+                    _isTackleSuccessful = false;
+                    _waitTime = FailedTackleResolveDelay;
+                }
+
+                _duelElapsed += Time.deltaTime;
+                float progress = Mathf.Clamp01(_duelElapsed / DuelWindowDurationSeconds);
+
+                if (_duelUserPlayer != null)
+                    _duelUserPlayer.SetDefendWidgetState(true, progress);
+
+                if (_duelElapsed < DuelWindowDurationSeconds)
+                    return;
+
+                _isDuelWindowActive = false;
+                ClearDefendWidget();
+                ResolveTackleDuel();
+                return;
+            }
 
             //decrement time
             _waitTime -= Time.deltaTime;
@@ -45,11 +96,50 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             //if time if exhausted trigger approprite state transation
             if(_waitTime <= 0)
             {
-                if (_isTackleSuccessful)
+                if (_isTackleSuccessful && Ball.Instance != null && Ball.Instance.Owner == Owner)
                     SuperMachine.ChangeState<ControlBallMainState>();
                 else
                     SuperMachine.ChangeState<GoToHomeMainState>();
             }
+        }
+
+        public override void Exit()
+        {
+            base.Exit();
+            ClearDefendWidget();
+        }
+
+        void ResolveTackleDuel()
+        {
+            if (_carrier == null || !IsCarrierStillValidForDuel())
+            {
+                _isTackleSuccessful = false;
+                _waitTime = FailedTackleResolveDelay;
+                return;
+            }
+
+            // Dynamic duel result feels more natural than fixed 50/50.
+            float tackleSuccessChance = EvaluateTackleSuccessChance(_carrier);
+            _isTackleSuccessful = Random.value <= tackleSuccessChance;
+
+            // Successful tackles resolve slightly faster for responsive casual feel.
+            _waitTime = _isTackleSuccessful ? 0.18f : FailedTackleResolveDelay;
+
+            if (_isTackleSuccessful)
+                ActionUtility.Invoke_Action(_carrier.OnTackled);
+        }
+
+        bool IsCarrierStillValidForDuel()
+        {
+            return Ball.Instance != null
+                && _carrier != null
+                && Ball.Instance.Owner == _carrier;
+        }
+
+        void ClearDefendWidget()
+        {
+            if (_duelUserPlayer != null)
+                _duelUserPlayer.ResetDefendWidget();
         }
 
         float EvaluateTackleSuccessChance(Player carrier)

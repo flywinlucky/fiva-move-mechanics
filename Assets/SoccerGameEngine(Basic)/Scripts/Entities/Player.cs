@@ -7,6 +7,7 @@ using RobustFSM.Interfaces;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
@@ -124,7 +125,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         //[SerializeField]
         //[Range(0.1f, 1f)]
-        float  _accuracy = 0.8f;
+        float _accuracy = 0.8f;
 
         [SerializeField]
         [Range(0.1f, 1f)]
@@ -181,8 +182,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         GameObject _iconUserControlled;
         [SerializeField]
         GameObject _iconCanPassPlayer;
-        [SerializeField] 
+        [SerializeField]
         PlayerWiget _playerWiget;
+        [SerializeField] GameObject _playerDefendWidget;
+        [SerializeField] Image _playerDefendWidget_Filled_Image;
 
         [Header("Player Body Parts")]
         [SerializeField]
@@ -383,6 +386,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
             // keep preview icon hidden until a valid manual pass target is selected
             SetCanPassPreviewVisible(false);
+            ResetDefendWidget();
         }
 
         void OnValidate()
@@ -1663,6 +1667,35 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                 _iconCanPassPlayer.SetActive(visible);
         }
 
+        public void SetDefendWidgetVisible(bool visible)
+        {
+            if (_playerDefendWidget == null)
+                return;
+
+            if (_playerDefendWidget.activeSelf != visible)
+                _playerDefendWidget.SetActive(visible);
+        }
+
+        public void SetDefendWidgetFill(float fill01)
+        {
+            if (_playerDefendWidget_Filled_Image == null)
+                return;
+
+            _playerDefendWidget_Filled_Image.fillAmount = Mathf.Clamp01(fill01);
+        }
+
+        public void SetDefendWidgetState(bool visible, float fill01)
+        {
+            SetDefendWidgetVisible(visible);
+            SetDefendWidgetFill(fill01);
+        }
+
+        public void ResetDefendWidget()
+        {
+            SetDefendWidgetFill(0f);
+            SetDefendWidgetVisible(false);
+        }
+
         public float TriggerPassAnimationAndGetReleaseDelay(float fallbackDelay = 0.5f)
         {
             if (_playerAnimationManager == null)
@@ -1880,6 +1913,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         }
         public float BallRecoveryBlockedUntil { get; set; }
         public float GoalKeeperPickupBlockedUntil { get; set; }
+        public float TackleDuelLockUntil { get; set; }
         public float GoalKeeperPassPowerMultiplier
         {
             get => Mathf.Max(1f, _goalKeeperPassPowerMultiplier);
