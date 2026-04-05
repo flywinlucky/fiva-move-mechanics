@@ -159,8 +159,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             if (_cameraController == null)
                 _cameraController = FindObjectOfType<CameraController>();
 
-            if (_cameraController != null)
-                _cameraController.Shake(0.14f, 0.22f);
+            //if (_cameraController != null)
+                //_cameraController.Shake(0.14f, 0.22f);
         }
 
         private void Instance_OnMatchOver(string message)

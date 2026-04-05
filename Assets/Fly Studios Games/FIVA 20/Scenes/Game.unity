@@ -1470,7 +1470,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: d5345867c3444d9459d88bff378c4eeb, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -2339,6 +2339,9 @@ MonoBehaviour:
   autoPlayDelaySeconds: 5
   wakeUpOnAnyScreenTouch: 1
   wakeUpOnAnyKey: 1
+  wakeUpOnMovementAxisHold: 1
+  movementAxisWakeThreshold: 0.15
+  wakeUpOnSprintKeyHold: 1
   showJoystickTextOnlyDuringAutoPlay: 1
 --- !u!1001 &355426502
 PrefabInstance:
@@ -8500,11 +8503,6 @@ MonoBehaviour:
   _minZ: -65
   _maxZ: 65
   _drawBoundsGizmo: 1
-  _shakeFrequency: 17
-  _shakeSmoothTime: 0.08
-  _shakeAxisMultiplier: {x: 1, y: 0.85, z: 1}
-  duration: 0.4
-  magnitude: 20
 --- !u!4 &966406192 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3002280711180486036, guid: 679ed1767a0ddf34db0c8fb7850ae01d,
