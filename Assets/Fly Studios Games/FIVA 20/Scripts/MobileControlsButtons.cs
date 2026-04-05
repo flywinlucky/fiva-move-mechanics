@@ -50,6 +50,17 @@ public class MobileControlsButtons : MonoBehaviour
     [SerializeField]
     bool wakeUpOnAnyKey = true;
 
+    [Header("Keyboard/Gamepad Activity")]
+    [SerializeField]
+    bool wakeUpOnMovementAxisHold = true;
+
+    [SerializeField]
+    [Range(0.01f, 0.8f)]
+    float movementAxisWakeThreshold = 0.15f;
+
+    [SerializeField]
+    bool wakeUpOnSprintKeyHold = true;
+
     [SerializeField]
     bool showJoystickTextOnlyDuringAutoPlay = true;
 
@@ -143,6 +154,20 @@ public class MobileControlsButtons : MonoBehaviour
 
         if (wakeUpOnAnyKey && Input.anyKeyDown)
             return true;
+
+        if (wakeUpOnMovementAxisHold)
+        {
+            float threshold = Mathf.Clamp(movementAxisWakeThreshold, 0.01f, 0.8f);
+            Vector2 keyboardOrPadAxes = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            if (keyboardOrPadAxes.sqrMagnitude >= threshold * threshold)
+                return true;
+        }
+
+        if (wakeUpOnSprintKeyHold)
+        {
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                return true;
+        }
 
         return false;
     }
