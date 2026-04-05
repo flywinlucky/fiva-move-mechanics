@@ -169,6 +169,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [Range(0f, 0.8f)]
         float aiHesitationTime = 0.22f;
 
+        [Header("WebGL Runtime")]
+        [SerializeField]
+        bool _applyWebGLRuntimeTuning = true;
+
+        [SerializeField]
+        [Range(30, 120)]
+        int _webGLTargetFrameRate = 60;
+
         [SerializeField]
         MatchDifficultyProfile _casualProfile = new MatchDifficultyProfile
         {
@@ -544,6 +552,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         {
             base.Awake();
 
+            ApplyRuntimePlatformSettings();
+
             FSM = GetComponent<MatchManagerFSM>();
             _nextAIPostShotTrigger = UnityEngine.Random.Range(4, 6);
         }
@@ -556,6 +566,18 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
             if (Application.isPlaying)
                 ApplyDifficultyToActiveTeams();
+        }
+
+        void ApplyRuntimePlatformSettings()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (!_applyWebGLRuntimeTuning)
+                return;
+
+            int targetFrameRate = Mathf.Clamp(_webGLTargetFrameRate, 30, 120);
+            if (Application.targetFrameRate != targetFrameRate)
+                Application.targetFrameRate = targetFrameRate;
+#endif
         }
 
         void ClampDifficultyProfile(ref MatchDifficultyProfile profile)

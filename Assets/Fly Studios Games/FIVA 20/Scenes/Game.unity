@@ -1255,7 +1255,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1670927552}
-  m_RootOrder: 5
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &147274229
 BoxCollider:
@@ -1856,7 +1856,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &233224636
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9682,6 +9682,7 @@ MonoBehaviour:
   activeControlPulseAmplitude: 0.1
   activeControlPulseSpeed: 2.8
   highlightFadeSpeed: 8
+  userPlayerRefreshInterval: 0.35
 --- !u!4 &1080164638
 Transform:
   m_ObjectHideFlags: 0
@@ -10993,6 +10994,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3af0287c8ecf024488333937e2988142, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _checkInterval: 0.2
 --- !u!1001 &1390488190
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13017,11 +13019,11 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1774287651}
+  - {fileID: 147274228}
   - {fileID: 110719905}
   - {fileID: 1597825512}
   - {fileID: 2056451235}
   - {fileID: 223104879}
-  - {fileID: 147274228}
   - {fileID: 1267879366}
   - {fileID: 1655874423}
   - {fileID: 1887884251}

@@ -10,6 +10,14 @@ public class SafeArea : MonoBehaviour
 {
     private RectTransform _panel;
     private Rect _lastSafeArea = new Rect(0, 0, 0, 0); // Stocăm ultima zonă sigură cunoscută pentru a evita actualizări inutile
+    private int _lastScreenWidth;
+    private int _lastScreenHeight;
+    private ScreenOrientation _lastOrientation;
+    private float _nextCheckTime;
+
+    [SerializeField]
+    [Min(0.05f)]
+    private float _checkInterval = 0.2f;
 
     void Awake()
     {
@@ -23,13 +31,23 @@ public class SafeArea : MonoBehaviour
 
         // Aplicăm zona sigură de la început
         ApplySafeArea();
+        _nextCheckTime = Time.unscaledTime;
     }
 
     void Update()
     {
+        if (Time.unscaledTime < _nextCheckTime)
+            return;
+
+        _nextCheckTime = Time.unscaledTime + Mathf.Max(0.05f, _checkInterval);
+
         // Verificăm dacă zona sigură s-a schimbat (de ex., la rotirea ecranului)
         // Această verificare este foarte rapidă și previne rularea logicii în fiecare frame
-        if (Screen.safeArea != _lastSafeArea)
+        bool screenChanged = Screen.width != _lastScreenWidth
+            || Screen.height != _lastScreenHeight
+            || Screen.orientation != _lastOrientation;
+
+        if (screenChanged || Screen.safeArea != _lastSafeArea)
         {
             ApplySafeArea();
         }
@@ -57,5 +75,8 @@ public class SafeArea : MonoBehaviour
 
         // Actualizăm ultima zonă sigură cunoscută
         _lastSafeArea = safeArea;
+        _lastScreenWidth = Screen.width;
+        _lastScreenHeight = Screen.height;
+        _lastOrientation = Screen.orientation;
     }
 }

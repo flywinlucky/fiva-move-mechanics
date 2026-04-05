@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [ExecuteAlways]
 [DisallowMultipleComponent]
@@ -95,6 +98,9 @@ public class AdBoardRibbonMeshBuilder : MonoBehaviour
     float nextTextureSwitchTime;
     Vector2 scrollOffset;
     string texturePropertyName;
+#if UNITY_EDITOR
+    bool editorRefreshQueued;
+#endif
 
     static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
     static readonly int MainTexId = Shader.PropertyToID("_MainTex");
@@ -124,6 +130,14 @@ public class AdBoardRibbonMeshBuilder : MonoBehaviour
 
     void OnDisable()
     {
+#if UNITY_EDITOR
+        if (editorRefreshQueued)
+        {
+            EditorApplication.delayCall -= DelayedEditorRefresh;
+            editorRefreshQueued = false;
+        }
+#endif
+
         if (runtimeMaterial != null)
         {
             runtimeMaterial.mainTextureOffset = Vector2.zero;
@@ -133,6 +147,14 @@ public class AdBoardRibbonMeshBuilder : MonoBehaviour
 
     void OnDestroy()
     {
+#if UNITY_EDITOR
+        if (editorRefreshQueued)
+        {
+            EditorApplication.delayCall -= DelayedEditorRefresh;
+            editorRefreshQueued = false;
+        }
+#endif
+
         if (ownsRuntimeMaterialInstance && runtimeMaterial != null)
         {
             Destroy(runtimeMaterial);
@@ -546,11 +568,41 @@ public class AdBoardRibbonMeshBuilder : MonoBehaviour
         textureSwitchInterval = Mathf.Max(0.2f, textureSwitchInterval);
         scrollSpeed = Mathf.Clamp(scrollSpeed, 0f, 3f);
 
+        ScheduleEditorRefreshFromValidate();
+    }
+
+#if UNITY_EDITOR
+    void ScheduleEditorRefreshFromValidate()
+    {
+        if (Application.isPlaying)
+            return;
+
+        if (!isActiveAndEnabled)
+            return;
+
+        if (editorRefreshQueued)
+            return;
+
+        editorRefreshQueued = true;
+        EditorApplication.delayCall += DelayedEditorRefresh;
+    }
+
+    void DelayedEditorRefresh()
+    {
+        EditorApplication.delayCall -= DelayedEditorRefresh;
+        editorRefreshQueued = false;
+
+        if (this == null || !isActiveAndEnabled)
+            return;
+
         EnsureComponents();
         InitializeRuntimeMaterial();
         ForceRefresh();
 
-        if (!Application.isPlaying && rebuildContinuouslyInEditor)
+        if (rebuildContinuouslyInEditor)
             RebuildMesh();
     }
+#else
+    void ScheduleEditorRefreshFromValidate() { }
+#endif
 }

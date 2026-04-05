@@ -166,7 +166,7 @@ public class PlayerAnimationManager : MonoBehaviour
         if (deltaTime < 0f)
             deltaTime = Time.deltaTime;
 
-        if (playerAnimator == null)
+        if (!HasValidAnimatorController())
             return;
 
         float currentMoveSpeed = ResolveCurrentMoveSpeed();
@@ -204,7 +204,7 @@ public class PlayerAnimationManager : MonoBehaviour
         shotTriggerHash = Animator.StringToHash(shotTriggerName);
         passLayerIndex = -1;
 
-        if (playerAnimator == null)
+        if (!HasValidAnimatorController())
             return;
 
         passLayerIndex = playerAnimator.GetLayerIndex(passLayerName);
@@ -229,7 +229,7 @@ public class PlayerAnimationManager : MonoBehaviour
 
     void UpdatePassLayerWeight(float deltaTime)
     {
-        if (playerAnimator == null || passLayerIndex < 0)
+        if (!HasValidAnimatorController() || passLayerIndex < 0)
             return;
 
         float targetWeight = Time.time <= passLayerHoldUntil ? passLayerActiveWeight : 0f;
@@ -272,7 +272,7 @@ public class PlayerAnimationManager : MonoBehaviour
         float duration = Mathf.Max(0.1f, animationDuration) * timingScale;
         float releaseDelay = duration * Mathf.Clamp01(releaseNormalizedTime);
 
-        if (playerAnimator == null)
+        if (!HasValidAnimatorController())
             return Mathf.Max(0.01f, fallbackDelay);
 
         if (hasTrigger)
@@ -373,5 +373,10 @@ public class PlayerAnimationManager : MonoBehaviour
             sprintSpeed = Mathf.Max(sprintSpeed, movement.Speed);
 
         return sprintSpeed;
+    }
+
+    bool HasValidAnimatorController()
+    {
+        return playerAnimator != null && playerAnimator.runtimeAnimatorController != null;
     }
 }

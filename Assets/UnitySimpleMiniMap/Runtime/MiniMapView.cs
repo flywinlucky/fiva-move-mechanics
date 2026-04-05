@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 #if ODIN_INSPECTOR
@@ -43,6 +42,7 @@ namespace Arikan
 
         private Dictionary<Transform, RectTransform> redDotMap = new Dictionary<Transform, RectTransform>();
         private KeyValuePair<Transform, RectTransform> mainMap = new KeyValuePair<Transform, RectTransform>();
+        private readonly List<Transform> pendingUnfollowTargets = new List<Transform>(16);
 
         private void OnEnable()
         {
@@ -141,10 +141,23 @@ namespace Arikan
             {
                 UnfollowTarget(mainMap.Key);
             }
-            foreach (var redDot in redDotMap.ToList())
+
+            if (redDotMap.Count == 0)
+                return;
+
+            pendingUnfollowTargets.Clear();
+            foreach (var pair in redDotMap)
             {
-                UnfollowTarget(redDot.Key);
+                if (pair.Key != null)
+                    pendingUnfollowTargets.Add(pair.Key);
             }
+
+            for (int i = 0; i < pendingUnfollowTargets.Count; i++)
+            {
+                UnfollowTarget(pendingUnfollowTargets[i]);
+            }
+
+            pendingUnfollowTargets.Clear();
         }
 
         private void Update()
@@ -154,18 +167,36 @@ namespace Arikan
                 var target = mainMap.Key;
                 var redDot = mainMap.Value;
 
-                TranslateReverse(target, redDot);
+                if (target != null && redDot != null)
+                    TranslateReverse(target, redDot);
+                else
+                    mainMap = new KeyValuePair<Transform, RectTransform>();
             }
 
+            pendingUnfollowTargets.Clear();
             foreach (var pair in redDotMap)
             {
                 var target = pair.Key;
                 var redDot = pair.Value;
 
-                if (target != null)
+                if (target == null || redDot == null)
                 {
-                    Translate(target, redDot);
+                    if (redDot != null)
+                        Destroy(redDot.gameObject);
+
+                    pendingUnfollowTargets.Add(target);
+                    continue;
                 }
+
+                Translate(target, redDot);
+            }
+
+            if (pendingUnfollowTargets.Count > 0)
+            {
+                for (int i = 0; i < pendingUnfollowTargets.Count; i++)
+                    redDotMap.Remove(pendingUnfollowTargets[i]);
+
+                pendingUnfollowTargets.Clear();
             }
         }
 

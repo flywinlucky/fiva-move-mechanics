@@ -135,6 +135,11 @@ public class TutorialManager : MonoBehaviour
     [Min(0.01f)]
     float highlightFadeSpeed = 8f;
 
+    [Header("Performance")]
+    [SerializeField]
+    [Min(0.05f)]
+    float userPlayerRefreshInterval = 0.35f;
+
     TutorialPhase _phase = TutorialPhase.None;
     Player _userPlayer;
     Player _passReferencePlayer;
@@ -143,6 +148,7 @@ public class TutorialManager : MonoBehaviour
     float _sprintMovedDistance;
     bool _goalScoredInScoreStep;
     readonly List<Coroutine> _phaseVisibilityCoroutines = new List<Coroutine>();
+    float _nextUserPlayerRefreshTime;
 
     void Start()
     {
@@ -169,6 +175,7 @@ public class TutorialManager : MonoBehaviour
         _goalScoredInScoreStep = false;
         _passReferencePlayer = null;
         RefreshUserPlayer();
+        _nextUserPlayerRefreshTime = Time.unscaledTime;
         SetPhase(TutorialPhase.Move);
     }
 
@@ -184,8 +191,12 @@ public class TutorialManager : MonoBehaviour
         if (_phase == TutorialPhase.None || _phase == TutorialPhase.Completed)
             return;
 
-        if (_userPlayer == null || !_userPlayer.IsUserControlled)
+        if ((_userPlayer == null || !_userPlayer.IsUserControlled)
+            && Time.unscaledTime >= _nextUserPlayerRefreshTime)
+        {
             RefreshUserPlayer();
+            _nextUserPlayerRefreshTime = Time.unscaledTime + Mathf.Max(0.05f, userPlayerRefreshInterval);
+        }
 
         switch (_phase)
         {

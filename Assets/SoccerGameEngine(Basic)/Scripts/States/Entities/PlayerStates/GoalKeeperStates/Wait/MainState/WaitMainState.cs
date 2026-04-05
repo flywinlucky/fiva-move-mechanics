@@ -94,7 +94,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             if (MatchManager.Instance == null || !MatchManager.Instance.EnableGoalkeeperDebug)
                 return;
 
-            Debug.Log("[GK DEBUG] " + Owner.name + " :: " + message);
+            //Debug.Log("[GK DEBUG] " + Owner.name + " :: " + message);
         }
 
         public Player Owner

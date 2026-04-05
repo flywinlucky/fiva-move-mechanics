@@ -7,7 +7,6 @@ using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
 using RobustFSM.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
@@ -227,40 +226,78 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public TeamPlayer GetClosestPlayerToPoint(Vector3 position)
         {
-            // get the closest player to point
-            TeamPlayer player = Players
-                .Where(tm => tm != null
-                && tm.Player != null
-                && tm.Player.PlayerType == PlayerTypes.InFieldPlayer
-                && (tm.Player.InFieldPlayerFSM == null
-                    || tm.Player.InFieldPlayerFSM.CurrentState == null
-                    || tm.Player.InFieldPlayerFSM.IsCurrentState<TackledMainState>() == false))
-                .OrderBy(tm => (tm.Player.Position - position).sqrMagnitude)
-                .ThenBy(tm => tm.Player.GetInstanceID())
-                .FirstOrDefault();
+            if (Players == null || Players.Count == 0)
+                return null;
 
-            if (player == null)
+            TeamPlayer bestPreferred = null;
+            float bestPreferredSqr = float.MaxValue;
+            int bestPreferredId = int.MaxValue;
+
+            TeamPlayer bestInField = null;
+            float bestInFieldSqr = float.MaxValue;
+            int bestInFieldId = int.MaxValue;
+
+            TeamPlayer bestAny = null;
+            float bestAnySqr = float.MaxValue;
+            int bestAnyId = int.MaxValue;
+
+            for (int i = 0; i < Players.Count; i++)
             {
-                player = Players
-                    .Where(tm => tm != null
-                    && tm.Player != null
-                    && tm.Player.PlayerType == PlayerTypes.InFieldPlayer)
-                    .OrderBy(tm => (tm.Player.Position - position).sqrMagnitude)
-                    .ThenBy(tm => tm.Player.GetInstanceID())
-                    .FirstOrDefault();
+                TeamPlayer tm = Players[i];
+                if (tm == null || tm.Player == null)
+                    continue;
+
+                Player player = tm.Player;
+                float sqrDistance = (player.Position - position).sqrMagnitude;
+                int instanceId = player.GetInstanceID();
+
+                if (IsBetterClosestCandidate(sqrDistance, instanceId, bestAnySqr, bestAnyId))
+                {
+                    bestAny = tm;
+                    bestAnySqr = sqrDistance;
+                    bestAnyId = instanceId;
+                }
+
+                if (player.PlayerType != PlayerTypes.InFieldPlayer)
+                    continue;
+
+                if (IsBetterClosestCandidate(sqrDistance, instanceId, bestInFieldSqr, bestInFieldId))
+                {
+                    bestInField = tm;
+                    bestInFieldSqr = sqrDistance;
+                    bestInFieldId = instanceId;
+                }
+
+                bool isTackled = player.InFieldPlayerFSM != null
+                    && player.InFieldPlayerFSM.CurrentState != null
+                    && player.InFieldPlayerFSM.IsCurrentState<TackledMainState>();
+
+                if (!isTackled && IsBetterClosestCandidate(sqrDistance, instanceId, bestPreferredSqr, bestPreferredId))
+                {
+                    bestPreferred = tm;
+                    bestPreferredSqr = sqrDistance;
+                    bestPreferredId = instanceId;
+                }
             }
 
-            if (player == null)
-            {
-                player = Players
-                    .Where(tm => tm != null && tm.Player != null)
-                    .OrderBy(tm => (tm.Player.Position - position).sqrMagnitude)
-                    .ThenBy(tm => tm.Player.GetInstanceID())
-                    .FirstOrDefault();
-            }
+            if (bestPreferred != null)
+                return bestPreferred;
 
-            // return player
-            return player;
+            if (bestInField != null)
+                return bestInField;
+
+            return bestAny;
+        }
+
+        bool IsBetterClosestCandidate(float candidateSqr, int candidateId, float bestSqr, int bestId)
+        {
+            if (candidateSqr < bestSqr)
+                return true;
+
+            if (Mathf.Approximately(candidateSqr, bestSqr))
+                return candidateId < bestId;
+
+            return false;
         }
 
         public TeamPlayer GetTeamPlayer(Player player)
@@ -268,7 +305,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             if (player == null)
                 return null;
 
-            return Players.FirstOrDefault(tm => tm != null && tm.Player == player);
+            if (Players == null)
+                return null;
+
+            for (int i = 0; i < Players.Count; i++)
+            {
+                TeamPlayer teamPlayer = Players[i];
+                if (teamPlayer != null && teamPlayer.Player == player)
+                    return teamPlayer;
+            }
+
+            return null;
         }
 
         public bool ShouldSwitchClosestPlayer(TeamPlayer current, TeamPlayer candidate, Vector3 position)
@@ -411,7 +458,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             if (player == null || Players == null)
                 return false;
 
-            return Players.Any(tm => tm != null && tm.Player == player);
+            for (int i = 0; i < Players.Count; i++)
+            {
+                TeamPlayer teamPlayer = Players[i];
+                if (teamPlayer != null && teamPlayer.Player == player)
+                    return true;
+            }
+
+            return false;
         }
 
         void ApplySingleUserControlSelection(Player selected)
