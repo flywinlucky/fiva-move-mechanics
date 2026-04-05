@@ -8,4 +8,9 @@ public class RestartCurrentScene : MonoBehaviour
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
         SceneManager.LoadScene(currentSceneIndex);
     }
+
+        public void SwitchScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
 }
