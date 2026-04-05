@@ -1,5 +1,8 @@
 using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
+using System.Collections;
+using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +18,33 @@ public class TutorialManager : MonoBehaviour
         PassBall,
         ScoreGoal,
         Completed
+    }
+
+    [Serializable]
+    class PhaseContentVisibility
+    {
+        public TutorialPhase phase = TutorialPhase.None;
+
+        [Min(0f)]
+        public float applyDelaySeconds = 0f;
+
+        public bool applyDelayUseUnscaledTime = true;
+
+        public List<GameObject> objectsToShow = new List<GameObject>();
+        public List<GameObject> objectsToHide = new List<GameObject>();
+        public List<TimedObjectToggle> delayedToggles = new List<TimedObjectToggle>();
+    }
+
+    [Serializable]
+    class TimedObjectToggle
+    {
+        public GameObject target;
+        public bool setActive = true;
+
+        [Min(0f)]
+        public float delaySeconds = 0f;
+
+        public bool useUnscaledTime = true;
     }
 
     [SerializeField]
@@ -62,6 +92,13 @@ public class TutorialManager : MonoBehaviour
     [SerializeField]
     Transform ballSpawnPoint;
 
+    [Header("Phase Content Visibility")]
+    [SerializeField]
+    bool usePhaseContentVisibility = true;
+
+    [SerializeField]
+    List<PhaseContentVisibility> phaseContentVisibility = new List<PhaseContentVisibility>();
+
     [Header("Control Highlights")]
     [SerializeField]
     bool useControlHighlights = true;
@@ -105,6 +142,7 @@ public class TutorialManager : MonoBehaviour
     Vector3 _sprintLastPosition;
     float _sprintMovedDistance;
     bool _goalScoredInScoreStep;
+    readonly List<Coroutine> _phaseVisibilityCoroutines = new List<Coroutine>();
 
     void Start()
     {
@@ -120,6 +158,8 @@ public class TutorialManager : MonoBehaviour
 
     void OnDisable()
     {
+        CancelPendingPhaseVisibilityCoroutines();
+
         if (MatchManager.Instance != null)
             MatchManager.Instance.OnGoalScored -= HandleGoalScored;
     }
@@ -226,6 +266,7 @@ public class TutorialManager : MonoBehaviour
     void SetPhase(TutorialPhase phase)
     {
         _phase = phase;
+        ApplyPhaseContentVisibility(_phase);
         UpdateControlHighlights(true);
 
         switch (_phase)
@@ -263,6 +304,140 @@ public class TutorialManager : MonoBehaviour
                 SetStepText(completedStepText);
                 break;
         }
+    }
+
+    void ApplyPhaseContentVisibility(TutorialPhase phase)
+    {
+        if (!usePhaseContentVisibility || phaseContentVisibility == null || phaseContentVisibility.Count == 0)
+            return;
+
+        CancelPendingPhaseVisibilityCoroutines();
+
+        for (int i = 0; i < phaseContentVisibility.Count; i++)
+        {
+            PhaseContentVisibility config = phaseContentVisibility[i];
+            if (config == null || config.phase != phase)
+                continue;
+
+            float delay = Mathf.Max(0f, config.applyDelaySeconds);
+            if (delay <= 0f)
+            {
+                ApplyObjectVisibilityList(config.objectsToHide, false);
+                ApplyObjectVisibilityList(config.objectsToShow, true);
+                ApplyDelayedObjectToggles(config.delayedToggles);
+                continue;
+            }
+
+            Coroutine routine = StartCoroutine(ApplyPhaseContentVisibilityWithDelay(config,
+                delay,
+                config.applyDelayUseUnscaledTime));
+            if (routine != null)
+                _phaseVisibilityCoroutines.Add(routine);
+        }
+    }
+
+    IEnumerator ApplyPhaseContentVisibilityWithDelay(PhaseContentVisibility config, float delaySeconds, bool useUnscaledTime)
+    {
+        if (useUnscaledTime)
+        {
+            float elapsed = 0f;
+            while (elapsed < delaySeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+        }
+        else
+        {
+            yield return new WaitForSeconds(delaySeconds);
+        }
+
+        if (config == null)
+            yield break;
+
+        ApplyObjectVisibilityList(config.objectsToHide, false);
+        ApplyObjectVisibilityList(config.objectsToShow, true);
+        ApplyDelayedObjectToggles(config.delayedToggles);
+    }
+
+    void ApplyObjectVisibilityList(List<GameObject> objects, bool active)
+    {
+        if (objects == null)
+            return;
+
+        for (int i = 0; i < objects.Count; i++)
+        {
+            GameObject go = objects[i];
+            if (go == null)
+                continue;
+
+            if (go.activeSelf != active)
+                go.SetActive(active);
+        }
+    }
+
+    void ApplyDelayedObjectToggles(List<TimedObjectToggle> toggles)
+    {
+        if (toggles == null)
+            return;
+
+        for (int i = 0; i < toggles.Count; i++)
+        {
+            TimedObjectToggle toggle = toggles[i];
+            if (toggle == null || toggle.target == null)
+                continue;
+
+            float delay = Mathf.Max(0f, toggle.delaySeconds);
+            if (delay <= 0f)
+            {
+                if (toggle.target.activeSelf != toggle.setActive)
+                    toggle.target.SetActive(toggle.setActive);
+
+                continue;
+            }
+
+            Coroutine routine = StartCoroutine(ApplyDelayedToggleRoutine(toggle.target,
+                toggle.setActive,
+                delay,
+                toggle.useUnscaledTime));
+            if (routine != null)
+                _phaseVisibilityCoroutines.Add(routine);
+        }
+    }
+
+    IEnumerator ApplyDelayedToggleRoutine(GameObject target, bool active, float delaySeconds, bool useUnscaledTime)
+    {
+        if (useUnscaledTime)
+        {
+            float elapsed = 0f;
+            while (elapsed < delaySeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+        }
+        else
+        {
+            yield return new WaitForSeconds(delaySeconds);
+        }
+
+        if (target != null && target.activeSelf != active)
+            target.SetActive(active);
+    }
+
+    void CancelPendingPhaseVisibilityCoroutines()
+    {
+        if (_phaseVisibilityCoroutines.Count == 0)
+            return;
+
+        for (int i = 0; i < _phaseVisibilityCoroutines.Count; i++)
+        {
+            Coroutine routine = _phaseVisibilityCoroutines[i];
+            if (routine != null)
+                StopCoroutine(routine);
+        }
+
+        _phaseVisibilityCoroutines.Clear();
     }
 
     void AdvancePhase()
