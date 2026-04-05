@@ -103,6 +103,18 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         [Range(0f, 0.25f)]
         public float GKShotForgiveness;
+
+        [Range(0f, 1.5f)]
+        public float UserShotErrorBase;
+
+        [Range(0f, 4.5f)]
+        public float UserShotErrorLongRange;
+
+        [Range(0f, 0.45f)]
+        public float UserShotMissChanceBase;
+
+        [Range(0f, 0.9f)]
+        public float UserShotMissChanceLongRange;
     }
 
     [RequireComponent(typeof(MatchManagerFSM))]
@@ -187,7 +199,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             GKReboundChance = 0.24f,
             GKPositioningResponsiveness = 1.00f,
             GKWrongDiveChance = 0.14f,
-            GKShotForgiveness = 0.07f
+            GKShotForgiveness = 0.07f,
+            UserShotErrorBase = 0.18f,
+            UserShotErrorLongRange = 1.25f,
+            UserShotMissChanceBase = 0.03f,
+            UserShotMissChanceLongRange = 0.18f
         };
 
         [SerializeField]
@@ -220,7 +236,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             GKReboundChance = 0.18f,
             GKPositioningResponsiveness = 1.28f,
             GKWrongDiveChance = 0.07f,
-            GKShotForgiveness = 0.04f
+            GKShotForgiveness = 0.04f,
+            UserShotErrorBase = 0.28f,
+            UserShotErrorLongRange = 1.75f,
+            UserShotMissChanceBase = 0.06f,
+            UserShotMissChanceLongRange = 0.30f
         };
 
         [SerializeField]
@@ -253,7 +273,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             GKReboundChance = 0.22f,
             GKPositioningResponsiveness = 1.45f,
             GKWrongDiveChance = 0.06f,
-            GKShotForgiveness = 0.04f
+            GKShotForgiveness = 0.04f,
+            UserShotErrorBase = 0.36f,
+            UserShotErrorLongRange = 2.35f,
+            UserShotMissChanceBase = 0.09f,
+            UserShotMissChanceLongRange = 0.40f
         };
 
         [SerializeField]
@@ -570,6 +594,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             profile.GKPositioningResponsiveness = Mathf.Clamp(profile.GKPositioningResponsiveness, 0.1f, 2.5f);
             profile.GKWrongDiveChance = Mathf.Clamp(profile.GKWrongDiveChance, 0f, 0.4f);
             profile.GKShotForgiveness = Mathf.Clamp(profile.GKShotForgiveness, 0f, 0.25f);
+            profile.UserShotErrorBase = Mathf.Clamp(profile.UserShotErrorBase, 0f, 1.5f);
+            profile.UserShotErrorLongRange = Mathf.Clamp(profile.UserShotErrorLongRange, 0f, 4.5f);
+            profile.UserShotMissChanceBase = Mathf.Clamp(profile.UserShotMissChanceBase, 0f, 0.45f);
+            profile.UserShotMissChanceLongRange = Mathf.Clamp(profile.UserShotMissChanceLongRange, 0f, 0.9f);
+            if (profile.UserShotMissChanceLongRange < profile.UserShotMissChanceBase)
+                profile.UserShotMissChanceLongRange = profile.UserShotMissChanceBase;
         }
 
         void ApplyDifficultyToActiveTeams()
@@ -673,10 +703,22 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 profile.GKShotForgiveness += assist * 0.08f;
                 profile.GKPositioningResponsiveness -= assist * 0.20f;
 
+                // User shooting assist when struggling: reduce miss dispersion and miss chance.
+                profile.UserShotErrorBase -= assist * 0.14f;
+                profile.UserShotErrorLongRange -= assist * 0.48f;
+                profile.UserShotMissChanceBase -= assist * 0.06f;
+                profile.UserShotMissChanceLongRange -= assist * 0.14f;
+
                 profile.GKMistakeChance -= challenge * 0.03f;
                 profile.GKReboundChance -= challenge * 0.03f;
                 profile.GKWrongDiveChance -= challenge * 0.02f;
                 profile.GKPositioningResponsiveness += challenge * 0.10f;
+
+                // When dominating, increase shot challenge but keep it fair.
+                profile.UserShotErrorBase += challenge * 0.06f;
+                profile.UserShotErrorLongRange += challenge * 0.22f;
+                profile.UserShotMissChanceBase += challenge * 0.03f;
+                profile.UserShotMissChanceLongRange += challenge * 0.07f;
 
                 // If player dominates, tighten AI slightly but keep behavior fair.
                 profile.AIErrorChanceBase -= challenge * 0.01f;

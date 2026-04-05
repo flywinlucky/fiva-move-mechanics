@@ -9,6 +9,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 {
     public class ShootBall : BState
     {
+        const float UserShotDistanceNear = 10f;
+        const float UserShotDistanceFar = 34f;
+
         float _timeUntilBallRelease;
         bool _shotExecuted;
 
@@ -77,6 +80,83 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             return defaultBallTime * Random.Range(1.08f, 1.20f);
         }
 
+        float ComputeShotPressure01()
+        {
+            if (Owner.OppositionMembers == null)
+                return 0f;
+
+            int nearbyOpponents = 0;
+            float pressureRadius = Mathf.Max(1.4f, Owner.DistanceThreatMax * 1.15f);
+            float sqrRadius = pressureRadius * pressureRadius;
+
+            for (int i = 0; i < Owner.OppositionMembers.Count; i++)
+            {
+                Player opponent = Owner.OppositionMembers[i];
+                if (opponent == null)
+                    continue;
+
+                if ((opponent.Position - Owner.Position).sqrMagnitude <= sqrRadius)
+                    nearbyOpponents++;
+            }
+
+            return Mathf.Clamp01(nearbyOpponents / 3f);
+        }
+
+        Vector3 ApplyHardMissOffset(Vector3 target, float distance01, float challenge01)
+        {
+            bool highMiss = Random.value <= Mathf.Lerp(0.34f, 0.68f, distance01);
+            if (highMiss)
+            {
+                target += Vector3.up * Random.Range(1.2f, 2.9f + challenge01 * 0.5f);
+                return target;
+            }
+
+            float sideSign = Random.value < 0.5f ? -1f : 1f;
+            float sideError = Random.Range(1.1f, 2.6f + challenge01 * 0.4f);
+            target += Owner.OppGoal.transform.right * sideSign * sideError;
+            target += Vector3.up * Random.Range(-0.2f, 0.9f);
+            return target;
+        }
+
+        Vector3 ResolveUserShotTarget(Vector3 defaultTarget)
+        {
+            if (!Owner.IsUserControlled)
+                return defaultTarget;
+
+            if (MatchManager.Instance == null || Owner.OppGoal == null)
+                return defaultTarget;
+
+            MatchDifficultyProfile profile = MatchManager.Instance.RuntimeDifficultyProfile;
+            float distanceToGoal = Vector3.Distance(Owner.Position, Owner.OppGoal.Position);
+            float distance01 = Mathf.InverseLerp(UserShotDistanceNear, UserShotDistanceFar, distanceToGoal);
+            float pressure01 = ComputeShotPressure01();
+            float assist01 = MatchManager.Instance.DdaAssistStrength;
+            float challenge01 = 1f - assist01;
+            float performance01 = MatchManager.Instance.PlayerPerformanceScore;
+
+            float errorRadius = profile.UserShotErrorBase + (profile.UserShotErrorLongRange * distance01);
+            errorRadius += pressure01 * 0.45f;
+            errorRadius += Mathf.Clamp01(performance01 - 0.55f) * 0.55f;
+            errorRadius -= assist01 * 0.25f;
+            errorRadius = Mathf.Clamp(errorRadius, 0.02f, 4.8f);
+
+            Vector2 jitter = Random.insideUnitCircle * errorRadius;
+            Vector3 target = defaultTarget;
+            target += Owner.OppGoal.transform.right * jitter.x;
+            target += Vector3.up * (jitter.y * 0.62f);
+
+            float missChance = Mathf.Lerp(profile.UserShotMissChanceBase, profile.UserShotMissChanceLongRange, distance01);
+            missChance += pressure01 * 0.12f;
+            missChance += Mathf.Clamp01(performance01 - 0.62f) * 0.08f;
+            missChance -= assist01 * 0.12f;
+            missChance = Mathf.Clamp01(missChance);
+
+            if (Random.value <= missChance)
+                target = ApplyHardMissOffset(target, distance01, challenge01);
+
+            return target;
+        }
+
         public override void Enter()
         {
             base.Enter();
@@ -125,8 +205,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
             Ball.Instance.Owner = null;
             Ball.Instance.Rigidbody.isKinematic = false;
 
-            Vector3 resolvedTarget = ResolveAiShotTarget((Vector3)Owner.KickTarget);
-            float resolvedBallTime = ResolveAiBallTime(Owner.BallTime);
+            Vector3 baseTarget = (Vector3)Owner.KickTarget;
+            Vector3 resolvedTarget = Owner.IsUserControlled
+                ? ResolveUserShotTarget(baseTarget)
+                : ResolveAiShotTarget(baseTarget);
+
+            float resolvedBallTime = Owner.IsUserControlled
+                ? Owner.BallTime
+                : ResolveAiBallTime(Owner.BallTime);
 
             //make a shot
             Owner.MakeShot(Ball.Instance.NormalizedPosition,

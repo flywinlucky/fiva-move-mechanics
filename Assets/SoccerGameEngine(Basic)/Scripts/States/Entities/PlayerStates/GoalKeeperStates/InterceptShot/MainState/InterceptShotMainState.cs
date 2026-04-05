@@ -11,6 +11,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
     public class InterceptShotMainState : BState
     {
         const float GoalKeeperCatchRetryDelay = 0.15f;
+        const float InterceptSteerStopDistance = 0.35f;
 
         float timeOfBallToInterceptPoint;
         Vector3 _steerTarget;
@@ -75,7 +76,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             // decrement ball time
             timeOfBallToInterceptPoint -= Time.deltaTime;
 
-            if(Vector3.Distance(_steerTarget, Owner.Position) <= 1f)
+            if(Vector3.Distance(_steerTarget, Owner.Position) <= InterceptSteerStopDistance)
             {
                 if (Owner.RPGMovement.Steer == true)
                     Owner.RPGMovement.SetSteeringOff();
@@ -105,13 +106,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 : 0f;
 
             float catchChance = Owner.EvaluateGoalKeeperCatchChance(ballSpeed);
-            bool isCaught = Owner.TryCatchBallAsGoalKeeper(ballSpeed);
-
-            if (SaveQuality > 0f)
-            {
-                float qualityBias = Mathf.Clamp(SaveQuality, 0.1f, 0.95f);
-                isCaught = Random.value <= qualityBias;
-            }
+            float saveQualityChance = SaveQuality > 0f
+                ? Mathf.Clamp(Mathf.Lerp(SaveQuality, 1f, 0.22f), 0.1f, 0.98f)
+                : 0f;
+            float catchAssist = ComputeInterceptCatchAssist(ballSpeed);
+            float adjustedCatchChance = Mathf.Clamp(Mathf.Max(catchChance + catchAssist, saveQualityChance), 0.1f, 0.98f);
+            bool isCaught = Random.value <= adjustedCatchChance;
 
             if (isCaught)
             {
@@ -124,7 +124,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 }
 
                 LogGoalKeeperDebug("Ball reached keeper control distance -> Caught (chance: "
-                    + catchChance.ToString("0.00") + ", speed: " + ballSpeed.ToString("0.00")
+                    + catchChance.ToString("0.00") + ", adjusted: " + adjustedCatchChance.ToString("0.00")
+                    + ", speed: " + ballSpeed.ToString("0.00")
                     + ") -> ControlBall");
                 Machine.ChangeState<ControlBallMainState>();
                 return true;
@@ -134,9 +135,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 Time.time + GoalKeeperCatchRetryDelay);
 
             LogGoalKeeperDebug("Ball reached keeper control distance -> Missed catch (chance: "
-                + catchChance.ToString("0.00") + ", speed: " + ballSpeed.ToString("0.00") + ")");
+                + catchChance.ToString("0.00") + ", adjusted: " + adjustedCatchChance.ToString("0.00")
+                + ", speed: " + ballSpeed.ToString("0.00") + ")");
 
             return false;
+        }
+
+        float ComputeInterceptCatchAssist(float ballSpeed)
+        {
+            float speedAssist = Mathf.Clamp01(ballSpeed / 20f) * 0.05f;
+            float qualityAssist = Mathf.Clamp01(SaveQuality) * 0.08f;
+            float skillAssist = Mathf.Clamp01(Owner.GoalKeeping) * 0.04f;
+
+            return speedAssist + qualityAssist + skillAssist;
         }
 
         void TriggerRebound(float ballSpeed)

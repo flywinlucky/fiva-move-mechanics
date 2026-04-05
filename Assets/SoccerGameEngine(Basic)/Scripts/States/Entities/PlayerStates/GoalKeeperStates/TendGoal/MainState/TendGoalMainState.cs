@@ -16,6 +16,20 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
     public class TendGoalMainState : BState
     {
         const float LooseBallAutoCollectDistance = 10f;
+        const float LooseBallCollectDistanceNearThreat = 13.5f;
+        const float GoalThreatNearDistance = 16f;
+        const float GoalThreatFarDistance = 46f;
+        const float BallSpeedUrgencyReference = 14f;
+        const float GoalKeeperBaseAdvanceRatio = 0.85f;
+        const float GoalKeeperNearThreatDepthBias = 0.18f;
+        const float GoalKeeperBallMoveRepositionThresholdSafe = 0.9f;
+        const float GoalKeeperBallMoveRepositionThresholdDanger = 0.35f;
+        const float GoalKeeperTargetMoveThresholdSafe = 1.05f;
+        const float GoalKeeperTargetMoveThresholdDanger = 0.45f;
+        const float GoalKeeperAnchorGridSafe = 0.22f;
+        const float GoalKeeperAnchorGridDanger = 0.1f;
+        const float GoalKeeperHoldRadiusSafe = 0.95f;
+        const float GoalKeeperHoldRadiusDanger = 0.42f;
         const float GoalKeeperCatchRetryDelay = 0.15f;
         const float SaveQualityMin = 0.05f;
         const float SaveQualityMax = 0.95f;
@@ -49,6 +63,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             //set some data
             _prevBallPosition = 1000 * Vector3.one;
+            _steeringTarget = Owner.ClampGoalKeeperTargetToHomeRadius(Owner.Position);
             _timeSinceLastUpdate = 0f;
             _lastPickupBlockedLogTime = -10f;
             _hasPendingIntercept = false;
@@ -75,6 +90,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             //get the entity positions
             Vector3 ballPosition = Ball.Instance.NormalizedPosition;
+            float distanceToGoal = Vector3.Distance(ballPosition, Owner.TeamGoal.Position);
+            float goalThreat01 = ComputeGoalThreat01(ballPosition, distanceToGoal);
+            float looseCollectDistance = Mathf.Lerp(LooseBallAutoCollectDistance,
+                LooseBallCollectDistanceNearThreat,
+                goalThreat01);
 
             bool isNearOrHasBall = Ball.Instance.Owner == Owner || Owner.IsBallWithinControlableDistance();
             UpdateGoalKeeperControlIcons(isNearOrHasBall);
@@ -90,14 +110,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             bool canPickupNow = Time.time >= Owner.GoalKeeperPickupBlockedUntil;
             float distanceToBall = Vector3.Distance(Owner.Position, ballPosition);
 
+            UpdateDynamicTendGoalSpeed(goalThreat01, isBallLoose, distanceToBall);
+
             // if loose ball is near the keeper, actively step to it and pick it up when possible
-            bool shouldAutoCollectLooseBall = isBallLoose && distanceToBall <= LooseBallAutoCollectDistance;
+            bool shouldAutoCollectLooseBall = isBallLoose && distanceToBall <= looseCollectDistance;
             if (shouldAutoCollectLooseBall)
             {
                 Owner.RPGMovement.SetRotateFacePosition(ballPosition);
                 Vector3 collectTarget = Owner.ClampGoalKeeperTargetToHomeRadius(ballPosition);
                 Owner.RPGMovement.SetMoveTarget(collectTarget);
-                Owner.RPGMovement.Steer = Vector3.Distance(Owner.Position, collectTarget) >= 0.2f;
+                Owner.RPGMovement.Steer = Vector3.Distance(Owner.Position, collectTarget) >= Mathf.Lerp(0.12f, 0.28f, 1f - goalThreat01);
 
                 if (isBallInPickupRange && canPickupNow)
                 {
@@ -140,44 +162,98 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             //if I have exhausted my time then update the tend point
             if (_timeSinceLastUpdate <= 0f)
             {
-                //do not continue if the ball didnt move
-                if (_prevBallPosition != ballPosition)
+                float minBallMoveThreshold = Mathf.Lerp(
+                    GoalKeeperBallMoveRepositionThresholdSafe,
+                    GoalKeeperBallMoveRepositionThresholdDanger,
+                    goalThreat01);
+                float ballMoveThresholdSqr = minBallMoveThreshold * minBallMoveThreshold;
+
+                bool shouldReposition = (_prevBallPosition - ballPosition).sqrMagnitude >= ballMoveThresholdSqr;
+                if (_prevBallPosition.x > 900f)
+                    shouldReposition = true;
+
+                if (shouldReposition)
                 {
                     //cache the ball position
                     _prevBallPosition = ballPosition;
 
                     //run the logic for protecting the goal, find the position
                     Vector3 ballRelativePosToGoal = Owner.TeamGoal.transform.InverseTransformPoint(ballPosition);
-                    ballRelativePosToGoal.z = Owner.TendGoalDistance;
-                    ballRelativePosToGoal.x /= 3f;
-                    ballRelativePosToGoal.x = Mathf.Clamp(ballRelativePosToGoal.x, -2.14f, 2.14f);
+
+                    float movementRadius = Mathf.Max(1f, Owner.GoalKeeperMovementRadius);
+                    float maxAdvanceDepth = Mathf.Max(Owner.TendGoalDistance + 0.6f,
+                        movementRadius * GoalKeeperBaseAdvanceRatio);
+                    float advanceBySafety01 = 1f - goalThreat01;
+                    float dynamicDepth = Mathf.Lerp(Owner.TendGoalDistance,
+                        maxAdvanceDepth,
+                        advanceBySafety01);
+
+                    // In danger phases we bias the keeper slightly closer to goal for stable shot defense.
+                    dynamicDepth = Mathf.Max(Owner.TendGoalDistance - GoalKeeperNearThreatDepthBias,
+                        dynamicDepth);
+
+                    float lateralScale = Mathf.Lerp(2.35f, 3.6f, advanceBySafety01);
+                    float lateralClamp = Mathf.Lerp(1.85f, 2.55f, advanceBySafety01);
+
+                    ballRelativePosToGoal.z = dynamicDepth;
+                    ballRelativePosToGoal.x /= lateralScale;
+                    ballRelativePosToGoal.x = Mathf.Clamp(ballRelativePosToGoal.x, -lateralClamp, lateralClamp);
+
                     MatchDifficultyProfile profile = GetRuntimeProfile();
                     Vector3 target = Owner.TeamGoal.transform.TransformPoint(ballRelativePosToGoal);
-                    float positioningBlend = Mathf.Clamp01(profile.GKPositioningResponsiveness * Time.deltaTime * 1.8f);
+                    float anchorGrid = Mathf.Lerp(GoalKeeperAnchorGridSafe, GoalKeeperAnchorGridDanger, goalThreat01);
+                    target = SnapToGridXZ(target, anchorGrid);
+                    float speedUrgency = GetBallSpeedUrgency01(ballPosition);
+                    float positioningBlend = Mathf.Clamp01(
+                        profile.GKPositioningResponsiveness
+                        * Time.deltaTime
+                        * Mathf.Lerp(1.2f, 3.2f, goalThreat01 + (speedUrgency * 0.65f)));
+
+                    float minTargetMoveThreshold = Mathf.Lerp(
+                        GoalKeeperTargetMoveThresholdSafe,
+                        GoalKeeperTargetMoveThresholdDanger,
+                        goalThreat01);
+                    bool targetChangedEnough = (_steeringTarget - target).sqrMagnitude >= (minTargetMoveThreshold * minTargetMoveThreshold);
+                    if (!targetChangedEnough)
+                        target = _steeringTarget;
+
                     _steeringTarget = Vector3.Lerp(_steeringTarget, target, positioningBlend);
                     _steeringTarget = Owner.ClampGoalKeeperTargetToHomeRadius(_steeringTarget);
-
-                    //add some noise to the target
-                    float limit = Mathf.Max(0.05f, 1f - Owner.GoalKeeping);
-                    _steeringTarget.x += Random.Range(-limit, limit);
-                    _steeringTarget.z += Random.Range(-limit, limit);
                 }
 
                 //reset the time 
                 MatchDifficultyProfile updateProfile = GetRuntimeProfile();
-                float baseUpdateDelay = 2f * (1f - Owner.GoalKeeping);
-                float delayedUpdate = Mathf.Lerp(baseUpdateDelay, baseUpdateDelay + 0.2f, 1f - Mathf.Clamp01(updateProfile.GKPositioningResponsiveness / 2f));
-                _timeSinceLastUpdate = Mathf.Max(0.08f, delayedUpdate);
-                if (_timeSinceLastUpdate == 0f)
-                    _timeSinceLastUpdate = 2f * 0.1f;
+                float responsiveness01 = Mathf.Clamp01(updateProfile.GKPositioningResponsiveness / 2f);
+                float skill01 = Mathf.Clamp01(Owner.GoalKeeping);
+                float urgency01 = Mathf.Clamp01(goalThreat01 + (GetBallSpeedUrgency01(ballPosition) * 0.6f));
+
+                float baseUpdateDelay = Mathf.Lerp(0.5f, 0.12f, responsiveness01);
+                baseUpdateDelay = Mathf.Lerp(baseUpdateDelay, baseUpdateDelay * 0.78f, skill01);
+                baseUpdateDelay = Mathf.Lerp(baseUpdateDelay, 0.1f, urgency01);
+
+                _timeSinceLastUpdate = Mathf.Clamp(baseUpdateDelay, 0.1f, 0.62f);
             }
 
             //decrement the time
             _timeSinceLastUpdate -= Time.deltaTime;
 
             //set the ability to steer here
-            Owner.RPGMovement.Steer = Vector3.Distance(Owner.Position, _steeringTarget) >= 1f;
-            Owner.RPGMovement.SetMoveTarget(Owner.ClampGoalKeeperTargetToHomeRadius(_steeringTarget));
+            float steerThreshold = Mathf.Lerp(1.05f, 0.55f, goalThreat01);
+            float holdRadius = Mathf.Lerp(GoalKeeperHoldRadiusSafe, GoalKeeperHoldRadiusDanger, goalThreat01);
+            float distanceToSteeringTarget = Vector3.Distance(Owner.Position, _steeringTarget);
+
+            bool shouldHoldDefensiveAnchor = !isBallLoose && distanceToSteeringTarget <= holdRadius;
+            if (shouldHoldDefensiveAnchor)
+            {
+                // Hold position near goal to avoid micro step jitter while still facing play.
+                Owner.RPGMovement.Steer = false;
+                Owner.RPGMovement.SetMoveTarget(Owner.Position);
+            }
+            else
+            {
+                Owner.RPGMovement.Steer = distanceToSteeringTarget >= steerThreshold;
+                Owner.RPGMovement.SetMoveTarget(Owner.ClampGoalKeeperTargetToHomeRadius(_steeringTarget));
+            }
         }
 
         public override void ManualExecute()
@@ -407,7 +483,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 : 0f;
 
             float catchChance = Owner.EvaluateGoalKeeperCatchChance(ballSpeed);
-            bool isCaught = Owner.TryCatchBallAsGoalKeeper(ballSpeed);
+            float catchAssist = ComputeCatchAssistBonus(ballSpeed);
+            float adjustedCatchChance = Mathf.Clamp(catchChance + catchAssist, 0.1f, 0.97f);
+            bool isCaught = Random.value <= adjustedCatchChance;
 
             if (isCaught)
             {
@@ -420,6 +498,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 }
 
                 LogGoalKeeperDebug(context + " -> Caught ball (chance: " + catchChance.ToString("0.00")
+                    + ", adjusted: " + adjustedCatchChance.ToString("0.00")
                     + ", speed: " + ballSpeed.ToString("0.00") + ") -> ControlBall");
                 Machine.ChangeState<ControlBallMainState>();
                 return true;
@@ -429,9 +508,82 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 Time.time + GoalKeeperCatchRetryDelay);
 
             LogGoalKeeperDebug(context + " -> Missed catch (chance: " + catchChance.ToString("0.00")
+                + ", adjusted: " + adjustedCatchChance.ToString("0.00")
                 + ", speed: " + ballSpeed.ToString("0.00") + ")");
 
             return false;
+        }
+
+        void UpdateDynamicTendGoalSpeed(float goalThreat01, bool isBallLoose, float distanceToBall)
+        {
+            float skill01 = Mathf.Clamp01(Owner.GoalKeeping);
+            float speedMultiplier = Mathf.Lerp(1.02f, 1.38f, goalThreat01);
+            speedMultiplier = Mathf.Lerp(speedMultiplier, speedMultiplier * 1.08f, skill01);
+
+            if (isBallLoose && distanceToBall <= LooseBallCollectDistanceNearThreat)
+                speedMultiplier += 0.18f;
+
+            Owner.RPGMovement.Speed = Owner.TendGoalSpeed * speedMultiplier;
+        }
+
+        float GetBallSpeedUrgency01(Vector3 ballPosition)
+        {
+            if (Ball.Instance == null || Ball.Instance.Rigidbody == null)
+                return 0f;
+
+            Vector3 velocity = Ball.Instance.Rigidbody.velocity;
+            Vector3 toGoal = Owner.TeamGoal.Position - ballPosition;
+            toGoal.y = 0f;
+            if (toGoal.sqrMagnitude <= 0.0001f)
+                return 0f;
+
+            toGoal.Normalize();
+            Vector3 planarVelocity = Vector3.Scale(velocity, new Vector3(1f, 0f, 1f));
+            float speed01 = Mathf.Clamp01(planarVelocity.magnitude / BallSpeedUrgencyReference);
+            float towardGoal01 = Mathf.Clamp01((Vector3.Dot(planarVelocity.normalized, toGoal) + 1f) * 0.5f);
+
+            return speed01 * towardGoal01;
+        }
+
+        float ComputeGoalThreat01(Vector3 ballPosition, float distanceToGoal)
+        {
+            float distanceThreat01 = 1f - Mathf.InverseLerp(GoalThreatNearDistance,
+                GoalThreatFarDistance,
+                distanceToGoal);
+
+            float possessionThreat01 = 0.55f;
+            Player ballOwner = Ball.Instance != null ? Ball.Instance.Owner : null;
+            if (ballOwner == Owner)
+            {
+                possessionThreat01 = 0f;
+            }
+            else if (ballOwner != null)
+            {
+                possessionThreat01 = ballOwner.IsTeamInControl == Owner.IsTeamInControl ? 0.15f : 1f;
+            }
+
+            float speedUrgency01 = GetBallSpeedUrgency01(ballPosition);
+            float threat = (distanceThreat01 * 0.62f) + (possessionThreat01 * 0.26f) + (speedUrgency01 * 0.22f);
+            return Mathf.Clamp01(threat);
+        }
+
+        float ComputeCatchAssistBonus(float ballSpeed)
+        {
+            float distanceToGoal = Vector3.Distance(Owner.Position, Owner.TeamGoal.Position);
+            float homeAssist = 1f - Mathf.Clamp01(distanceToGoal / Mathf.Max(2.5f, Owner.GoalKeeperMovementRadius + 1.5f));
+            float speedAssist = Mathf.Clamp01(ballSpeed / Mathf.Max(0.1f, 18f));
+            float skillAssist = Mathf.Clamp01(Owner.GoalKeeping);
+
+            return (homeAssist * 0.1f) + (speedAssist * 0.05f) + (skillAssist * 0.03f);
+        }
+
+        Vector3 SnapToGridXZ(Vector3 value, float gridSize)
+        {
+            float grid = Mathf.Max(0.01f, gridSize);
+            value.x = Mathf.Round(value.x / grid) * grid;
+            value.z = Mathf.Round(value.z / grid) * grid;
+            value.y = 0f;
+            return value;
         }
 
         float GetRandomReactionDelay()
