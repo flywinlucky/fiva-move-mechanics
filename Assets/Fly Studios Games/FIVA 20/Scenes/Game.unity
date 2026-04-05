@@ -1301,7 +1301,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 82a08eb2528a76b4c901bc33d5e5cba9, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -6237,8 +6237,8 @@ Mesh:
     firstVertex: 0
     vertexCount: 10
     localAABB:
-      m_Center: {x: -33.52965, y: 0.62457204, z: -54.319374}
-      m_Extent: {x: 36.74435, y: 0.550004, z: 53.91063}
+      m_Center: {x: -33.52965, y: 0.54194117, z: -54.31937}
+      m_Extent: {x: 36.74435, y: 0.46737313, z: 53.910625}
   m_Shapes:
     vertices: []
     shapes: []
@@ -6317,7 +6317,7 @@ Mesh:
       format: 0
       dimension: 0
     m_DataSize: 320
-    _typelessdata: a0bd4d404dbb983dc375d8c200000000000000000000803f0000000000000000a0bd4d408258963fc375d8c200000000000000000000803f000000000000803f4a8c8cc24dbb983dc375d8c2756c173f00000000136a4e3f37fa9241000000004a8c8cc28258963fc375d8c2c250723f000000003828a53e37fa92410000803f4a8c8cc21cb7983d8046d1bec250723f000000003828a5be5a4f3542000000004a8c8cc23f58963f8046d1be756c173f00000000136a4ebf5a4f35420000803fa0bd4d401cb7983d8046d1be756c17bf00000000136a4ebf76cc7e4200000000a0bd4d403f58963f8046d1bec25072bf000000003828a5be76cc7e420000803fa0bd4d404dbb983dc375d8c2000080bf00000000000000005a4fb54200000000a0bd4d408258963fc375d8c2000080bf00000000000000005a4fb5420000803f
+    _typelessdata: a0bd4d404dbb983dc275d8c200000000000000000000803f0000000000000000a0bd4d403631813fc275d8c200000000000000000000803f000000000000803f4a8c8cc24dbb983dc275d8c2746c173f00000000136a4e3f765fb041000000004a8c8cc23631813fc275d8c2c250723f000000003b28a53e765fb0410000803f4a8c8cc21cb7983d0047d1bec250723f000000003928a5be0d125742000000004a8c8cc2f230813f0047d1be736c173f00000000136a4ebf0d1257420000803fa0bd4d401cb7983d0047d1be736c17bf00000000136a4ebfe4a0974200000000a0bd4d40f230813f0047d1bec25072bf000000003928a5bee4a097420000803fa0bd4d404dbb983dc275d8c2000080bf00000000000000000d12d74200000000a0bd4d403631813fc275d8c2000080bf00000000000000000d12d7420000803f
   m_CompressedMesh:
     m_Vertices:
       m_NumItems: 0
@@ -6371,8 +6371,8 @@ Mesh:
       m_BitSize: 0
     m_UVInfo: 0
   m_LocalAABB:
-    m_Center: {x: -33.52965, y: 0.62457204, z: -54.319374}
-    m_Extent: {x: 36.74435, y: 0.550004, z: 53.91063}
+    m_Center: {x: -33.52965, y: 0.54194117, z: -54.31937}
+    m_Extent: {x: 36.74435, y: 0.46737313, z: 53.910625}
   m_MeshUsageFlags: 0
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
@@ -6463,7 +6463,7 @@ Transform:
   m_GameObject: {fileID: 836815605}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.2, y: 1.1768, z: 1.1768}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 682725971}
@@ -8058,6 +8058,10 @@ MonoBehaviour:
     GKPositioningResponsiveness: 0.85
     GKWrongDiveChance: 0.2
     GKShotForgiveness: 0.14
+    UserShotErrorBase: 0.18
+    UserShotErrorLongRange: 1.25
+    UserShotMissChanceBase: 0.03
+    UserShotMissChanceLongRange: 0.18
   _normalProfile:
     PassMaxMultiplier: 1.15
     PassMinMultiplier: 0.85
@@ -8087,6 +8091,10 @@ MonoBehaviour:
     GKPositioningResponsiveness: 1.15
     GKWrongDiveChance: 0.11
     GKShotForgiveness: 0.08
+    UserShotErrorBase: 0.28
+    UserShotErrorLongRange: 1.75
+    UserShotMissChanceBase: 0.06
+    UserShotMissChanceLongRange: 0.3
   _hardProfile:
     PassMaxMultiplier: 1
     PassMinMultiplier: 1
@@ -8116,6 +8124,10 @@ MonoBehaviour:
     GKPositioningResponsiveness: 1.45
     GKWrongDiveChance: 0.06
     GKShotForgiveness: 0.04
+    UserShotErrorBase: 0.36
+    UserShotErrorLongRange: 2.35
+    UserShotMissChanceBase: 0.09
+    UserShotMissChanceLongRange: 0.4
   _distancePassMax: 25
   _distancePassMin: 8
   _distanceShotValidMax: 30
