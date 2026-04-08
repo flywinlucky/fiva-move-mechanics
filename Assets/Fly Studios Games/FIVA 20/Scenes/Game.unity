@@ -683,7 +683,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: TeamA 0-0 TeamH
+  m_text: BLUE 0-0 RED
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a933f577d03139348bf5a1468bf33208, type: 2}
   m_sharedMaterial: {fileID: 3502512618334885138, guid: a933f577d03139348bf5a1468bf33208,
@@ -1510,7 +1510,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
+        m_Texture: {fileID: 2800000, guid: 77a803fcdaf21c94abd36437857c3b09, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:

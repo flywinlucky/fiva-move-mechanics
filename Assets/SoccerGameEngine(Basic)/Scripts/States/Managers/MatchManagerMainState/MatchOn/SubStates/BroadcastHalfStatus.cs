@@ -19,7 +19,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             base.Enter();
 
             //set the wait time
-            waitTime = 1f;
+            waitTime = Owner.HalfStartBroadcastSeconds;
 
             //raise the half-start event
             RaiseTheHalfStartEvent();

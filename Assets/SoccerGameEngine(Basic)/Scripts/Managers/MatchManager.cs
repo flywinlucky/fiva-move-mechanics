@@ -340,6 +340,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [SerializeField]
         int _regulationDurationSeconds = 180;
 
+        [Header("Flow Timing")]
+        [SerializeField]
+        [Min(0f)]
+        float _matchStartBroadcastSeconds = 2f;
+
+        [SerializeField]
+        [Min(0f)]
+        float _halfStartBroadcastSeconds = 2f;
+
         /// <summary>
         /// A reference to how long each half length is in actual time(m)
         /// </summary>
@@ -979,5 +988,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         public float VelocityShotArrive { get => _velocityShotArrive; set => _velocityShotArrive = value; }
         public float DistanceTendGoal { get => _distanceTendGoal; set => _distanceTendGoal = value; }
         public float DistanceThreatTrack { get => _distanceThreatTrack; set => _distanceThreatTrack = value; }
+        public float MatchStartBroadcastSeconds { get => Mathf.Max(0f, _matchStartBroadcastSeconds); set => _matchStartBroadcastSeconds = Mathf.Max(0f, value); }
+        public float HalfStartBroadcastSeconds { get => Mathf.Max(0f, _halfStartBroadcastSeconds); set => _halfStartBroadcastSeconds = Mathf.Max(0f, value); }
     }
 }

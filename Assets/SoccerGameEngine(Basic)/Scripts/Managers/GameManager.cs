@@ -38,6 +38,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [SerializeField]
         SuddenDeathPanel _suddenDeathPanel;
 
+        [Header("Flow Timing")]
+        [SerializeField]
+        [Min(0f)]
+        float _initialKickOffDelaySeconds = 2f;
+
         [Header("Ranked Trophy Rewards")]
         [SerializeField]
         bool _enableTrophyRewards = true;
@@ -295,7 +300,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         IEnumerator DelayedMatchStart()
         {
-            yield return new WaitForSeconds(0f);
+            yield return new WaitForSeconds(_initialKickOffDelaySeconds);
             ActionUtility.Invoke_Action(OnMessageSwitchToMatchOn);
             _delayedMatchStartCoroutine = null;
         }
