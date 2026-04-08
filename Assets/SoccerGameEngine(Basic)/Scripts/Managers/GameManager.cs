@@ -367,11 +367,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 return;
 
             if (delta > 0)
-                _matchOverPanel.TxtTrophyReward.text = $"+{delta} Trophies";
+                _matchOverPanel.TxtTrophyReward.text = $"+{delta}";
             else if (delta < 0)
-                _matchOverPanel.TxtTrophyReward.text = $"{delta} Trophies";
+                _matchOverPanel.TxtTrophyReward.text = $"{delta}";
             else
-                _matchOverPanel.TxtTrophyReward.text = "0 Trophies";
+                _matchOverPanel.TxtTrophyReward.text = "0";
         }
 
         MatchResultType ResolveResult(string message)
