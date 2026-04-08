@@ -12,12 +12,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: efa747916aa66674d96ea40ca8a480b2, type: 3}
   m_Name: SettingsYG2
   m_EditorClassIdentifier: 
+  Authorization:
+    playerPhotoSize: 1
+    authorized: 1
+    playerName: Player current
+    uniqueID: 000
+    playerPhoto: demo image
+    payingStatus: 0
   Localization:
     setLanguageMod: 1
+  Storage:
+    saveLocal: 0
+    saveCloud: 1
+    flush: 0
   Basic:
     platform: {fileID: 11400000, guid: fabe82a4ab034324eb452cc7109f6d19, type: 2}
     autoApplySettings: 1
     autoPauseGame: 1
+    editTimeScale: 1
     editEventSystem: 1
     autoGRA: 1
     logInEditor: 1
@@ -31,10 +43,12 @@ MonoBehaviour:
   Simulation:
     device: 1
     language: ru
+    enableInterAdv: 1
     advIntervalSimulation: 60
     durationAdv: 0.5
     loadAdv: 0
     testFailAds: 0
+    pauseOnFocusGame: 0
   Templates:
     logoImageFormat: 0
     backgroundImgFormat: 0
@@ -69,6 +83,8 @@ MonoBehaviour:
     ownHost: 0
   platformToggles:
     setLanguageMod: 0
+    saveLocal: 0
+    saveCloud: 0
     autoPauseGame: 0
     selectWebGLTemplate: 1
     runInBackground: 1

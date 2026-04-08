@@ -1,5 +1,7 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using YG;
 
 [Serializable]
 public class UserProfileData
@@ -28,6 +30,16 @@ public class UserData : MonoBehaviour
     [SerializeField]
     bool autoSaveOnChange = true;
 
+    [Header("Yandex Cloud (PluginYG2)")]
+    [SerializeField]
+    bool useYandexCloudStorage = true;
+
+    [SerializeField]
+    bool preferAuthorizedNickname = true;
+
+    [SerializeField]
+    bool refreshBindingsOnSceneLoaded = true;
+
     [Header("Debug")]
     [SerializeField]
     bool enableDebugTrophyHotkeys = true;
@@ -38,6 +50,8 @@ public class UserData : MonoBehaviour
 
     [SerializeField]
     UserProfileData _data = new UserProfileData();
+
+    bool _isApplyingExternalData;
 
     public UserProfileData Data => _data;
 
@@ -56,7 +70,32 @@ public class UserData : MonoBehaviour
         if (dontDestroyOnLoad)
             DontDestroyOnLoad(gameObject);
 
-        Load();
+        LoadFromLocalBackup();
+
+        TrySyncFromYGData();
+    }
+
+    void OnEnable()
+    {
+        YG2.onGetSDKData += HandleYGDataReady;
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+
+        if (YG2.isSDKEnabled)
+            HandleYGDataReady();
+    }
+
+    void OnDisable()
+    {
+        YG2.onGetSDKData -= HandleYGDataReady;
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+    }
+
+    void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (!refreshBindingsOnSceneLoaded)
+            return;
+
+        NotifyDataChanged(saveAfterNotify: false);
     }
 
     void OnApplicationPause(bool pauseStatus)
@@ -147,12 +186,22 @@ public class UserData : MonoBehaviour
     {
         EnsureDataIntegrity();
 
-        string json = JsonUtility.ToJson(_data);
-        PlayerPrefs.SetString(SaveKey, json);
-        PlayerPrefs.Save();
+        SaveToLocalBackup();
+
+        if (ShouldUseYGCloud())
+        {
+            PushCurrentDataToYGSaves();
+            YG2.SaveProgress();
+        }
     }
 
     public void Load()
+    {
+        LoadFromLocalBackup();
+        TrySyncFromYGData();
+    }
+
+    void LoadFromLocalBackup()
     {
         if (!PlayerPrefs.HasKey(SaveKey))
         {
@@ -173,6 +222,20 @@ public class UserData : MonoBehaviour
         _data = loaded ?? CreateDefaultData();
         EnsureDataIntegrity();
         NotifyDataChanged(saveAfterNotify: false);
+    }
+
+    void SaveToLocalBackup()
+    {
+        EnsureDataIntegrity();
+
+        string json = JsonUtility.ToJson(_data);
+        PlayerPrefs.SetString(SaveKey, json);
+        PlayerPrefs.Save();
+    }
+
+    void HandleYGDataReady()
+    {
+        TrySyncFromYGData();
     }
 
     public void ResetData(bool saveImmediately = true)
@@ -215,7 +278,134 @@ public class UserData : MonoBehaviour
         EnsureDataIntegrity();
         OnUserDataChanged?.Invoke(_data);
 
-        if (saveAfterNotify && autoSaveOnChange)
+        if (!_isApplyingExternalData && saveAfterNotify && autoSaveOnChange)
             Save();
+    }
+
+    bool ShouldUseYGCloud()
+    {
+#if Storage_yg
+        return useYandexCloudStorage && YG2.isSDKEnabled;
+#else
+        return false;
+#endif
+    }
+
+    void TrySyncFromYGData()
+    {
+#if Storage_yg
+        if (!ShouldUseYGCloud())
+            return;
+
+        if (!HasMeaningfulYGSaves())
+        {
+            // Keep current local profile when cloud/local plugin save is still empty.
+            // This prevents 0-value overwrites after scene changes or early SDK callbacks.
+            EnsureDataIntegrity();
+            NotifyDataChanged(saveAfterNotify: false);
+
+            if (HasAnyProgress(_data))
+            {
+                PushCurrentDataToYGSaves();
+                YG2.SaveProgress();
+            }
+
+            return;
+        }
+
+        _isApplyingExternalData = true;
+
+        string resolvedName = ResolveNameFromYG();
+        if (!string.IsNullOrWhiteSpace(resolvedName))
+            _data.playerName = resolvedName;
+
+        _data.trophies = Mathf.Max(0, YG2.saves.userTrophies);
+        _data.matchesPlayed = Mathf.Max(0, YG2.saves.userMatchesPlayed);
+        _data.matchesWon = Mathf.Max(0, YG2.saves.userMatchesWon);
+        _data.goalsScored = Mathf.Max(0, YG2.saves.userGoalsScored);
+
+        EnsureDataIntegrity();
+        SaveToLocalBackup();
+        NotifyDataChanged(saveAfterNotify: false);
+
+        _isApplyingExternalData = false;
+#endif
+    }
+
+    bool HasAnyProgress(UserProfileData data)
+    {
+        if (data == null)
+            return false;
+
+        if (!string.IsNullOrWhiteSpace(data.playerName) && !string.Equals(data.playerName, defaultPlayerName, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return data.trophies > 0
+            || data.matchesPlayed > 0
+            || data.matchesWon > 0
+            || data.goalsScored > 0;
+    }
+
+    bool HasMeaningfulYGSaves()
+    {
+#if Storage_yg
+        if (YG2.saves == null)
+            return false;
+
+        if (YG2.saves.idSave > 0)
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(YG2.saves.userPlayerName))
+            return true;
+
+        return YG2.saves.userTrophies > 0
+            || YG2.saves.userMatchesPlayed > 0
+            || YG2.saves.userMatchesWon > 0
+            || YG2.saves.userGoalsScored > 0;
+#else
+        return false;
+#endif
+    }
+
+    void PushCurrentDataToYGSaves()
+    {
+#if Storage_yg
+        EnsureDataIntegrity();
+
+        YG2.saves.userPlayerName = _data.playerName;
+        YG2.saves.userTrophies = Mathf.Max(0, _data.trophies);
+        YG2.saves.userMatchesPlayed = Mathf.Max(0, _data.matchesPlayed);
+        YG2.saves.userMatchesWon = Mathf.Max(0, _data.matchesWon);
+        YG2.saves.userGoalsScored = Mathf.Max(0, _data.goalsScored);
+#endif
+    }
+
+    string ResolveNameFromYG()
+    {
+#if Storage_yg
+#if Authorization_yg
+        if (preferAuthorizedNickname && IsAuthorizedYGName(YG2.player.name))
+            return YG2.player.name;
+#endif
+
+        if (!string.IsNullOrWhiteSpace(YG2.saves.userPlayerName))
+            return YG2.saves.userPlayerName;
+#endif
+
+        return _data != null ? _data.playerName : defaultPlayerName;
+    }
+
+    bool IsAuthorizedYGName(string nickname)
+    {
+        if (string.IsNullOrWhiteSpace(nickname))
+            return false;
+
+        if (string.Equals(nickname, "unauthorized", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (string.Equals(nickname, "anonymous", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return true;
     }
 }

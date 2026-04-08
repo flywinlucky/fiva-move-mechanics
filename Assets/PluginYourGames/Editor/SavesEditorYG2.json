@@ -1,0 +1,16 @@
+{
+    "userPlayerName": "Player current",
+    "userTrophies": 253,
+    "userMatchesPlayed": 0,
+    "userMatchesWon": 0,
+    "userGoalsScored": 0,
+    "intExample": 5,
+    "strExample": "Hello!",
+    "boolExample": [
+        false,
+        false,
+        false,
+        false
+    ],
+    "idSave": 18
+}

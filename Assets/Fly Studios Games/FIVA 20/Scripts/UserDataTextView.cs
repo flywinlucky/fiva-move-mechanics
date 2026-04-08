@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [DisallowMultipleComponent]
 public class UserDataTextView : MonoBehaviour
@@ -18,33 +19,51 @@ public class UserDataTextView : MonoBehaviour
     [SerializeField]
     string emptyNameFallback = "Player";
 
+    UserData _boundUserData;
+
     void OnEnable()
     {
-        ResolveUserDataReference();
-
-        if (userData != null)
-            userData.OnUserDataChanged += HandleUserDataChanged;
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+        RebindUserData();
 
         RefreshUI();
+        StartCoroutine(RefreshNextFrame());
     }
 
     void OnDisable()
     {
-        if (userData != null)
-            userData.OnUserDataChanged -= HandleUserDataChanged;
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+
+        if (_boundUserData != null)
+            _boundUserData.OnUserDataChanged -= HandleUserDataChanged;
+
+        _boundUserData = null;
+    }
+
+    System.Collections.IEnumerator RefreshNextFrame()
+    {
+        yield return null;
+        RebindUserData();
+        RefreshUI();
+    }
+
+    void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        RebindUserData();
+        RefreshUI();
     }
 
     public void RefreshUI()
     {
-        ResolveUserDataReference();
+        RebindUserData();
 
-        if (userData == null || userData.Data == null)
+        if (_boundUserData == null || _boundUserData.Data == null)
         {
             ApplyText(emptyNameFallback, 0);
             return;
         }
 
-        UserProfileData data = userData.Data;
+        UserProfileData data = _boundUserData.Data;
         ApplyText(data.playerName, data.trophies);
     }
 
@@ -66,6 +85,24 @@ public class UserDataTextView : MonoBehaviour
 
         if (trophiesText != null)
             trophiesText.text = Mathf.Max(0, trophies).ToString();
+    }
+
+    void RebindUserData()
+    {
+        UserData previous = _boundUserData;
+
+        ResolveUserDataReference();
+
+        if (previous == userData)
+            return;
+
+        if (previous != null)
+            previous.OnUserDataChanged -= HandleUserDataChanged;
+
+        _boundUserData = userData;
+
+        if (_boundUserData != null)
+            _boundUserData.OnUserDataChanged += HandleUserDataChanged;
     }
 
     void ResolveUserDataReference()
