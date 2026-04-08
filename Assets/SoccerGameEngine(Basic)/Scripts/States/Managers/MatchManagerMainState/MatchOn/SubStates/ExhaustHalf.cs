@@ -80,7 +80,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             FreezePlayersForGoalReset();
 
             //prepare the text
-            string info = string.Format("TeamA {0}-{1} TeamH", Owner.TeamAway.Goals, Owner.TeamHome.Goals);
+            string info = string.Format("BLUE {0}-{1} RED", Owner.TeamAway.Goals, Owner.TeamHome.Goals);
 
             //invoke the goal-scored event
             GoalScored temp = Owner.OnGoalScored;
