@@ -9,5 +9,7 @@ namespace YG
         public int userMatchesPlayed;
         public int userMatchesWon;
         public int userGoalsScored;
+        public long userSaveRevision;
+        public long userLastSaveUnixTime;
     }
 }

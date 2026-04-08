@@ -97,6 +97,7 @@ namespace YG.Insides
     public static partial class YGInsides
     {
         private enum DataState { Exist, NotExist, Broken };
+        private enum SaveOriginChoice { Cloud, Local }
         private const string STORAGE_KEY = "YG2_SavesData";
 
         public static void LoadProgress()
@@ -273,7 +274,9 @@ namespace YG.Insides
 
             if (cloudDataState == DataState.Exist && localDataState == DataState.Exist)
             {
-                if (cloudData.idSave >= localData.idSave)
+                SaveOriginChoice choice = ChooseNewestSave(cloudData, localData);
+
+                if (choice == SaveOriginChoice.Cloud)
                 {
                     Message($"Load Cloud Complete! ID Cloud Save: {cloudData.idSave}, ID Local Save: {localData.idSave}");
                     YG2.saves = cloudData;
@@ -326,6 +329,55 @@ namespace YG.Insides
             }
 
             GetDataInvoke();
+        }
+
+        private static SaveOriginChoice ChooseNewestSave(SavesYG cloudData, SavesYG localData)
+        {
+            bool hasCloudStamp = HasUserSyncStamp(cloudData);
+            bool hasLocalStamp = HasUserSyncStamp(localData);
+
+            if (hasCloudStamp || hasLocalStamp)
+            {
+                int compareStamp = CompareUserSyncStamp(cloudData, localData);
+                if (compareStamp > 0)
+                    return SaveOriginChoice.Cloud;
+
+                if (compareStamp < 0)
+                    return SaveOriginChoice.Local;
+            }
+
+            return cloudData.idSave >= localData.idSave
+                ? SaveOriginChoice.Cloud
+                : SaveOriginChoice.Local;
+        }
+
+        private static bool HasUserSyncStamp(SavesYG savesData)
+        {
+            if (savesData == null)
+                return false;
+
+            return savesData.userSaveRevision > 0 || savesData.userLastSaveUnixTime > 0;
+        }
+
+        private static int CompareUserSyncStamp(SavesYG cloudData, SavesYG localData)
+        {
+            long cloudRevision = Math.Max(0, cloudData.userSaveRevision);
+            long localRevision = Math.Max(0, localData.userSaveRevision);
+
+            if (cloudRevision > localRevision)
+                return 1;
+            if (cloudRevision < localRevision)
+                return -1;
+
+            long cloudTime = Math.Max(0, cloudData.userLastSaveUnixTime);
+            long localTime = Math.Max(0, localData.userLastSaveUnixTime);
+
+            if (cloudTime > localTime)
+                return 1;
+            if (cloudTime < localTime)
+                return -1;
+
+            return 0;
         }
     }
 }

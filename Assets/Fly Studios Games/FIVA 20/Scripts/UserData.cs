@@ -11,6 +11,15 @@ public class UserProfileData
     public int matchesPlayed;
     public int matchesWon;
     public int goalsScored;
+    public long saveRevision;
+    public long lastSaveUnixTime;
+}
+
+public enum SaveFreshness
+{
+    Equal,
+    CloudNewer,
+    LocalNewer
 }
 
 [DisallowMultipleComponent]
@@ -39,6 +48,9 @@ public class UserData : MonoBehaviour
 
     [SerializeField]
     bool refreshBindingsOnSceneLoaded = true;
+
+    [SerializeField]
+    bool reloadCloudOnFocus = true;
 
     [Header("Debug")]
     [SerializeField]
@@ -102,6 +114,17 @@ public class UserData : MonoBehaviour
     {
         if (pauseStatus)
             Save();
+    }
+
+    void OnApplicationFocus(bool hasFocus)
+    {
+#if Storage_yg
+        if (!hasFocus || !reloadCloudOnFocus)
+            return;
+
+        if (ShouldUseYGCloud())
+            YG.Insides.YGInsides.LoadProgress();
+#endif
     }
 
     void Update()
@@ -185,6 +208,7 @@ public class UserData : MonoBehaviour
     public void Save()
     {
         EnsureDataIntegrity();
+        StampLocalVersion();
 
         SaveToLocalBackup();
 
@@ -252,7 +276,9 @@ public class UserData : MonoBehaviour
             trophies = 0,
             matchesPlayed = 0,
             matchesWon = 0,
-            goalsScored = 0
+            goalsScored = 0,
+            saveRevision = 0,
+            lastSaveUnixTime = 0
         };
     }
 
@@ -271,6 +297,8 @@ public class UserData : MonoBehaviour
         _data.matchesPlayed = Mathf.Max(0, _data.matchesPlayed);
         _data.matchesWon = Mathf.Clamp(_data.matchesWon, 0, _data.matchesPlayed);
         _data.goalsScored = Mathf.Max(0, _data.goalsScored);
+        _data.saveRevision = Math.Max(0, _data.saveRevision);
+        _data.lastSaveUnixTime = Math.Max(0, _data.lastSaveUnixTime);
     }
 
     void NotifyDataChanged(bool saveAfterNotify = true)
@@ -297,11 +325,12 @@ public class UserData : MonoBehaviour
         if (!ShouldUseYGCloud())
             return;
 
+        EnsureDataIntegrity();
+
         if (!HasMeaningfulYGSaves())
         {
             // Keep current local profile when cloud/local plugin save is still empty.
             // This prevents 0-value overwrites after scene changes or early SDK callbacks.
-            EnsureDataIntegrity();
             NotifyDataChanged(saveAfterNotify: false);
 
             if (HasAnyProgress(_data))
@@ -313,6 +342,29 @@ public class UserData : MonoBehaviour
             return;
         }
 
+        SaveFreshness freshness = CompareFreshnessWithYG();
+
+        if (freshness == SaveFreshness.CloudNewer)
+        {
+            ApplyYGDataToLocal();
+            return;
+        }
+
+        if (freshness == SaveFreshness.LocalNewer)
+        {
+            PushCurrentDataToYGSaves();
+            YG2.SaveProgress();
+            NotifyDataChanged(saveAfterNotify: false);
+            return;
+        }
+
+        // Equal freshness: keep local data and only refresh UI bindings.
+        NotifyDataChanged(saveAfterNotify: false);
+#endif
+    }
+
+    void ApplyYGDataToLocal()
+    {
         _isApplyingExternalData = true;
 
         string resolvedName = ResolveNameFromYG();
@@ -323,13 +375,55 @@ public class UserData : MonoBehaviour
         _data.matchesPlayed = Mathf.Max(0, YG2.saves.userMatchesPlayed);
         _data.matchesWon = Mathf.Max(0, YG2.saves.userMatchesWon);
         _data.goalsScored = Mathf.Max(0, YG2.saves.userGoalsScored);
+        _data.saveRevision = Math.Max(0, YG2.saves.userSaveRevision);
+        _data.lastSaveUnixTime = Math.Max(0, YG2.saves.userLastSaveUnixTime);
 
         EnsureDataIntegrity();
         SaveToLocalBackup();
         NotifyDataChanged(saveAfterNotify: false);
 
         _isApplyingExternalData = false;
+    }
+
+    SaveFreshness CompareFreshnessWithYG()
+    {
+#if Storage_yg
+        long cloudRevision = Math.Max(0, YG2.saves.userSaveRevision);
+        long localRevision = Math.Max(0, _data.saveRevision);
+        if (cloudRevision > localRevision)
+            return SaveFreshness.CloudNewer;
+        if (cloudRevision < localRevision)
+            return SaveFreshness.LocalNewer;
+
+        long cloudTime = Math.Max(0, YG2.saves.userLastSaveUnixTime);
+        long localTime = Math.Max(0, _data.lastSaveUnixTime);
+        if (cloudTime > localTime)
+            return SaveFreshness.CloudNewer;
+        if (cloudTime < localTime)
+            return SaveFreshness.LocalNewer;
+
+        return SaveFreshness.Equal;
+#else
+        return SaveFreshness.Equal;
 #endif
+    }
+
+    void StampLocalVersion()
+    {
+        EnsureDataIntegrity();
+
+        _data.saveRevision = Math.Max(0, _data.saveRevision) + 1;
+
+        long now = GetUnixNow();
+        if (now <= _data.lastSaveUnixTime)
+            now = _data.lastSaveUnixTime + 1;
+
+        _data.lastSaveUnixTime = now;
+    }
+
+    long GetUnixNow()
+    {
+        return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
     }
 
     bool HasAnyProgress(UserProfileData data)
@@ -377,6 +471,8 @@ public class UserData : MonoBehaviour
         YG2.saves.userMatchesPlayed = Mathf.Max(0, _data.matchesPlayed);
         YG2.saves.userMatchesWon = Mathf.Max(0, _data.matchesWon);
         YG2.saves.userGoalsScored = Mathf.Max(0, _data.goalsScored);
+        YG2.saves.userSaveRevision = Math.Max(0, _data.saveRevision);
+        YG2.saves.userLastSaveUnixTime = Math.Max(0, _data.lastSaveUnixTime);
 #endif
     }
 
