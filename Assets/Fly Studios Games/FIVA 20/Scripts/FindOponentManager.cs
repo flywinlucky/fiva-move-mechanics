@@ -2,7 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
-using UnityEngine.UI;
 using TMPro;
 
 public class FindOponentManager : MonoBehaviour
@@ -41,6 +40,36 @@ public class FindOponentManager : MonoBehaviour
     [Header("Tips")]
     [SerializeField]
     string[] searchTips;
+
+    [Header("Generated Opponent")]
+    [SerializeField]
+    string[] opponentNamePool =
+    {
+        "Thunder FC",
+        "Iron Wolves",
+        "Royal Strikers",
+        "Street Kings",
+        "Blue Titans",
+        "Red Comets",
+        "Shadow United",
+        "Rapid Eleven"
+    };
+
+    [SerializeField]
+    [Range(0.05f, 0.40f)]
+    float minTrophyVariancePercent = 0.10f;
+
+    [SerializeField]
+    [Range(0.05f, 0.50f)]
+    float maxTrophyVariancePercent = 0.20f;
+
+    [SerializeField]
+    [Min(0)]
+    int minTrophiesIfNoUserData = 20;
+
+    [SerializeField]
+    [Min(1)]
+    int maxTrophiesIfNoUserData = 180;
 
     Coroutine _searchRoutine;
     int _lastTipIndex = -1;
@@ -95,8 +124,46 @@ public class FindOponentManager : MonoBehaviour
 
         UpdateSearchMessage(foundMessage);
 
+        GenerateAndStoreOpponentData();
+
         // Auto continue to match scene once fake matchmaking has completed.
         LoadGameScene();
+    }
+
+    void GenerateAndStoreOpponentData()
+    {
+        string aiName = GenerateOpponentName();
+        int aiTrophies = GenerateOpponentTrophies();
+
+        AiData bridge = AiData.GetOrCreate();
+        bridge.SetAiData(aiName, aiTrophies);
+    }
+
+    string GenerateOpponentName()
+    {
+        if (opponentNamePool == null || opponentNamePool.Length == 0)
+            return "Opponent";
+
+        return opponentNamePool[Random.Range(0, opponentNamePool.Length)];
+    }
+
+    int GenerateOpponentTrophies()
+    {
+        int userTrophies = 0;
+        if (UserData.Instance != null && UserData.Instance.Data != null)
+            userTrophies = Mathf.Max(0, UserData.Instance.Data.trophies);
+
+        if (userTrophies <= 0)
+            return Random.Range(Mathf.Max(0, minTrophiesIfNoUserData), Mathf.Max(1, maxTrophiesIfNoUserData + 1));
+
+        float minPercent = Mathf.Clamp(minTrophyVariancePercent, 0.01f, 0.75f);
+        float maxPercent = Mathf.Max(minPercent, Mathf.Clamp(maxTrophyVariancePercent, 0.01f, 0.95f));
+        float variancePercent = Random.Range(minPercent, maxPercent);
+
+        int offset = Mathf.Max(1, Mathf.RoundToInt(userTrophies * variancePercent));
+        bool add = Random.value >= 0.5f;
+        int result = add ? userTrophies + offset : userTrophies - offset;
+        return Mathf.Max(0, result);
     }
 
     void ShowRandomTip()
@@ -158,5 +225,9 @@ public class FindOponentManager : MonoBehaviour
     {
         minSearchDurationSeconds = Mathf.Max(0.1f, minSearchDurationSeconds);
         maxSearchDurationSeconds = Mathf.Max(minSearchDurationSeconds, maxSearchDurationSeconds);
+        minTrophiesIfNoUserData = Mathf.Max(0, minTrophiesIfNoUserData);
+        maxTrophiesIfNoUserData = Mathf.Max(minTrophiesIfNoUserData + 1, maxTrophiesIfNoUserData);
+        minTrophyVariancePercent = Mathf.Clamp(minTrophyVariancePercent, 0.01f, 0.75f);
+        maxTrophyVariancePercent = Mathf.Clamp(maxTrophyVariancePercent, minTrophyVariancePercent, 0.95f);
     }
 }

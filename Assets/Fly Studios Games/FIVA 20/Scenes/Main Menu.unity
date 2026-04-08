@@ -1571,6 +1571,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 746046542}
   m_CullTransparentMesh: 1
+--- !u!1 &751657525
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 751657527}
+  - component: {fileID: 751657528}
+  m_Layer: 0
+  m_Name: Ai Data
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &751657527
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751657525}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &751657528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751657525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61c9454c874c0404f992b04e5b5a4874, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  aiName: Opponent
+  aiTrophies: 0
 --- !u!1 &796644204
 GameObject:
   m_ObjectHideFlags: 0
@@ -1685,7 +1731,7 @@ GameObject:
   - component: {fileID: 846126391}
   - component: {fileID: 846126390}
   m_Layer: 0
-  m_Name: GameObject (1)
+  m_Name: WebGl Adaptive
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1725,7 +1771,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &894788775
 GameObject:
@@ -2672,7 +2718,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1305170691
 GameObject:
@@ -3136,6 +3182,19 @@ MonoBehaviour:
   - Good positioning is key to both attack and defense.
   - Watch your teammates smart passes are better than risky plays.
   - Use quick turns to escape defenders and open new angles.
+  opponentNamePool:
+  - Thunder FC
+  - Iron Wolves
+  - Royal Strikers
+  - Street Kings
+  - Blue Titans
+  - Red Comets
+  - Shadow United
+  - Rapid Eleven
+  minTrophyVariancePercent: 0.1
+  maxTrophyVariancePercent: 0.2
+  minTrophiesIfNoUserData: 20
+  maxTrophiesIfNoUserData: 180
 --- !u!114 &1517609297
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3935,7 +3994,7 @@ Transform:
   - {fileID: 705507995}
   - {fileID: 261874351}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1963159058
 GameObject:
@@ -4038,6 +4097,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 0.06903076
+      objectReference: {fileID: 0}
+    - target: {fileID: 4295738512537832197, guid: 2b96c9db1084b894988c92b8341c3146,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4295738512641407098, guid: 2b96c9db1084b894988c92b8341c3146,
         type: 3}
@@ -4480,7 +4544,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2042274578
 MonoBehaviour:
