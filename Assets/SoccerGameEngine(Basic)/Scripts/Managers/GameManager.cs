@@ -15,6 +15,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
     /// </summary>
     public class GameManager : MonoBehaviour
     {
+        enum MatchResultType
+        {
+            Win,
+            Loss,
+            Draw,
+            Unknown
+        }
+
         [SerializeField]
         MatchInfoPanel _matchInfoPanel;
 
@@ -30,6 +38,42 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [SerializeField]
         SuddenDeathPanel _suddenDeathPanel;
 
+        [Header("Ranked Trophy Rewards")]
+        [SerializeField]
+        bool _enableTrophyRewards = true;
+
+        [SerializeField]
+        [Range(10, 60)]
+        int _baseWinTrophies = 30;
+
+        [SerializeField]
+        [Range(5, 50)]
+        int _baseLossTrophies = 25;
+
+        [SerializeField]
+        [Range(40f, 200f)]
+        float _trophyDiffScale = 80f;
+
+        [SerializeField]
+        [Range(5, 60)]
+        int _minWinReward = 15;
+
+        [SerializeField]
+        [Range(10, 80)]
+        int _maxWinReward = 45;
+
+        [SerializeField]
+        [Range(0, 30)]
+        int _minLossPenalty = 8;
+
+        [SerializeField]
+        [Range(10, 50)]
+        int _maxLossPenalty = 38;
+
+        [SerializeField]
+        [Range(0, 20)]
+        int _maxDrawDelta = 12;
+
         /// <summary>
         /// Event raised when continuing to second half
         /// </summary>
@@ -42,6 +86,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         Coroutine _delayedMatchStartCoroutine;
         Coroutine _suddenDeathPanelAutoHideCoroutine;
+        bool _matchRewardApplied;
 
         private void Awake()
         {
@@ -168,6 +213,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             StopSuddenDeathPanelAutoHide();
             SetSuddenDeathPanelActive(false);
             _matchOverPanel.TxtInfo.text = message;
+
+            int trophyDelta = ApplyMatchTrophyReward(message);
+            UpdateMatchOverRewardText(trophyDelta);
+
             _matchOverPanel.Root.gameObject.SetActive(true);
         }
 
@@ -279,6 +328,120 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             _matchInfoPanel.TxtInfo.text = message;
             _matchInfoPanel.Root.gameObject.SetActive(true);
         }
+
+        int ApplyMatchTrophyReward(string matchMessage)
+        {
+            if (_matchRewardApplied || !_enableTrophyRewards)
+                return 0;
+
+            _matchRewardApplied = true;
+
+            UserData userData = UserData.Instance;
+            if (userData == null || userData.Data == null)
+                return 0;
+
+            MatchResultType result = ResolveResult(matchMessage);
+            if (result == MatchResultType.Unknown)
+                return 0;
+
+            int userTrophies = Mathf.Max(0, userData.Data.trophies);
+            int opponentTrophies = GetOpponentTrophies();
+            int trophyDelta = CalculateTrophyDelta(result, userTrophies, opponentTrophies);
+
+            if (trophyDelta > 0)
+                userData.AddTrophies(trophyDelta);
+            else if (trophyDelta < 0)
+                userData.SpendTrophies(-trophyDelta);
+
+            int userGoals = GetUserGoals();
+            userData.RegisterMatchPlayed(result == MatchResultType.Win, userGoals);
+
+            // Save immediately so fast exits after match do not drop progress.
+            userData.Save();
+            return trophyDelta;
+        }
+
+        void UpdateMatchOverRewardText(int delta)
+        {
+            if (_matchOverPanel.TxtTrophyReward == null)
+                return;
+
+            if (delta > 0)
+                _matchOverPanel.TxtTrophyReward.text = $"+{delta} Trophies";
+            else if (delta < 0)
+                _matchOverPanel.TxtTrophyReward.text = $"{delta} Trophies";
+            else
+                _matchOverPanel.TxtTrophyReward.text = "0 Trophies";
+        }
+
+        MatchResultType ResolveResult(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return MatchResultType.Unknown;
+
+            if (message.IndexOf("You Won", StringComparison.OrdinalIgnoreCase) >= 0)
+                return MatchResultType.Win;
+
+            if (message.IndexOf("You Lost", StringComparison.OrdinalIgnoreCase) >= 0)
+                return MatchResultType.Loss;
+
+            if (message.IndexOf("Draw", StringComparison.OrdinalIgnoreCase) >= 0)
+                return MatchResultType.Draw;
+
+            return MatchResultType.Unknown;
+        }
+
+        int CalculateTrophyDelta(MatchResultType result, int userTrophies, int opponentTrophies)
+        {
+            int diff = opponentTrophies - userTrophies;
+            int scaled = Mathf.RoundToInt(diff / Mathf.Max(1f, _trophyDiffScale));
+
+            if (result == MatchResultType.Win)
+                return Mathf.Clamp(_baseWinTrophies + scaled, _minWinReward, _maxWinReward);
+
+            if (result == MatchResultType.Loss)
+            {
+                int loss = Mathf.Clamp(_baseLossTrophies - scaled, _minLossPenalty, _maxLossPenalty);
+                return -loss;
+            }
+
+            if (result == MatchResultType.Draw)
+                return Mathf.Clamp(scaled, -_maxDrawDelta, _maxDrawDelta);
+
+            return 0;
+        }
+
+        int GetOpponentTrophies()
+        {
+            AiData aiData = AiData.Instance;
+            if (aiData != null)
+                return Mathf.Max(0, aiData.AiTrophies);
+
+            return 0;
+        }
+
+        int GetUserGoals()
+        {
+            if (MatchManager.Instance == null)
+                return 0;
+
+            if (MatchManager.Instance.TeamHome != null && MatchManager.Instance.TeamHome.IsUserControlled)
+                return Mathf.Max(0, MatchManager.Instance.TeamHome.Goals);
+
+            if (MatchManager.Instance.TeamAway != null && MatchManager.Instance.TeamAway.IsUserControlled)
+                return Mathf.Max(0, MatchManager.Instance.TeamAway.Goals);
+
+            return 0;
+        }
+
+        public void ReturnToMainMenu(string sceneName)
+        {
+            if (!string.IsNullOrWhiteSpace(sceneName) && UserData.Instance != null)
+                UserData.Instance.Save();
+
+            if (!string.IsNullOrWhiteSpace(sceneName))
+                SceneManager.LoadScene(sceneName);
+        }
     }
 
     [Serializable]
@@ -309,6 +472,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
     public struct MatchOverPanel
     {
         public Text TxtInfo;
+
+        public TMP_Text TxtTrophyReward;
 
         public Transform Root;
     }

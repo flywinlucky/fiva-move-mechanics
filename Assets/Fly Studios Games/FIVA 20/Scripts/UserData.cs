@@ -104,6 +104,8 @@ public class UserData : MonoBehaviour
 
     void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        TryAdoptAuthorizedNickname();
+
         if (!refreshBindingsOnSceneLoaded)
             return;
 
@@ -260,11 +262,24 @@ public class UserData : MonoBehaviour
     void HandleYGDataReady()
     {
         TrySyncFromYGData();
+        TryAdoptAuthorizedNickname();
     }
 
     public void ResetData(bool saveImmediately = true)
     {
         _data = CreateDefaultData();
+        NotifyDataChanged(saveAfterNotify: saveImmediately);
+    }
+
+    public void ResetProgressKeepName(bool saveImmediately = true)
+    {
+        string preservedName = _data != null ? _data.playerName : defaultPlayerName;
+
+        _data = CreateDefaultData();
+
+        if (!string.IsNullOrWhiteSpace(preservedName))
+            _data.playerName = preservedName.Trim();
+
         NotifyDataChanged(saveAfterNotify: saveImmediately);
     }
 
@@ -503,5 +518,39 @@ public class UserData : MonoBehaviour
             return false;
 
         return true;
+    }
+
+    void TryAdoptAuthorizedNickname()
+    {
+#if Authorization_yg
+        if (!preferAuthorizedNickname)
+            return;
+
+        EnsureDataIntegrity();
+
+        if (!IsUsingFallbackName(_data.playerName))
+            return;
+
+        string authorizedName = YG2.player.name;
+        if (!IsAuthorizedYGName(authorizedName))
+            return;
+
+        _data.playerName = authorizedName;
+        NotifyDataChanged();
+#endif
+    }
+
+    bool IsUsingFallbackName(string currentName)
+    {
+        if (string.IsNullOrWhiteSpace(currentName))
+            return true;
+
+        if (string.Equals(currentName, defaultPlayerName, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (string.Equals(currentName, "Player", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
     }
 }

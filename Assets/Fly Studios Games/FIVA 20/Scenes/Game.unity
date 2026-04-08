@@ -570,6 +570,7 @@ MonoBehaviour:
     Root: {fileID: 1858508652}
   _matchOverPanel:
     TxtInfo: {fileID: 1689624617}
+    TxtTrophyReward: {fileID: 1938978339}
     Root: {fileID: 2063861011}
   _matchOnPanel:
     TxtScores: {fileID: 37862757}
@@ -579,6 +580,15 @@ MonoBehaviour:
   _suddenDeathPanel:
     TxtInfo: {fileID: 681301748}
     Root: {fileID: 1669918580}
+  _enableTrophyRewards: 1
+  _baseWinTrophies: 30
+  _baseLossTrophies: 25
+  _trophyDiffScale: 80
+  _minWinReward: 15
+  _maxWinReward: 45
+  _minLossPenalty: 8
+  _maxLossPenalty: 38
+  _maxDrawDelta: 12
 --- !u!114 &37751770
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1500,7 +1510,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 77a803fcdaf21c94abd36437857c3b09, type: 3}
+        m_Texture: {fileID: 2800000, guid: d5345867c3444d9459d88bff378c4eeb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -10115,8 +10125,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ai_Name_DataText: {fileID: 1708250}
   ai_Trophies_DataText: {fileID: 1708251}
-  aiName: 
-  aiTrophies: 0
 --- !u!114 &1055621257
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10235,7 +10243,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1110408084
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11805,10 +11813,10 @@ RectTransform:
   m_Father: {fileID: 1452886022}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0.000015258789, y: 0.00000047684}
-  m_SizeDelta: {x: 94, y: 100}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: -48.573975, y: 0.000019073486}
+  m_SizeDelta: {x: 97.148, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1405285296
 MonoBehaviour:
@@ -11924,7 +11932,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 182.63998, y: 29.661385}
+  m_AnchoredPosition: {x: 511, y: 0}
   m_SizeDelta: {x: 468.89, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!4 &1455816631 stripped
@@ -15138,7 +15146,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: +27
+  m_text: '{+0}'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a933f577d03139348bf5a1468bf33208, type: 2}
   m_sharedMaterial: {fileID: 3502512618334885138, guid: a933f577d03139348bf5a1468bf33208,

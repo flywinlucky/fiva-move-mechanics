@@ -1,6 +1,9 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if Authorization_yg
+using YG;
+#endif
 
 [DisallowMultipleComponent]
 public class UserDataTextView : MonoBehaviour
@@ -64,7 +67,16 @@ public class UserDataTextView : MonoBehaviour
         }
 
         UserProfileData data = _boundUserData.Data;
-        ApplyText(data.playerName, data.trophies);
+        string resolvedName = ResolveDisplayName(data.playerName);
+
+        if (!string.Equals(resolvedName, data.playerName, System.StringComparison.Ordinal) &&
+            !string.IsNullOrWhiteSpace(resolvedName) &&
+            !string.Equals(resolvedName, emptyNameFallback, System.StringComparison.OrdinalIgnoreCase))
+        {
+            _boundUserData.SetPlayerName(resolvedName);
+        }
+
+        ApplyText(resolvedName, data.trophies);
     }
 
     void HandleUserDataChanged(UserProfileData data)
@@ -75,7 +87,38 @@ public class UserDataTextView : MonoBehaviour
             return;
         }
 
-        ApplyText(data.playerName, data.trophies);
+        ApplyText(ResolveDisplayName(data.playerName), data.trophies);
+    }
+
+    string ResolveDisplayName(string currentName)
+    {
+        if (!string.IsNullOrWhiteSpace(currentName) &&
+            !string.Equals(currentName, emptyNameFallback, System.StringComparison.OrdinalIgnoreCase))
+        {
+            return currentName;
+        }
+
+#if Authorization_yg
+        string ygName = YG2.player.name;
+        if (IsValidAuthorizedName(ygName))
+            return ygName;
+#endif
+
+        return currentName;
+    }
+
+    bool IsValidAuthorizedName(string nickname)
+    {
+        if (string.IsNullOrWhiteSpace(nickname))
+            return false;
+
+        if (string.Equals(nickname, "unauthorized", System.StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (string.Equals(nickname, "anonymous", System.StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return true;
     }
 
     void ApplyText(string playerName, int trophies)

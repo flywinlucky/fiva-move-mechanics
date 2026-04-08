@@ -14,6 +14,9 @@ public class UserDataTrophyDebugButtons : MonoBehaviour
     [SerializeField]
     Button decreaseTrophyButton;
 
+    [SerializeField]
+    Button resetProgressButton;
+
     [Header("Debug Values")]
     [SerializeField]
     [Min(1)]
@@ -63,6 +66,12 @@ public class UserDataTrophyDebugButtons : MonoBehaviour
             decreaseTrophyButton.onClick.RemoveListener(OnDecreaseTrophyClicked);
             decreaseTrophyButton.onClick.AddListener(OnDecreaseTrophyClicked);
         }
+
+        if (resetProgressButton != null)
+        {
+            resetProgressButton.onClick.RemoveListener(OnResetProgressClicked);
+            resetProgressButton.onClick.AddListener(OnResetProgressClicked);
+        }
     }
 
     void UnbindButtons()
@@ -72,6 +81,9 @@ public class UserDataTrophyDebugButtons : MonoBehaviour
 
         if (decreaseTrophyButton != null)
             decreaseTrophyButton.onClick.RemoveListener(OnDecreaseTrophyClicked);
+
+        if (resetProgressButton != null)
+            resetProgressButton.onClick.RemoveListener(OnResetProgressClicked);
     }
 
     public void OnAddTrophyClicked()
@@ -96,5 +108,18 @@ public class UserDataTrophyDebugButtons : MonoBehaviour
         userData.SpendTrophies(amount);
         int delta = before - userData.Data.trophies;
         Debug.Log($"[UserDataTrophyDebugButtons] -{delta} trophies. Total: {userData.Data.trophies}");
+    }
+
+    public void OnResetProgressClicked()
+    {
+        ResolveUserData();
+        if (userData == null)
+            return;
+
+        string preservedName = userData.Data != null ? userData.Data.playerName : "Player";
+        userData.ResetProgressKeepName();
+
+        int currentTrophies = userData.Data != null ? userData.Data.trophies : 0;
+        Debug.Log($"[UserDataTrophyDebugButtons] Progress reset complete. Name kept: {preservedName}. Trophies: {currentTrophies}");
     }
 }
