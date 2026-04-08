@@ -2435,7 +2435,6 @@ GameObject:
   - component: {fileID: 1090277728}
   - component: {fileID: 1090277727}
   - component: {fileID: 1090277726}
-  - component: {fileID: 1090277725}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -2464,18 +2463,6 @@ RectTransform:
   m_AnchoredPosition: {x: -20.307503, y: 0.0000009536743}
   m_SizeDelta: {x: 40.615, y: 50.769}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1090277725
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1090277723}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a366f061ad48fd842acf0dfc00f89dec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1090277726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3182,6 +3169,8 @@ MonoBehaviour:
   - Good positioning is key to both attack and defense.
   - Watch your teammates smart passes are better than risky plays.
   - Use quick turns to escape defenders and open new angles.
+  namesCsvFile: {fileID: 4900000, guid: 4a4a4049fbc09214cbe88b1370a7679b, type: 3}
+  useCsvNicknames: 1
   opponentNamePool:
   - Thunder FC
   - Iron Wolves
@@ -4599,7 +4588,6 @@ GameObject:
   - component: {fileID: 2093333869}
   - component: {fileID: 2093333868}
   - component: {fileID: 2093333867}
-  - component: {fileID: 2093333866}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -4628,18 +4616,6 @@ RectTransform:
   m_AnchoredPosition: {x: -20.307503, y: 0.0000009536743}
   m_SizeDelta: {x: 40.615, y: 50.769}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &2093333866
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2093333864}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a366f061ad48fd842acf0dfc00f89dec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &2093333867
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
@@ -43,6 +44,12 @@ public class FindOponentManager : MonoBehaviour
 
     [Header("Generated Opponent")]
     [SerializeField]
+    TextAsset namesCsvFile;
+
+    [SerializeField]
+    bool useCsvNicknames = true;
+
+    [SerializeField]
     string[] opponentNamePool =
     {
         "Thunder FC",
@@ -73,11 +80,14 @@ public class FindOponentManager : MonoBehaviour
 
     Coroutine _searchRoutine;
     int _lastTipIndex = -1;
+    readonly List<string> _csvNicknames = new List<string>();
 
     public bool IsSearching { get; private set; }
 
     void Awake()
     {
+        BuildCsvNicknameCache();
+
         if (findOpponentPanel != null)
             findOpponentPanel.SetActive(false);
 
@@ -141,10 +151,50 @@ public class FindOponentManager : MonoBehaviour
 
     string GenerateOpponentName()
     {
+        if (useCsvNicknames && _csvNicknames.Count > 0)
+            return _csvNicknames[Random.Range(0, _csvNicknames.Count)];
+
         if (opponentNamePool == null || opponentNamePool.Length == 0)
             return "Opponent";
 
         return opponentNamePool[Random.Range(0, opponentNamePool.Length)];
+    }
+
+    void BuildCsvNicknameCache()
+    {
+        _csvNicknames.Clear();
+
+        if (namesCsvFile == null || string.IsNullOrWhiteSpace(namesCsvFile.text))
+            return;
+
+        string[] lines = namesCsvFile.text.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
+        HashSet<string> unique = new HashSet<string>();
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            // Skip header row from names.csv.
+            if (i == 0 && line.StartsWith("name1,"))
+                continue;
+
+            string[] cols = line.Split(',');
+            if (cols.Length < 3)
+                continue;
+
+            string relationship = cols[1].Trim();
+            string nickname = cols[2].Trim().Trim('"');
+            if (!string.Equals(relationship, "has_nickname", System.StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (string.IsNullOrWhiteSpace(nickname))
+                continue;
+
+            if (unique.Add(nickname))
+                _csvNicknames.Add(nickname);
+        }
     }
 
     int GenerateOpponentTrophies()
@@ -223,6 +273,7 @@ public class FindOponentManager : MonoBehaviour
 
     void OnValidate()
     {
+        BuildCsvNicknameCache();
         minSearchDurationSeconds = Mathf.Max(0.1f, minSearchDurationSeconds);
         maxSearchDurationSeconds = Mathf.Max(minSearchDurationSeconds, maxSearchDurationSeconds);
         minTrophiesIfNoUserData = Mathf.Max(0, minTrophiesIfNoUserData);
