@@ -580,6 +580,7 @@ MonoBehaviour:
   _suddenDeathPanel:
     TxtInfo: {fileID: 681301748}
     Root: {fileID: 1669918580}
+  _initialKickOffDelaySeconds: 2
   _enableTrophyRewards: 1
   _baseWinTrophies: 30
   _baseLossTrophies: 25
@@ -685,8 +686,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: BLUE 0-0 RED
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: a933f577d03139348bf5a1468bf33208, type: 2}
-  m_sharedMaterial: {fileID: 3502512618334885138, guid: a933f577d03139348bf5a1468bf33208,
+  m_fontAsset: {fileID: 11400000, guid: 50c12c23294124aa48490c44ac65a9e4, type: 2}
+  m_sharedMaterial: {fileID: 7746803525459343344, guid: 50c12c23294124aa48490c44ac65a9e4,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -10771,6 +10772,8 @@ MonoBehaviour:
   _rootTeam: {fileID: 619258094}
   _transformCentreSpot: {fileID: 1308484980}
   _regulationDurationSeconds: 180
+  _matchStartBroadcastSeconds: 2
+  _halfStartBroadcastSeconds: 2
 --- !u!114 &1055621252
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13638,8 +13641,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 2:15
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: a933f577d03139348bf5a1468bf33208, type: 2}
-  m_sharedMaterial: {fileID: 3502512618334885138, guid: a933f577d03139348bf5a1468bf33208,
+  m_fontAsset: {fileID: 11400000, guid: 50c12c23294124aa48490c44ac65a9e4, type: 2}
+  m_sharedMaterial: {fileID: 7746803525459343344, guid: 50c12c23294124aa48490c44ac65a9e4,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -13664,8 +13667,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13
-  m_fontSizeBase: 13
+  m_fontSize: 15
+  m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
