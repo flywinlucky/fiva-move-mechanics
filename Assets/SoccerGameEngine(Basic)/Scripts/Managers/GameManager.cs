@@ -43,6 +43,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [Min(0f)]
         float _initialKickOffDelaySeconds = 2f;
 
+        [SerializeField]
+        bool _waitForCinematicBeforeMatchStart = true;
+
+        [SerializeField]
+        CinematicCameraSystem _cinematicCameraSystem;
+
         [Header("Ranked Trophy Rewards")]
         [SerializeField]
         bool _enableTrophyRewards = true;
@@ -300,7 +306,28 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         IEnumerator DelayedMatchStart()
         {
-            yield return new WaitForSeconds(_initialKickOffDelaySeconds);
+            if (_waitForCinematicBeforeMatchStart)
+            {
+                if (_cinematicCameraSystem == null)
+                    _cinematicCameraSystem = FindObjectOfType<CinematicCameraSystem>();
+
+                if (_cinematicCameraSystem != null)
+                {
+                    if (!_cinematicCameraSystem.IsPlaying)
+                        _cinematicCameraSystem.PlaySequence();
+
+                    while (_cinematicCameraSystem != null && _cinematicCameraSystem.IsPlaying)
+                        yield return null;
+                }
+                else if (_initialKickOffDelaySeconds > 0f)
+                {
+                    yield return new WaitForSeconds(_initialKickOffDelaySeconds);
+                }
+            }
+            else if (_initialKickOffDelaySeconds > 0f)
+            {
+                yield return new WaitForSeconds(_initialKickOffDelaySeconds);
+            }
 
             ActionUtility.Invoke_Action(OnMessageSwitchToMatchOn);
             _delayedMatchStartCoroutine = null;
