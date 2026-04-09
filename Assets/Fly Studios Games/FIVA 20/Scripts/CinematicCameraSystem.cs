@@ -47,10 +47,12 @@ public class CinematicCameraSystem : MonoBehaviour
 
     [Header("Events")]
     public UnityEvent onCinematicStarted;
+    public UnityEvent onTransitionToGoalCamera;
     public UnityEvent onCinematicFinished;
 
     Coroutine _sequenceRoutine;
     bool _isPlaying;
+    bool _hasEnteredGoalShot;
 
     void Start()
     {
@@ -82,6 +84,7 @@ public class CinematicCameraSystem : MonoBehaviour
     IEnumerator PlaySequenceRoutine()
     {
         _isPlaying = true;
+        _hasEnteredGoalShot = false;
         onCinematicStarted?.Invoke();
 
         if (startGameCamera != null && startPoint != null && endPoint != null)
@@ -95,6 +98,8 @@ public class CinematicCameraSystem : MonoBehaviour
 
         if (showGoalCamera != null && goalStartPoint != null && goalEndPoint != null)
         {
+            _hasEnteredGoalShot = true;
+            onTransitionToGoalCamera?.Invoke();
             SetActiveCamera(showGoalCamera);
             yield return MoveCameraBetweenPoints(showGoalCamera, goalStartPoint, goalEndPoint, secondShotDuration);
 
@@ -160,4 +165,6 @@ public class CinematicCameraSystem : MonoBehaviour
     }
 
     public bool IsPlaying => _isPlaying;
+
+    public bool HasEnteredGoalShot => _hasEnteredGoalShot;
 }

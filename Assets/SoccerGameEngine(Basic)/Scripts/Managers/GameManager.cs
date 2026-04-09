@@ -1,8 +1,10 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.Controllers;
+using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities;
 using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -98,6 +100,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         Coroutine _delayedMatchStartCoroutine;
         Coroutine _suddenDeathPanelAutoHideCoroutine;
         bool _matchRewardApplied;
+        bool _teamsStagedForKickOff;
 
         private void Awake()
         {
@@ -306,6 +309,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         IEnumerator DelayedMatchStart()
         {
+            _teamsStagedForKickOff = false;
+
             if (_waitForCinematicBeforeMatchStart)
             {
                 if (_cinematicCameraSystem == null)
@@ -313,11 +318,24 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
                 if (_cinematicCameraSystem != null)
                 {
+                    _cinematicCameraSystem.onTransitionToGoalCamera.AddListener(Instance_OnCinematicSwitchedToGoalCamera);
+
                     if (!_cinematicCameraSystem.IsPlaying)
                         _cinematicCameraSystem.PlaySequence();
 
                     while (_cinematicCameraSystem != null && _cinematicCameraSystem.IsPlaying)
+                    {
+                        if (!_teamsStagedForKickOff && _cinematicCameraSystem.HasEnteredGoalShot)
+                            StageTeamsForKickOffWithoutStartingMatch();
+
                         yield return null;
+                    }
+
+                    if (_cinematicCameraSystem != null)
+                        _cinematicCameraSystem.onTransitionToGoalCamera.RemoveListener(Instance_OnCinematicSwitchedToGoalCamera);
+
+                    if (!_teamsStagedForKickOff)
+                        StageTeamsForKickOffWithoutStartingMatch();
                 }
                 else if (_initialKickOffDelaySeconds > 0f)
                 {
@@ -331,6 +349,90 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
             ActionUtility.Invoke_Action(OnMessageSwitchToMatchOn);
             _delayedMatchStartCoroutine = null;
+        }
+
+        void Instance_OnCinematicSwitchedToGoalCamera()
+        {
+            StageTeamsForKickOffWithoutStartingMatch();
+        }
+
+        void StageTeamsForKickOffWithoutStartingMatch()
+        {
+            if (_teamsStagedForKickOff || MatchManager.Instance == null)
+                return;
+
+            _teamsStagedForKickOff = true;
+
+            PlaceBallAtCentreSpot();
+            StageTeamAtKickOffPositions(MatchManager.Instance.TeamAway);
+            StageTeamAtKickOffPositions(MatchManager.Instance.TeamHome);
+        }
+
+        void PlaceBallAtCentreSpot()
+        {
+            if (Ball.Instance == null || MatchManager.Instance.TransformCentreSpot == null)
+                return;
+
+            Ball.Instance.Owner = null;
+            Ball.Instance.Rigidbody.isKinematic = false;
+            Ball.Instance.Trap();
+            Ball.Instance.Position = MatchManager.Instance.TransformCentreSpot.position;
+        }
+
+        void StageTeamAtKickOffPositions(Team team)
+        {
+            if (team == null || team.Players == null)
+                return;
+
+            team.ControllingPlayer = null;
+            ActionUtility.Invoke_Action(team.OnInstructPlayersToWait);
+
+            Vector3 centerSpot = MatchManager.Instance != null && MatchManager.Instance.TransformCentreSpot != null
+                ? MatchManager.Instance.TransformCentreSpot.position
+                : Vector3.zero;
+
+            TeamPlayer kickOffTaker = null;
+            if (team.HasKickOff)
+            {
+                kickOffTaker = team.Players
+                    .Where(tM => tM != null && tM.Player != null && tM.Player.PlayerType == PlayerTypes.InFieldPlayer)
+                    .OrderBy(tM => Vector3.Distance(tM.Player.Position, centerSpot))
+                    .FirstOrDefault();
+
+                if (kickOffTaker == null)
+                {
+                    kickOffTaker = team.Players
+                        .Where(tM => tM != null && tM.Player != null)
+                        .LastOrDefault();
+                }
+            }
+
+            foreach (TeamPlayer teamPlayer in team.Players)
+            {
+                if (teamPlayer == null || teamPlayer.Player == null || teamPlayer.CurrentHomePosition == null || teamPlayer.KickOffHomePosition == null)
+                    continue;
+
+                teamPlayer.CurrentHomePosition.position = teamPlayer.KickOffHomePosition.position;
+                teamPlayer.Player.Position = teamPlayer.CurrentHomePosition.position;
+                teamPlayer.Player.Rotation = teamPlayer.KickOffHomePosition.rotation;
+                teamPlayer.Player.HomeRegion = teamPlayer.CurrentHomePosition;
+            }
+
+            if (kickOffTaker == null || kickOffTaker.Player == null || MatchManager.Instance == null || MatchManager.Instance.TransformCentreSpot == null)
+                return;
+
+            Vector3 kickoffPosition = MatchManager.Instance.TransformCentreSpot.position
+                + (team.Goal.transform.forward * (kickOffTaker.Player.BallControlDistance + kickOffTaker.Player.Radius));
+
+            kickOffTaker.CurrentHomePosition.position = kickoffPosition;
+            kickOffTaker.Player.Position = kickoffPosition;
+
+            if (team.KickOffRefDirection != null)
+            {
+                team.KickOffRefDirection.position = kickoffPosition;
+                kickOffTaker.Player.HomeRegion = team.KickOffRefDirection;
+                kickOffTaker.Player.transform.rotation = team.KickOffRefDirection.rotation;
+            }
         }
 
         /// <summary>
