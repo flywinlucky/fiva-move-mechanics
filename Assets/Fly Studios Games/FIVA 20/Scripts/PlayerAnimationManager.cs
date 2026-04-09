@@ -79,26 +79,26 @@ public class PlayerAnimationManager : MonoBehaviour
 
     [SerializeField]
     [Range(0f, 1f)]
-    float runBlendNormalValue = 0.35f;
+    float runBlendNormalValue = 0.30f; // 0.35 * 0.85
 
     [SerializeField]
     [Range(0f, 1f)]
-    float runBlendSprintValue = 0.44f;
+    float runBlendSprintValue = 0.37f; // 0.44 * 0.85
 
     [Header("With Ball Sync")]
     [Tooltip("Reduces run blend while owning ball so locomotion looks heavier/slower.")]
     [SerializeField]
     [Range(0.6f, 1f)]
-    float withBallRunBlendMultiplier = 0.88f;
+    float withBallRunBlendMultiplier = 0.85f; // sincron cu mișcarea cu mingea
 
     [Header("Fallback Speeds")]
     [SerializeField]
     [Range(0.1f, 30f)]
-    float fallbackRunSpeed = 5f;
+    float fallbackRunSpeed = 4.25f; // 5f * 0.85
 
     [SerializeField]
     [Range(1f, 4f)]
-    float fallbackSprintMultiplier = 2f;
+    float fallbackSprintMultiplier = 1.7f; // 2f * 0.85
 
     bool hasRunParameter;
     int runParameterHash;

@@ -7,12 +7,13 @@ namespace Assets.SimpleSteering.Scripts.Movement
     public class RPGMovement : MonoBehaviour
     {
         [Header("Attributes")]
+        // Reducem cu 15% pentru smoothness și gameplay mai lent
         public float Acceleration = 1f;
-        public float Agility = 1f;
+        public float Agility = 0.90f;
         [HideInInspector]
-        public float RotationSpeed;
+        public float RotationSpeed = 6.8f; // default 8f * 0.85
         [HideInInspector]
-        public float Speed;
+        public float Speed = 4.25f; // default 5f * 0.85 (exemplu)
 
         public bool Steer;
 
@@ -147,8 +148,12 @@ namespace Assets.SimpleSteering.Scripts.Movement
             if (!EnsureReferences())
                 return;
 
-            //accelerate
-            CurrentSpeed = Mathf.MoveTowards(CurrentSpeed, Speed, Acceleration * Time.time);
+            // Boost inițial la pornire pentru reacție rapidă
+            float boostAccel = Acceleration * 2.5f;
+            if (CurrentSpeed < 0.1f && direction.sqrMagnitude > 0.01f)
+                CurrentSpeed = Mathf.MoveTowards(CurrentSpeed, Speed, boostAccel * Time.deltaTime);
+            else
+                CurrentSpeed = Mathf.MoveTowards(CurrentSpeed, Speed, Acceleration * Time.deltaTime);
 
             //move the character in this direction
             RigidBody.MovePosition(transform.position + MovementDirection.normalized * CurrentSpeed * Time.deltaTime);
@@ -195,13 +200,11 @@ namespace Assets.SimpleSteering.Scripts.Movement
 
                 float rotationSpeed = Mathf.Max(0.01f, RotationSpeed);
 
-                //rotate to target
-                Quaternion currTargetRotation;
-                currTargetRotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                // smoothing mai lent la rotire
+                Quaternion currTargetRotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * 0.7f * Time.deltaTime);
 
                 //rotate here
                 RigidBody.MoveRotation(currTargetRotation);
-
             }
         }
 

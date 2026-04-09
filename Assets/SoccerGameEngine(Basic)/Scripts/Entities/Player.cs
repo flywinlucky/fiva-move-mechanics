@@ -61,7 +61,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         [SerializeField]
         [Range(1f, 3f)]
-        float _sprintSpeedMultiplier = 2f;
+        float _sprintSpeedMultiplier = 1.7f; // 2f * 0.85
 
         [SerializeField]
         [Range(10f, 200f)]
@@ -221,7 +221,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [Header("Movement Tuning")]
         [SerializeField]
         [Range(0.1f, 5f)]
-        float _speedMultiplier = 1f;
+        float _speedMultiplier = 0.85f; // 1f * 0.85
 
         [Header("Movement Randomization")]
         [SerializeField]
@@ -239,19 +239,19 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         [SerializeField]
         [Range(1f, 40f)]
-        float _sprintRampUpSpeed = 10f;
+        float _sprintRampUpSpeed = 8.5f; // 10f * 0.85
 
         [SerializeField]
         [Range(1f, 40f)]
-        float _sprintRampDownSpeed = 14f;
+        float _sprintRampDownSpeed = 11.9f; // 14f * 0.85
 
         [SerializeField]
         [Range(0.85f, 0.95f)]
-        float _withBallSpeedMultiplier = 0.9f;
+        float _withBallSpeedMultiplier = 0.85f; // mai lent cu mingea
 
         [SerializeField]
         [Range(0.1f, 30f)]
-        float _rotationSpeed = 8f;
+        float _rotationSpeed = 6.8f; // 8f * 0.85
 
         [Header("Kick Input Safety")]
         [SerializeField]
