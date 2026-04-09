@@ -1,4 +1,5 @@
 ﻿using Assets.SoccerGameEngine_Basic_.Scripts.Entities;
+using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Entities;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.InFieldPlayerStates.TakeKickOff.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.Attack.MainState;
@@ -32,7 +33,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.KickOff.Su
             // set to unexecuted
             executed = false;
             _kickOffInstructionSent = false;
-            waitTime = KickOffInstructionDelay;
+            waitTime = KickOffInstructionDelay + GetPostGoalKickOffDelay();
             _completionTimeout = KickOffCompletionTimeout;
             InstructPlayerToTakeKickOff = null;
 
@@ -50,6 +51,18 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.Team.KickOff.Su
             ControllingPlayer.Player.OnTakeKickOff += Instance_OnPlayerTakeKickOff;
             InstructPlayerToTakeKickOff += ControllingPlayer.Player.Invoke_OnInstructedToTakeKickOff;
 
+        }
+
+        float GetPostGoalKickOffDelay()
+        {
+            MatchManager manager = MatchManager.Instance;
+            if (manager == null)
+                return 0f;
+
+            if (manager.MatchStatus != Utilities.Enums.MatchStatuses.GoalScored)
+                return 0f;
+
+            return Mathf.Max(0f, manager.PostGoalRoundStartDelaySeconds);
         }
 
         public override void Execute()

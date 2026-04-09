@@ -23,6 +23,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
 
         bool hasInvokedKickOffEvent;
         float kickOffRecoveryTime;
+        bool _kickOffFlowStarted;
+        bool _isListeningKickOffEvents;
+        float _preKickOffDelayRemaining;
 
         public override void Enter()
         {
@@ -31,13 +34,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             // set hasn't invoked kick off event
             hasInvokedKickOffEvent = false;
             kickOffRecoveryTime = KickOffRecoveryTimeout;
+            _kickOffFlowStarted = false;
+            _isListeningKickOffEvents = false;
+            _preKickOffDelayRemaining = 0f;
 
             // hard reset to kickoff flow so every goal restarts from center positions
             ResetToKickOffRoundStart();
 
-            //listen to team OnTakeKickOff events
-            Owner.TeamAway.OnTakeKickOff += Instance_OnTeamTakeKickOff;
-            Owner.TeamHome.OnTakeKickOff += Instance_OnTeamTakeKickOff;
+            StartKickOffFlow();
         }
 
         public override void Execute()
@@ -57,12 +61,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             base.Exit();
 
             //stop listening to team OnInit events
-            Owner.TeamAway.OnTakeKickOff -= Instance_OnTeamTakeKickOff;
-            Owner.TeamHome.OnTakeKickOff -= Instance_OnTeamTakeKickOff;
+            StopListeningKickOffEvents();
         }
 
         private void Instance_OnTeamTakeKickOff()
         {
+            if (!_kickOffFlowStarted)
+                return;
+
             hasInvokedKickOffEvent = true;
             Owner.MatchStatus = MatchStatuses.HalfExhausted;
             Machine.ChangeState<ExhaustHalf>();
@@ -80,6 +86,40 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
 
             PrepareTeamForKickOff(Owner.TeamAway);
             PrepareTeamForKickOff(Owner.TeamHome);
+        }
+
+        void StartKickOffFlow()
+        {
+            if (_kickOffFlowStarted)
+                return;
+
+            _kickOffFlowStarted = true;
+
+            //listen to team OnTakeKickOff events
+            if (Owner.TeamAway != null)
+                Owner.TeamAway.OnTakeKickOff += Instance_OnTeamTakeKickOff;
+
+            if (Owner.TeamHome != null)
+                Owner.TeamHome.OnTakeKickOff += Instance_OnTeamTakeKickOff;
+
+            _isListeningKickOffEvents = true;
+
+            PrepareTeamForKickOff(Owner.TeamAway);
+            PrepareTeamForKickOff(Owner.TeamHome);
+        }
+
+        void StopListeningKickOffEvents()
+        {
+            if (!_isListeningKickOffEvents)
+                return;
+
+            if (Owner.TeamAway != null)
+                Owner.TeamAway.OnTakeKickOff -= Instance_OnTeamTakeKickOff;
+
+            if (Owner.TeamHome != null)
+                Owner.TeamHome.OnTakeKickOff -= Instance_OnTeamTakeKickOff;
+
+            _isListeningKickOffEvents = false;
         }
 
         void PrepareTeamForKickOff(Team team)

@@ -349,6 +349,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [Min(0f)]
         float _halfStartBroadcastSeconds = 2f;
 
+        [SerializeField]
+        [Min(0f)]
+        float _postGoalRoundStartDelaySeconds = 5f;
+
         /// <summary>
         /// A reference to how long each half length is in actual time(m)
         /// </summary>
@@ -990,5 +994,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         public float DistanceThreatTrack { get => _distanceThreatTrack; set => _distanceThreatTrack = value; }
         public float MatchStartBroadcastSeconds { get => Mathf.Max(0f, _matchStartBroadcastSeconds); set => _matchStartBroadcastSeconds = Mathf.Max(0f, value); }
         public float HalfStartBroadcastSeconds { get => Mathf.Max(0f, _halfStartBroadcastSeconds); set => _halfStartBroadcastSeconds = Mathf.Max(0f, value); }
+        public float PostGoalRoundStartDelaySeconds { get => Mathf.Max(0f, _postGoalRoundStartDelaySeconds); set => _postGoalRoundStartDelaySeconds = Mathf.Max(0f, value); }
     }
 }
