@@ -51,6 +51,17 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [SerializeField]
         CinematicCameraSystem _cinematicCameraSystem;
 
+        [Header("Mobile Controls")]
+        public CanvasGroup mobileCanvasPanel;
+
+        [SerializeField]
+        [Min(0f)]
+        float _mobileControlsFadeDuration = 0.25f;
+
+        [SerializeField]
+        [Min(0f)]
+        float _mobileControlsLeadInSeconds = 2f;
+
         [Header("Ranked Trophy Rewards")]
         [SerializeField]
         bool _enableTrophyRewards = true;
@@ -311,6 +322,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         {
             _teamsStagedForKickOff = false;
 
+            yield return FadeMobileControls(false);
+
             if (_waitForCinematicBeforeMatchStart)
             {
                 if (_cinematicCameraSystem == null)
@@ -347,8 +360,51 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 yield return new WaitForSeconds(_initialKickOffDelaySeconds);
             }
 
+            yield return FadeMobileControls(true);
+
+            if (_mobileControlsLeadInSeconds > 0f)
+                yield return new WaitForSeconds(_mobileControlsLeadInSeconds);
+
             ActionUtility.Invoke_Action(OnMessageSwitchToMatchOn);
             _delayedMatchStartCoroutine = null;
+        }
+
+        IEnumerator FadeMobileControls(bool show)
+        {
+            if (mobileCanvasPanel == null)
+                yield break;
+
+            float target = show ? 1f : 0f;
+            float duration = Mathf.Max(0f, _mobileControlsFadeDuration);
+
+            if (show)
+            {
+                mobileCanvasPanel.interactable = true;
+                mobileCanvasPanel.blocksRaycasts = true;
+            }
+
+            if (duration <= 0f)
+            {
+                mobileCanvasPanel.alpha = target;
+                mobileCanvasPanel.interactable = show;
+                mobileCanvasPanel.blocksRaycasts = show;
+                yield break;
+            }
+
+            float start = mobileCanvasPanel.alpha;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                mobileCanvasPanel.alpha = Mathf.Lerp(start, target, t);
+                yield return null;
+            }
+
+            mobileCanvasPanel.alpha = target;
+            mobileCanvasPanel.interactable = show;
+            mobileCanvasPanel.blocksRaycasts = show;
         }
 
         void Instance_OnCinematicSwitchedToGoalCamera()
