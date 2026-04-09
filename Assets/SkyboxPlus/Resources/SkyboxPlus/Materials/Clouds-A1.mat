@@ -12,7 +12,6 @@ Material:
   m_ValidKeywords:
   - SKYBOX_HAZE
   - SKYBOX_LAYER_1
-  - USE_UNITY_FOG_COLOR
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -177,7 +176,7 @@ Material:
     - _SunFlare: 0.4
     - _SunSize: 0.15
     - _UVSec: 0
-    - _UseUnityFogColor: 1
+    - _UseUnityFogColor: 0
     - _VShiftLayer1: 0
     - _VShiftLayer2: 0
     - _VShiftLayer3: 0
@@ -194,7 +193,7 @@ Material:
     - _HazeRotationAxis: {r: 0, g: -1, b: 0, a: 1}
     - _NightTintColor: {r: 0, g: 0, b: 0.0002, a: 1}
     - _SkyNightColor: {r: 0, g: 0, b: 0, a: 1}
-    - _SkyTint: {r: 0.32551616, g: 0.8063201, b: 0.8962264, a: 1}
+    - _SkyTint: {r: 0.3726415, g: 0.90116966, b: 1, a: 1}
     - _StarBrightColor: {r: 0.2, g: 0.9, b: 1, a: 1}
     - _StarDarkColor: {r: 1, g: 0.3, b: 0.1, a: 1}
     - _SunColor: {r: 1, g: 0.9568, b: 0.83292, a: 1}

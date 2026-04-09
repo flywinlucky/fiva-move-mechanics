@@ -94,7 +94,7 @@ SubShader {
 		#pragma shader_feature_local USE_UNITY_FOG_COLOR
 
 		#include "UnityCG.cginc"
-		#include "Lighting.cginc"
+		// #include "Lighting.cginc" // Not necesar pentru WebGL
 
 		samplerCUBE _Tex1, _Tex2, _Tex3, _Tex4;
         float _RotationSpeed1, _RotationSpeed2, _RotationSpeed3, _RotationSpeed4;
@@ -290,7 +290,8 @@ SubShader {
 			skyColor = lerp(_SkyNightColor, skyColor, daylight);
 
 			// sun
-			half sunFlare = _SunFlare / pow(1.0 + dist, 64.0);
+			   // Optimizare WebGL: exponent mai mic la pow
+			   half sunFlare = _SunFlare / pow(1.0 + dist, 8.0);
 
 			#if SBP_CUSTOM_POSITIONS
 				float2 scrDist = i.scrPos.xy * 1.8;
@@ -325,27 +326,30 @@ SubShader {
 				#endif
 				delta = moonDir - ray;
 				dist = dot(delta, delta);
-				half  moonFlare = _MoonFlare / pow(1.0 + dist, 64.0);
+				   // Optimizare WebGL: exponent mai mic la pow
+				   half  moonFlare = _MoonFlare / pow(1.0 + dist, 8.0);
 
-				if (dist < 0.3) {
-					moonColor = moonFlare.xxx;
-					half3 moonTex = tex2Dlod(_MoonTex, float4(scrDistMoon.xy * _MoonSize + 0.5, 0, 0)).rgb;
-					moonColor += moonTex;
-					#if SBP_CUSTOM_POSITIONS
-						moonColor = max(0.0.xxx, moonColor - sunColor);
-					#else
-						sunColor = 0;
-					#endif
-				}
+				   if (dist < 0.3) {
+					   moonColor = moonFlare.xxx;
+					   // tex2Dlod nu e suportat în fragment shader WebGL, folosim tex2D
+					   half3 moonTex = tex2D(_MoonTex, scrDistMoon.xy * _MoonSize + 0.5).rgb;
+					   moonColor += moonTex;
+					   #if SBP_CUSTOM_POSITIONS
+						   moonColor = max(0.0.xxx, moonColor - sunColor);
+					   #else
+						   sunColor = 0;
+					   #endif
+				   }
 
 				// stars
-				float3 p = ray * _StarSize;
-				float br = smoothstep(1.0 - _StarDensity, 1.0, hash13(floor(p)));
-				float star = smoothstep(_StarBrightness, 0., length(frac(p) - 0.5)) * br;
-				star *= saturate(1.0 - saturate(frac(br * 10000.0 + _Time.w) - 0.3) * _StarBlinking);
-				star = saturate(star * (1.0 - fog) - moonFlare * 25.0 - daylight * daylight * 64.0);
-				half3 starColor = star * LinearColor(lerp(_StarDarkColor, _StarBrightColor, br));
-				starColor *= starColor;
+				   float3 p = ray * _StarSize;
+				   float br = smoothstep(1.0 - _StarDensity, 1.0, hash13(floor(p)));
+				   float star = smoothstep(_StarBrightness, 0., length(frac(p) - 0.5)) * br;
+				   // Optimizare WebGL: reduc multiplii și pow-uri
+				   star *= saturate(1.0 - saturate(frac(br * 10000.0 + _Time.w) - 0.3) * _StarBlinking);
+				   star = saturate(star * (1.0 - fog) - moonFlare * 10.0 - daylight * daylight * 16.0);
+				   half3 starColor = star * LinearColor(lerp(_StarDarkColor, _StarBrightColor, br));
+				   // Elimin starColor *= starColor pentru performanță
 			#else
 				half3 starColor = 0.0.xxx;
 			#endif
