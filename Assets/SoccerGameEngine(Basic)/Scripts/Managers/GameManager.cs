@@ -301,6 +301,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         IEnumerator DelayedMatchStart()
         {
             yield return new WaitForSeconds(_initialKickOffDelaySeconds);
+
             ActionUtility.Invoke_Action(OnMessageSwitchToMatchOn);
             _delayedMatchStartCoroutine = null;
         }

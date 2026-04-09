@@ -86,6 +86,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
 
             PrepareTeamForKickOff(Owner.TeamAway);
             PrepareTeamForKickOff(Owner.TeamHome);
+
+            RoundTeamsResuldInWord panel = RoundTeamsResuldInWord.Instance;
+            if (panel == null)
+                panel = UnityEngine.Object.FindObjectOfType<RoundTeamsResuldInWord>();
+
+            if (panel != null)
+                panel.PlayKickOffPanel();
         }
 
         void StartKickOffFlow()
