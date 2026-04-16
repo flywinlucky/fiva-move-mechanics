@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using YG;
 using UnityEngine.UI;
+
 public class SimpleUITutorial : MonoBehaviour
 {
+    const string AutoOpenDismissedKey = "SimpleUITutorial.AutoOpenDismissed";
+
     public bool openOnStart;
     public GameObject desktop_ControlsPanel;
     public GameObject mobile_ControlsPanel;
@@ -29,17 +32,30 @@ public class SimpleUITutorial : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (openOnStart)
+        bool shouldAutoOpen = openOnStart && !IsAutoOpenDismissed();
+        if (shouldAutoOpen)
         {
             OpenTutorial();
+            return;
         }
+
+        CloseTutorial();
     }
 
     public void CloseTutorial()
     {
-        desktop_ControlsPanel.SetActive(false);
-        mobile_ControlsPanel.SetActive(false);
-        close_TutorialButton.gameObject.SetActive(false);
+        if (desktop_ControlsPanel != null)
+            desktop_ControlsPanel.SetActive(false);
+
+        if (mobile_ControlsPanel != null)
+            mobile_ControlsPanel.SetActive(false);
+
+        if (close_TutorialButton != null)
+            close_TutorialButton.gameObject.SetActive(false);
+
+        // If tutorial auto-open is enabled, remember user dismissed it once.
+        if (openOnStart)
+            SetAutoOpenDismissed(true);
     }
 
     public void OpenTutorial()
@@ -47,21 +63,39 @@ public class SimpleUITutorial : MonoBehaviour
         bool deviceIsMobile = YG2.envir.isMobile;
         if (deviceIsMobile)
         {
-            mobile_ControlsPanel.SetActive(true);
-            desktop_ControlsPanel.SetActive(false);
-              close_TutorialButton.gameObject.SetActive(true);
+            if (mobile_ControlsPanel != null)
+                mobile_ControlsPanel.SetActive(true);
+
+            if (desktop_ControlsPanel != null)
+                desktop_ControlsPanel.SetActive(false);
+
+            if (close_TutorialButton != null)
+                close_TutorialButton.gameObject.SetActive(true);
         }
         else
         {
-            mobile_ControlsPanel.SetActive(false);
-            desktop_ControlsPanel.SetActive(true);
-              close_TutorialButton.gameObject.SetActive(true);
+            if (mobile_ControlsPanel != null)
+                mobile_ControlsPanel.SetActive(false);
+
+            if (desktop_ControlsPanel != null)
+                desktop_ControlsPanel.SetActive(true);
+
+            if (close_TutorialButton != null)
+                close_TutorialButton.gameObject.SetActive(true);
         }
 
-        if (openOnStart)
-        {
-            //open_TutorialButton.gameObject.SetActive(false);
-            close_TutorialButton.gameObject.SetActive(true);
-        }
+        if (open_TutorialButton != null)
+            open_TutorialButton.gameObject.SetActive(true);
+    }
+
+    bool IsAutoOpenDismissed()
+    {
+        return PlayerPrefs.GetInt(AutoOpenDismissedKey, 0) == 1;
+    }
+
+    void SetAutoOpenDismissed(bool dismissed)
+    {
+        PlayerPrefs.SetInt(AutoOpenDismissedKey, dismissed ? 1 : 0);
+        PlayerPrefs.Save();
     }
 }
