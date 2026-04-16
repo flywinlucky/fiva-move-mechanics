@@ -69,6 +69,8 @@ public class MobileControlsButtons : MonoBehaviour
     bool _lastDefendButtonState;
     bool _autoPlayActive;
     float _localLastInteractionTime;
+    bool _isMatchPlayActive;
+    bool _matchFlowCallbacksRegistered;
 
     enum DefendButtonMode
     {
@@ -77,8 +79,30 @@ public class MobileControlsButtons : MonoBehaviour
         Take
     }
 
+    void Awake()
+    {
+        TryRegisterMatchFlowCallbacks();
+    }
+
+    void OnEnable()
+    {
+        TryRegisterMatchFlowCallbacks();
+    }
+
+    void OnDisable()
+    {
+        SetAutoPlayActive(false, force: true);
+    }
+
+    void OnDestroy()
+    {
+        UnregisterMatchFlowCallbacks();
+    }
+
     void Start()
     {
+        TryRegisterMatchFlowCallbacks();
+
         _nextRefreshTime = 0f;
         _lastShotButtonState = shotButton != null && shotButton.activeSelf;
         _lastDefendButtonState = defendButton != null && defendButton.activeSelf;
@@ -91,6 +115,9 @@ public class MobileControlsButtons : MonoBehaviour
 
     void Update()
     {
+        if (!_matchFlowCallbacksRegistered)
+            TryRegisterMatchFlowCallbacks();
+
         HandleAutoPlayState();
 
         if (!autoToggleShotButton && !autoToggleDefendButton)
@@ -109,6 +136,16 @@ public class MobileControlsButtons : MonoBehaviour
 
     void HandleAutoPlayState()
     {
+        if (!_isMatchPlayActive)
+        {
+            if (_autoPlayActive)
+                SetAutoPlayActive(false, force: true);
+
+            // Do not accumulate inactivity during cutscenes/kickoff/goal resets.
+            _localLastInteractionTime = Time.time;
+            return;
+        }
+
         if (!enableAutoPlayOnInactivity)
         {
             SetAutoPlayActive(false);
@@ -128,6 +165,41 @@ public class MobileControlsButtons : MonoBehaviour
         float inactivitySeconds = GetInactivitySeconds();
         bool shouldEnableAutoPlay = inactivitySeconds >= Mathf.Max(1f, autoPlayDelaySeconds);
         SetAutoPlayActive(shouldEnableAutoPlay);
+    }
+
+    void TryRegisterMatchFlowCallbacks()
+    {
+        if (_matchFlowCallbacksRegistered || MatchManager.Instance == null)
+            return;
+
+        MatchManager.Instance.OnMatchPlayStart += Instance_OnMatchPlayStart;
+        MatchManager.Instance.OnMatchPlayStop += Instance_OnMatchPlayStop;
+        _matchFlowCallbacksRegistered = true;
+        _isMatchPlayActive = false;
+    }
+
+    void UnregisterMatchFlowCallbacks()
+    {
+        if (!_matchFlowCallbacksRegistered || MatchManager.Instance == null)
+            return;
+
+        MatchManager.Instance.OnMatchPlayStart -= Instance_OnMatchPlayStart;
+        MatchManager.Instance.OnMatchPlayStop -= Instance_OnMatchPlayStop;
+        _matchFlowCallbacksRegistered = false;
+    }
+
+    void Instance_OnMatchPlayStart()
+    {
+        _isMatchPlayActive = true;
+        RegisterManualInteraction();
+        SetAutoPlayActive(false, force: true);
+    }
+
+    void Instance_OnMatchPlayStop()
+    {
+        _isMatchPlayActive = false;
+        RegisterManualInteraction();
+        SetAutoPlayActive(false, force: true);
     }
 
     float GetInactivitySeconds()
