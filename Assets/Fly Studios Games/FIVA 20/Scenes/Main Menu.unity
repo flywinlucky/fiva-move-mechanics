@@ -2187,7 +2187,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 130
   field of view: 45
   orthographic: 0
   orthographic size: 5
@@ -4814,6 +4814,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: User Info
       objectReference: {fileID: 0}
+    - target: {fileID: 4295738512641407100, guid: 2b96c9db1084b894988c92b8341c3146,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.39215687
+      objectReference: {fileID: 0}
     - target: {fileID: 4295738512641407101, guid: 2b96c9db1084b894988c92b8341c3146,
         type: 3}
       propertyPath: m_Pivot.x
@@ -4995,10 +5000,10 @@ RectTransform:
   m_Father: {fileID: 8745857220830153955}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 17.1}
-  m_SizeDelta: {x: 0, y: 27.6382}
+  m_AnchorMin: {x: 0, y: 0.96639276}
+  m_AnchorMax: {x: 1, y: 0.96639276}
+  m_AnchoredPosition: {x: 0, y: -9.5}
+  m_SizeDelta: {x: 0, y: 22.3735}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2010623768
 MonoBehaviour:
@@ -5048,8 +5053,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 22.8
-  m_fontSizeBase: 22.8
+  m_fontSize: 17
+  m_fontSizeBase: 17
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -5630,6 +5635,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Sample UI Tutorial
+      objectReference: {fileID: 0}
+    - target: {fileID: 7448602486640890943, guid: 0940acaa6ca80f04088fad79892c8331,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7448602486914384949, guid: 0940acaa6ca80f04088fad79892c8331,
         type: 3}
@@ -8914,8 +8924,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 25}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: 0, y: 10.728092}
+  m_SizeDelta: {x: 100, y: 92.877}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8745857220830154657
 MonoBehaviour:
