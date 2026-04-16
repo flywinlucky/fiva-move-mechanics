@@ -6,16 +6,23 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class RoundTeamsResuldInWord : MonoBehaviour
 {
+    const string VsLabel = "VS";
+    const string GoLabel = "GO!";
+
     public static RoundTeamsResuldInWord Instance { get; private set; }
 
     [Header("References")]
-    public CanvasGroup canvasGroup;
     public TMP_Text blue_Name;
     public TMP_Text blue_Score;
+    public CanvasGroup bluePanelHost;
 
     [Space]
     public TMP_Text red_Name;
     public TMP_Text red_Score;
+    public CanvasGroup redPanelHost;
+
+    [Space]
+    public TMP_Text roundCountdownText;
 
     [Header("Intro Timing")]
     [SerializeField]
@@ -43,6 +50,18 @@ public class RoundTeamsResuldInWord : MonoBehaviour
     [Min(0.01f)]
     float kickOffPanelFadeSeconds = 0.2f;
 
+    [SerializeField]
+    [Range(1, 10)]
+    int kickOffCountdownStartFrom = 3;
+
+    [SerializeField]
+    [Min(0.01f)]
+    float kickOffCountdownStepSeconds = 0.45f;
+
+    [SerializeField]
+    [Min(0.01f)]
+    float kickOffGoVisibleSeconds = 0.45f;
+
     Coroutine _playingRoutine;
 
     void Awake()
@@ -54,9 +73,6 @@ public class RoundTeamsResuldInWord : MonoBehaviour
         }
 
         Instance = this;
-
-        if (canvasGroup == null)
-            canvasGroup = GetComponent<CanvasGroup>();
 
         SetVisibleImmediate(false);
         RefreshInfo();
@@ -92,7 +108,9 @@ public class RoundTeamsResuldInWord : MonoBehaviour
         {
             float fade = Mathf.Max(0.01f, kickOffPanelFadeSeconds);
             float visible = Mathf.Max(0f, kickOffPanelVisibleSeconds);
-            return (fade * 2f) + visible;
+            float countdown = Mathf.Max(1, kickOffCountdownStartFrom) * Mathf.Max(0.01f, kickOffCountdownStepSeconds);
+            float go = Mathf.Max(0.01f, kickOffGoVisibleSeconds);
+            return (fade * 2f) + visible + countdown + go;
         }
     }
 
@@ -111,13 +129,15 @@ public class RoundTeamsResuldInWord : MonoBehaviour
         if (preDelay > 0f)
             yield return new WaitForSeconds(preDelay);
 
-        yield return FadeCanvas(0f, 1f, Mathf.Max(0.01f, fadeDurationSeconds));
+        ShowRoundText(VsLabel);
+        yield return FadePanels(0f, 1f, Mathf.Max(0.01f, fadeDurationSeconds));
 
         float showTime = Mathf.Max(0f, visibleSeconds);
         if (showTime > 0f)
             yield return new WaitForSeconds(showTime);
 
-        yield return FadeCanvas(1f, 0f, Mathf.Max(0.01f, fadeDurationSeconds));
+        yield return FadePanels(1f, 0f, Mathf.Max(0.01f, fadeDurationSeconds));
+        HideRoundText(resetToVs: true);
         SetVisibleImmediate(false);
 
         float postDelay = Mathf.Max(0f, delayAfterHideSeconds);
@@ -130,14 +150,20 @@ public class RoundTeamsResuldInWord : MonoBehaviour
     IEnumerator PlayKickOffPanelSequence()
     {
         RefreshInfo();
+        SetVisibleImmediate(false);
 
-        yield return FadeCanvas(0f, 1f, Mathf.Max(0.01f, kickOffPanelFadeSeconds));
+        ShowRoundText(VsLabel);
+        yield return FadePanels(0f, 1f, Mathf.Max(0.01f, kickOffPanelFadeSeconds));
 
         float showTime = Mathf.Max(0f, kickOffPanelVisibleSeconds);
         if (showTime > 0f)
             yield return new WaitForSeconds(showTime);
 
-        yield return FadeCanvas(1f, 0f, Mathf.Max(0.01f, kickOffPanelFadeSeconds));
+        // Hide the blue/red panel hosts first, then play center countdown.
+        yield return FadePanels(1f, 0f, Mathf.Max(0.01f, kickOffPanelFadeSeconds));
+        yield return PlayCountdownSequence();
+
+        HideRoundText(resetToVs: true);
         SetVisibleImmediate(false);
 
         _playingRoutine = null;
@@ -181,19 +207,18 @@ public class RoundTeamsResuldInWord : MonoBehaviour
             red_Score.text = redScore.ToString();
     }
 
-    IEnumerator FadeCanvas(float from, float to, float duration)
+    IEnumerator FadePanels(float from, float to, float duration)
     {
-        if (canvasGroup == null)
+        if (bluePanelHost == null && redPanelHost == null)
             yield break;
 
-        canvasGroup.gameObject.SetActive(true);
-        canvasGroup.blocksRaycasts = false;
-        canvasGroup.interactable = false;
-        canvasGroup.alpha = Mathf.Clamp01(from);
+        PreparePanelHostForFade(bluePanelHost, from);
+        PreparePanelHostForFade(redPanelHost, from);
 
         if (duration <= 0.01f)
         {
-            canvasGroup.alpha = Mathf.Clamp01(to);
+            SetPanelAlpha(bluePanelHost, to);
+            SetPanelAlpha(redPanelHost, to);
             yield break;
         }
 
@@ -202,24 +227,25 @@ public class RoundTeamsResuldInWord : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
-            canvasGroup.alpha = Mathf.Lerp(from, to, t);
+            float alpha = Mathf.Lerp(from, to, t);
+            SetPanelAlpha(bluePanelHost, alpha);
+            SetPanelAlpha(redPanelHost, alpha);
             yield return null;
         }
 
-        canvasGroup.alpha = Mathf.Clamp01(to);
+        SetPanelAlpha(bluePanelHost, to);
+        SetPanelAlpha(redPanelHost, to);
     }
 
     void SetVisibleImmediate(bool visible)
     {
-        if (canvasGroup == null)
-            return;
+        SetPanelVisibleImmediate(bluePanelHost, visible);
+        SetPanelVisibleImmediate(redPanelHost, visible);
 
-        if (!canvasGroup.gameObject.activeSelf)
-            canvasGroup.gameObject.SetActive(true);
-
-        canvasGroup.alpha = visible ? 1f : 0f;
-        canvasGroup.blocksRaycasts = false;
-        canvasGroup.interactable = false;
+        if (visible)
+            ShowRoundText(VsLabel);
+        else
+            HideRoundText(resetToVs: true);
     }
 
     void EnsurePanelHostActive()
@@ -227,8 +253,97 @@ public class RoundTeamsResuldInWord : MonoBehaviour
         if (!gameObject.activeSelf)
             gameObject.SetActive(true);
 
-        if (canvasGroup != null && !canvasGroup.gameObject.activeSelf)
-            canvasGroup.gameObject.SetActive(true);
+        if (bluePanelHost != null && !bluePanelHost.gameObject.activeSelf)
+            bluePanelHost.gameObject.SetActive(true);
+
+        if (redPanelHost != null && !redPanelHost.gameObject.activeSelf)
+            redPanelHost.gameObject.SetActive(true);
+
+        if (roundCountdownText != null && !roundCountdownText.gameObject.activeSelf)
+            roundCountdownText.gameObject.SetActive(true);
+    }
+
+    IEnumerator PlayCountdownSequence()
+    {
+        if (roundCountdownText == null)
+            yield break;
+
+        int startFrom = Mathf.Max(1, kickOffCountdownStartFrom);
+        float stepDuration = Mathf.Max(0.01f, kickOffCountdownStepSeconds);
+
+        for (int i = startFrom; i >= 1; i--)
+        {
+            ShowRoundText(i.ToString());
+            yield return new WaitForSeconds(stepDuration);
+        }
+
+        ShowRoundText(GoLabel);
+        yield return new WaitForSeconds(Mathf.Max(0.01f, kickOffGoVisibleSeconds));
+    }
+
+    void ShowRoundText(string text)
+    {
+        if (roundCountdownText == null)
+            return;
+
+        roundCountdownText.text = text;
+
+        if (!roundCountdownText.gameObject.activeSelf)
+            roundCountdownText.gameObject.SetActive(true);
+
+        Color color = roundCountdownText.color;
+        color.a = 1f;
+        roundCountdownText.color = color;
+    }
+
+    void HideRoundText(bool resetToVs)
+    {
+        if (roundCountdownText == null)
+            return;
+
+        if (resetToVs)
+            roundCountdownText.text = VsLabel;
+
+        Color color = roundCountdownText.color;
+        color.a = 0f;
+        roundCountdownText.color = color;
+
+        if (roundCountdownText.gameObject.activeSelf)
+            roundCountdownText.gameObject.SetActive(false);
+    }
+
+    void PreparePanelHostForFade(CanvasGroup panelHost, float alpha)
+    {
+        if (panelHost == null)
+            return;
+
+        if (!panelHost.gameObject.activeSelf)
+            panelHost.gameObject.SetActive(true);
+
+        panelHost.blocksRaycasts = false;
+        panelHost.interactable = false;
+        panelHost.alpha = Mathf.Clamp01(alpha);
+    }
+
+    void SetPanelVisibleImmediate(CanvasGroup panelHost, bool visible)
+    {
+        if (panelHost == null)
+            return;
+
+        if (!panelHost.gameObject.activeSelf)
+            panelHost.gameObject.SetActive(true);
+
+        panelHost.blocksRaycasts = false;
+        panelHost.interactable = false;
+        panelHost.alpha = visible ? 1f : 0f;
+    }
+
+    void SetPanelAlpha(CanvasGroup panelHost, float alpha)
+    {
+        if (panelHost == null)
+            return;
+
+        panelHost.alpha = Mathf.Clamp01(alpha);
     }
 
     void OnDisable()
