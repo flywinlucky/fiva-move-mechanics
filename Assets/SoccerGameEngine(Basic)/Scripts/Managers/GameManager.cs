@@ -60,7 +60,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         [SerializeField]
         [Min(0f)]
-        float _mobileControlsLeadInSeconds = 2f;
+        float _mobileControlsLeadInSeconds = 0f;
 
         [Header("Ranked Trophy Rewards")]
         [SerializeField]
@@ -113,6 +113,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         bool _matchRewardApplied;
         bool _teamsStagedForKickOff;
 
+        void LogStartFlow(string message)
+        {
+    #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[StartFlow][GameManager][t={Time.realtimeSinceStartup:F3}] {message}", this);
+    #endif
+        }
+
         private void Awake()
         {
             SoundManager.Instance.PlayAmbienceLoop(false);
@@ -155,6 +162,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             MatchManager.Instance.OnMatchPlayStart += Instance_OnMatchPlayStart;
             MatchManager.Instance.OnMatchPlayStop += Instance_OnMatchPlayStop;
             MatchManager.Instance.OnTick += Instance_OnTick;
+
+            LogStartFlow($"Awake bootstrap. waitForCinematic={_waitForCinematicBeforeMatchStart}, initialKickOffDelay={_initialKickOffDelaySeconds:F2}, mobileLeadIn={_mobileControlsLeadInSeconds:F2}, mobileFade={_mobileControlsFadeDuration:F2}");
 
             Instance_OnMessageSwitchToMatchOn();
         }
@@ -310,6 +319,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         private void Instance_OnMessageSwitchToMatchOn()
         {
+            LogStartFlow("Instance_OnMessageSwitchToMatchOn called -> scheduling DelayedMatchStart coroutine.");
             SoundManager.Instance.PlayMatchStart();
 
             if (_delayedMatchStartCoroutine != null)
@@ -321,8 +331,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         IEnumerator DelayedMatchStart()
         {
             _teamsStagedForKickOff = false;
+            float delayedStartTime = Time.realtimeSinceStartup;
+            LogStartFlow("DelayedMatchStart BEGIN.");
 
             yield return FadeMobileControls(false);
+            LogStartFlow("FadeMobileControls(false) finished.");
 
             if (_waitForCinematicBeforeMatchStart)
             {
@@ -331,10 +344,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
                 if (_cinematicCameraSystem != null)
                 {
+                    LogStartFlow("Cinematic mode ON. Waiting for CinematicCameraSystem sequence.");
                     _cinematicCameraSystem.onTransitionToGoalCamera.AddListener(Instance_OnCinematicSwitchedToGoalCamera);
 
                     if (!_cinematicCameraSystem.IsPlaying)
+                    {
+                        LogStartFlow("Cinematic was not playing -> PlaySequence().");
                         _cinematicCameraSystem.PlaySequence();
+                    }
+
+                    float cinematicWaitStart = Time.realtimeSinceStartup;
 
                     while (_cinematicCameraSystem != null && _cinematicCameraSystem.IsPlaying)
                     {
@@ -347,25 +366,30 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                     if (_cinematicCameraSystem != null)
                         _cinematicCameraSystem.onTransitionToGoalCamera.RemoveListener(Instance_OnCinematicSwitchedToGoalCamera);
 
+                    LogStartFlow($"Cinematic wait finished in {(Time.realtimeSinceStartup - cinematicWaitStart):F3}s.");
+
                     if (!_teamsStagedForKickOff)
                         StageTeamsForKickOffWithoutStartingMatch();
                 }
-                else if (_initialKickOffDelaySeconds > 0f)
+                else
                 {
-                    yield return new WaitForSeconds(_initialKickOffDelaySeconds);
+                    LogStartFlow("Cinematic flag ON but CinematicCameraSystem is null.");
                 }
             }
-            else if (_initialKickOffDelaySeconds > 0f)
+          
+            yield return FadeMobileControls(true);
+            LogStartFlow("FadeMobileControls(true) finished.");
+
+            float mobileLeadInDelay = Mathf.Max(0f, _mobileControlsLeadInSeconds);
+            if (mobileLeadInDelay > 0f)
             {
-                yield return new WaitForSeconds(_initialKickOffDelaySeconds);
+                LogStartFlow($"Waiting mobile lead-in delay: {mobileLeadInDelay:F2}s.");
+                yield return new WaitForSeconds(mobileLeadInDelay);
             }
 
-            yield return FadeMobileControls(true);
-
-            if (_mobileControlsLeadInSeconds > 0f)
-                yield return new WaitForSeconds(_mobileControlsLeadInSeconds);
-
+            LogStartFlow("Invoking OnMessageSwitchToMatchOn -> MatchManager starts MatchOn state flow.");
             ActionUtility.Invoke_Action(OnMessageSwitchToMatchOn);
+            LogStartFlow($"DelayedMatchStart END. Total duration={(Time.realtimeSinceStartup - delayedStartTime):F3}s.");
             _delayedMatchStartCoroutine = null;
         }
 
@@ -409,6 +433,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         void Instance_OnCinematicSwitchedToGoalCamera()
         {
+            LogStartFlow("Cinematic switched to goal camera event received.");
             StageTeamsForKickOffWithoutStartingMatch();
         }
 
@@ -418,6 +443,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 return;
 
             _teamsStagedForKickOff = true;
+            LogStartFlow("StageTeamsForKickOffWithoutStartingMatch -> placing ball and players at kickoff positions.");
 
             PlaceBallAtCentreSpot();
             StageTeamAtKickOffPositions(MatchManager.Instance.TeamAway);

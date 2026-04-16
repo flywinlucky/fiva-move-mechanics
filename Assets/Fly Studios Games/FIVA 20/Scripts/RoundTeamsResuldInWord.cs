@@ -64,7 +64,8 @@ public class RoundTeamsResuldInWord : MonoBehaviour
 
     public void PlayIntro()
     {
-        if (!gameObject.activeInHierarchy)
+        EnsurePanelHostActive();
+        if (!isActiveAndEnabled)
             return;
 
         if (_playingRoutine != null)
@@ -75,13 +76,24 @@ public class RoundTeamsResuldInWord : MonoBehaviour
 
     public void PlayKickOffPanel()
     {
-        if (!gameObject.activeInHierarchy)
+        EnsurePanelHostActive();
+        if (!isActiveAndEnabled)
             return;
 
         if (_playingRoutine != null)
             StopCoroutine(_playingRoutine);
 
         _playingRoutine = StartCoroutine(PlayKickOffPanelSequence());
+    }
+
+    public float KickOffPanelTotalDuration
+    {
+        get
+        {
+            float fade = Mathf.Max(0.01f, kickOffPanelFadeSeconds);
+            float visible = Mathf.Max(0f, kickOffPanelVisibleSeconds);
+            return (fade * 2f) + visible;
+        }
     }
 
     public IEnumerator PlayIntroSequence()
@@ -196,10 +208,21 @@ public class RoundTeamsResuldInWord : MonoBehaviour
         if (canvasGroup == null)
             return;
 
+        if (!canvasGroup.gameObject.activeSelf)
+            canvasGroup.gameObject.SetActive(true);
+
         canvasGroup.alpha = visible ? 1f : 0f;
         canvasGroup.blocksRaycasts = false;
         canvasGroup.interactable = false;
-        canvasGroup.gameObject.SetActive(visible);
+    }
+
+    void EnsurePanelHostActive()
+    {
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
+
+        if (canvasGroup != null && !canvasGroup.gameObject.activeSelf)
+            canvasGroup.gameObject.SetActive(true);
     }
 
     void OnDisable()

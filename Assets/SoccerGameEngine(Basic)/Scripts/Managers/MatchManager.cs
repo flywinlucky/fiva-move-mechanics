@@ -169,14 +169,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [Range(0f, 0.8f)]
         float aiHesitationTime = 0.22f;
 
-        [Header("WebGL Runtime")]
-        [SerializeField]
-        bool _applyWebGLRuntimeTuning = true;
-
-        [SerializeField]
-        [Range(30, 120)]
-        int _webGLTargetFrameRate = 60;
-
         [SerializeField]
         MatchDifficultyProfile _casualProfile = new MatchDifficultyProfile
         {
@@ -343,15 +335,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [Header("Flow Timing")]
         [SerializeField]
         [Min(0f)]
-        float _matchStartBroadcastSeconds = 2f;
+        float _matchStartBroadcastSeconds = 0.35f;
 
         [SerializeField]
         [Min(0f)]
-        float _halfStartBroadcastSeconds = 2f;
+        float _halfStartBroadcastSeconds = 0.35f;
 
         [SerializeField]
         [Min(0f)]
-        float _postGoalRoundStartDelaySeconds = 5f;
+        float _postGoalRoundStartDelaySeconds = 2f;
 
         /// <summary>
         /// A reference to how long each half length is in actual time(m)
@@ -565,8 +557,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         {
             base.Awake();
 
-            ApplyRuntimePlatformSettings();
-
             FSM = GetComponent<MatchManagerFSM>();
             _nextAIPostShotTrigger = UnityEngine.Random.Range(4, 6);
         }
@@ -579,18 +569,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
             if (Application.isPlaying)
                 ApplyDifficultyToActiveTeams();
-        }
-
-        void ApplyRuntimePlatformSettings()
-        {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            if (!_applyWebGLRuntimeTuning)
-                return;
-
-            int targetFrameRate = Mathf.Clamp(_webGLTargetFrameRate, 30, 120);
-            if (Application.targetFrameRate != targetFrameRate)
-                Application.targetFrameRate = targetFrameRate;
-#endif
         }
 
         void ClampDifficultyProfile(ref MatchDifficultyProfile profile)
@@ -940,6 +918,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         /// </summary>
         public void Instance_OnMessagedSwitchToMatchOn()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[StartFlow][MatchManager][t={Time.realtimeSinceStartup:F3}] Instance_OnMessagedSwitchToMatchOn -> invoking OnMesssagedToSwitchToMatchOn.", this);
+#endif
             ActionUtility.Invoke_Action(OnMesssagedToSwitchToMatchOn);
         }
 

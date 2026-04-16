@@ -37,7 +37,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Enter()
         {
             base.Enter();
-            LogGoalKeeperDebug("Enter GoToHome");
         }
 
         public override void Execute()
@@ -46,7 +45,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             if (IsLooseBallNearKeeper())
             {
-                LogGoalKeeperDebug("GoToHome -> TendGoal (loose ball near keeper)");
                 SuperMachine.ChangeState<TendGoalMainState>();
             }
         }
@@ -57,7 +55,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             if (IsLooseBallNearKeeper())
             {
-                LogGoalKeeperDebug("GoToHome manual -> TendGoal (loose ball near keeper)");
                 SuperMachine.ChangeState<TendGoalMainState>();
                 return;
             }
@@ -65,7 +62,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             // run logic depending on whether team is in control or not
             if (Owner.IsTeamInControl == false)
             {
-                LogGoalKeeperDebug("GoToHome -> TendGoal (team lost control)");
                 SuperMachine.ChangeState<TendGoalMainState>();
             }
         }
@@ -73,17 +69,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
         public override void Exit()
         {
             base.Exit();
-            LogGoalKeeperDebug("Exit GoToHome");
         }
-
-        void LogGoalKeeperDebug(string message)
-        {
-            if (MatchManager.Instance == null || !MatchManager.Instance.EnableGoalkeeperDebug)
-                return;
-
-            Debug.Log("[GK DEBUG] " + Owner.name + " :: " + message);
-        }
-
         public Player Owner
         {
             get

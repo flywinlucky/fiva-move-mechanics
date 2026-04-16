@@ -41,12 +41,25 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             // hard reset to kickoff flow so every goal restarts from center positions
             ResetToKickOffRoundStart();
 
-            StartKickOffFlow();
+            if (_preKickOffDelayRemaining <= 0f)
+                StartKickOffFlow();
         }
 
         public override void Execute()
         {
             base.Execute();
+
+            if (!_kickOffFlowStarted)
+            {
+                if (_preKickOffDelayRemaining > 0f)
+                {
+                    _preKickOffDelayRemaining -= Time.deltaTime;
+                    if (_preKickOffDelayRemaining > 0f)
+                        return;
+                }
+
+                StartKickOffFlow();
+            }
 
             if (hasInvokedKickOffEvent == false)
             {
@@ -87,12 +100,36 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             PrepareTeamForKickOff(Owner.TeamAway);
             PrepareTeamForKickOff(Owner.TeamHome);
 
+            _preKickOffDelayRemaining = 0f;
+            if (!IsOpeningKickOff())
+                return;
+
             RoundTeamsResuldInWord panel = RoundTeamsResuldInWord.Instance;
             if (panel == null)
                 panel = UnityEngine.Object.FindObjectOfType<RoundTeamsResuldInWord>();
 
             if (panel != null)
+            {
                 panel.PlayKickOffPanel();
+                _preKickOffDelayRemaining = Mathf.Max(0f, panel.KickOffPanelTotalDuration);
+            }
+        }
+
+        bool IsOpeningKickOff()
+        {
+            if (Owner == null)
+                return false;
+
+            if (Owner.CurrentHalf != 1)
+                return false;
+
+            if (Owner.MatchStatus == MatchStatuses.GoalScored)
+                return false;
+
+            if (TimeManager.Instance == null)
+                return true;
+
+            return TimeManager.Instance.Minutes <= 0 && TimeManager.Instance.Seconds <= 0;
         }
 
         void StartKickOffFlow()

@@ -80,8 +80,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             //register to some events
             Owner.OnShotTaken += Instance_OnShotTaken;
-
-            LogGoalKeeperDebug("Enter TendGoal");
         }
 
         public override void Execute()
@@ -132,7 +130,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                     if (Time.time - _lastPickupBlockedLogTime >= 0.2f)
                     {
                         float remaining = Owner.GoalKeeperPickupBlockedUntil - Time.time;
-                        LogGoalKeeperDebug("Auto collect waiting for pickup block: " + Mathf.Max(0f, remaining).ToString("0.00") + "s");
                         _lastPickupBlockedLogTime = Time.time;
                     }
                 }
@@ -151,7 +148,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 if (Time.time - _lastPickupBlockedLogTime >= 0.2f)
                 {
                     float remaining = Owner.GoalKeeperPickupBlockedUntil - Time.time;
-                    LogGoalKeeperDebug("Pickup temporarily blocked after pass release: " + Mathf.Max(0f, remaining).ToString("0.00") + "s");
                     _lastPickupBlockedLogTime = Time.time;
                 }
             }
@@ -266,7 +262,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             // run logic depending on whether team is in control or not
             if (Owner.IsTeamInControl == true && !isLooseBallNearKeeper)
             {
-                LogGoalKeeperDebug("Team in control while TendGoal -> GoToHome");
                 SuperMachine.ChangeState<GoToHomeMainState>();
             }
         }
@@ -300,7 +295,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                         300,
                         _goalLayerMask);
 
-            LogGoalKeeperDebug("OnShotTaken event -> willHitGoal: " + willBallHitAGoal);
             
             // get the goal from the goal trigger
             if (willBallHitAGoal)
@@ -310,14 +304,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
                 // check if shot is on target
                 bool isShotOnTarget = goal == Owner.TeamGoal;
-                LogGoalKeeperDebug("Shot goal test -> isShotOnTarget: " + isShotOnTarget);
 
                 if (isShotOnTarget == true)
                 {
                     if (!ShouldAttemptSave())
                     {
                         _hasPendingIntercept = false;
-                        LogGoalKeeperDebug("Shot on target -> keeper late reaction (simulated miss)");
                         return;
                     }
 
@@ -337,8 +329,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                     _pendingForceRebound = forceRebound;
                     _pendingSaveQuality = saveQuality;
 
-                    LogGoalKeeperDebug("Shot on target -> queued intercept in " + _pendingInterceptDelay.ToString("0.00") + "s");
-                }
+                 }
             }
         }
 
@@ -360,7 +351,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             interceptShotState.ForceRebound = _pendingForceRebound;
             interceptShotState.SaveQuality = _pendingSaveQuality;
 
-            LogGoalKeeperDebug("Transition -> InterceptShot (delayed)");
             Machine.ChangeState<InterceptShotMainState>();
         }
 
@@ -497,19 +487,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                     return false;
                 }
 
-                LogGoalKeeperDebug(context + " -> Caught ball (chance: " + catchChance.ToString("0.00")
-                    + ", adjusted: " + adjustedCatchChance.ToString("0.00")
-                    + ", speed: " + ballSpeed.ToString("0.00") + ") -> ControlBall");
                 Machine.ChangeState<ControlBallMainState>();
                 return true;
             }
 
             Owner.GoalKeeperPickupBlockedUntil = Mathf.Max(Owner.GoalKeeperPickupBlockedUntil,
                 Time.time + GoalKeeperCatchRetryDelay);
-
-            LogGoalKeeperDebug(context + " -> Missed catch (chance: " + catchChance.ToString("0.00")
-                + ", adjusted: " + adjustedCatchChance.ToString("0.00")
-                + ", speed: " + ballSpeed.ToString("0.00") + ")");
 
             return false;
         }
@@ -620,7 +603,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             Ball.Instance.Kick(reboundTarget, reboundPower);
 
             Owner.GoalKeeperPickupBlockedUntil = Mathf.Max(Owner.GoalKeeperPickupBlockedUntil, Time.time + 0.2f);
-            LogGoalKeeperDebug(context + " -> rebound target: " + reboundTarget + ", power: " + reboundPower.ToString("0.00"));
         }
 
         bool IsLikelyUserShot(Vector3 initial)
@@ -693,14 +675,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 GKWrongDiveChance = 0.1f,
                 GKShotForgiveness = 0.08f
             };
-        }
-
-        void LogGoalKeeperDebug(string message)
-        {
-            if (MatchManager.Instance == null || !MatchManager.Instance.EnableGoalkeeperDebug)
-                return;
-
-            Debug.Log("[GK DEBUG] " + Owner.name + " :: " + message);
         }
 
         public Player Owner
