@@ -28,10 +28,10 @@ public class MobileControlsButtons : MonoBehaviour
 
     [Header("Defend Button Text")]
     [SerializeField]
-    string defendModeText = "DEFEND";
+    string defendModeText = "(M)\nDEFEND";
 
     [SerializeField]
-    string takeModeText = "TAKE";
+    string takeModeText = "(M)\nTAKE";
 
     [SerializeField]
     string idleModeText = "";
@@ -84,10 +84,10 @@ public class MobileControlsButtons : MonoBehaviour
     TMP_Text desktopDefendHintText;
 
     [SerializeField]
-    string desktopDefendModeText = "DEFEND";
+    string desktopDefendModeText = "(M)\nDEFEND";
 
     [SerializeField]
-    string desktopTakeModeText = "TAKE";
+    string desktopTakeModeText = "(M)\nTAKE";
 
     float _nextRefreshTime;
     bool _lastShotButtonState;
@@ -106,11 +106,18 @@ public class MobileControlsButtons : MonoBehaviour
 
     void Awake()
     {
+        NormalizeDefendLabelsToM();
         TryRegisterMatchFlowCallbacks();
+    }
+
+    void OnValidate()
+    {
+        NormalizeDefendLabelsToM();
     }
 
     void OnEnable()
     {
+        NormalizeDefendLabelsToM();
         TryRegisterMatchFlowCallbacks();
     }
 
@@ -499,6 +506,45 @@ public class MobileControlsButtons : MonoBehaviour
     bool ShouldShowDesktopHints()
     {
         return showDesktopActionHints && !Application.isMobilePlatform;
+    }
+
+    void NormalizeDefendLabelsToM()
+    {
+        defendModeText = NormalizeActionLabelToM(defendModeText, "DEFEND");
+        takeModeText = NormalizeActionLabelToM(takeModeText, "TAKE");
+        desktopDefendModeText = NormalizeActionLabelToM(desktopDefendModeText, "DEFEND");
+        desktopTakeModeText = NormalizeActionLabelToM(desktopTakeModeText, "TAKE");
+    }
+
+    string NormalizeActionLabelToM(string value, string fallbackAction)
+    {
+        string action = ExtractActionLine(value, fallbackAction);
+        return $"(M)\n{action}";
+    }
+
+    string ExtractActionLine(string value, string fallbackAction)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return fallbackAction;
+
+        string normalized = value.Replace("\r", string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return fallbackAction;
+
+        string[] lines = normalized.Split('\n');
+        for (int i = lines.Length - 1; i >= 0; i--)
+        {
+            string line = lines[i].Trim();
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            if (line.StartsWith("(") && line.EndsWith(")"))
+                continue;
+
+            return line;
+        }
+
+        return fallbackAction;
     }
 
     DefendButtonMode ResolveDefendButtonMode()
