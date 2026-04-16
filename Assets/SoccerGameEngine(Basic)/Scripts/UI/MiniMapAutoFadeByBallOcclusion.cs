@@ -13,7 +13,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.UI
         [Header("References")]
         [SerializeField]
         RectTransform _minimapRect;
-
+        public GameObject minimapObject;
+        public Button minimapOpenAndCloseButton;
+        public Image minimapBackgroundImage;
+        public Color minimapOpenColor;
+        public Color minimapClosedColor;
         [SerializeField]
         CanvasGroup _canvasGroup;
 
