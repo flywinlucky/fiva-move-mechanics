@@ -694,12 +694,8 @@ MonoBehaviour:
   autoToggleShotButton: 1
   autoToggleDefendButton: 1
   refreshInterval: 0.12
-  defendModeText: '(M)
-
-    DEFEND'
-  takeModeText: '(M)
-
-    TAKE'
+  defendModeText: DEFEND
+  takeModeText: TAKE
   idleModeText: 
   enableAutoPlayOnInactivity: 1
   autoPlayDelaySeconds: 5
@@ -1602,7 +1598,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
+        m_Texture: {fileID: 2800000, guid: 82a08eb2528a76b4c901bc33d5e5cba9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -6565,7 +6561,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &511859388
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13079,7 +13075,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1336419680
 RectTransform:
   m_ObjectHideFlags: 0
@@ -16320,7 +16316,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4278765818
-  m_fontColor: {r: 0.9803922, g: 0.7843138, b: 0.03137255, a: 1}
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -16343,7 +16339,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 16
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535

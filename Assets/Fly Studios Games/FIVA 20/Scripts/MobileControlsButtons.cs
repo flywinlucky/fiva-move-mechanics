@@ -3,6 +3,7 @@ using Assets.SoccerGameEngine_Basic_.Scripts.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities.Enums;
 using TMPro;
 using UnityEngine;
+using YG;
 
 public class MobileControlsButtons : MonoBehaviour
 {
@@ -28,10 +29,10 @@ public class MobileControlsButtons : MonoBehaviour
 
     [Header("Defend Button Text")]
     [SerializeField]
-    string defendModeText = "(M)\nDEFEND";
+    string defendModeText = "DEFEND";
 
     [SerializeField]
-    string takeModeText = "(M)\nTAKE";
+    string takeModeText = "TAKE";
 
     [SerializeField]
     string idleModeText = "";
@@ -505,13 +506,21 @@ public class MobileControlsButtons : MonoBehaviour
 
     bool ShouldShowDesktopHints()
     {
-        return showDesktopActionHints && !Application.isMobilePlatform;
+        return showDesktopActionHints && !IsTouchDeviceRuntime();
+    }
+
+    bool IsTouchDeviceRuntime()
+    {
+        if (Application.isMobilePlatform || SystemInfo.deviceType == DeviceType.Handheld)
+            return true;
+
+        return YG2.envir.isMobile || YG2.envir.isTablet;
     }
 
     void NormalizeDefendLabelsToM()
     {
-        defendModeText = NormalizeActionLabelToM(defendModeText, "DEFEND");
-        takeModeText = NormalizeActionLabelToM(takeModeText, "TAKE");
+        defendModeText = ExtractActionLine(defendModeText, "DEFEND");
+        takeModeText = ExtractActionLine(takeModeText, "TAKE");
         desktopDefendModeText = NormalizeActionLabelToM(desktopDefendModeText, "DEFEND");
         desktopTakeModeText = NormalizeActionLabelToM(desktopTakeModeText, "TAKE");
     }
