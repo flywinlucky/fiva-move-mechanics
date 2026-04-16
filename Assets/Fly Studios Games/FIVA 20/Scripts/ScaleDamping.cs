@@ -35,10 +35,22 @@ public class ScaleDamping : MonoBehaviour
     [Min(1f)]
     private float introBounceForce = 1.15f;
 
+    [Header("Transition Smoothing")]
+    [SerializeField]
+    [Min(0f)]
+    private float introToPulseBlendDuration = 0.08f;
+
+    [SerializeField]
+    [Min(0f)]
+    private float pulseSmoothingTime = 0.03f;
+
     private Vector3 baseScale;
     private float timer;
     private bool isPlaying;
     private Coroutine introRoutine;
+    private float introToPulseBlendRemaining;
+    private Vector3 introToPulseBlendStartScale;
+    private Vector3 pulseScaleVelocity;
 
     private void Awake()
     {
@@ -65,6 +77,9 @@ public class ScaleDamping : MonoBehaviour
             StopCoroutine(introRoutine);
             introRoutine = null;
         }
+
+        introToPulseBlendRemaining = 0f;
+        pulseScaleVelocity = Vector3.zero;
     }
 
     private void Update()
@@ -81,7 +96,34 @@ public class ScaleDamping : MonoBehaviour
         float curved = pulseCurve != null ? pulseCurve.Evaluate(normalized) : normalized;
 
         Vector3 targetScale = baseScale + (Vector3.one * addScale);
-        transform.localScale = Vector3.LerpUnclamped(baseScale, targetScale, curved);
+        Vector3 pulseScale = Vector3.LerpUnclamped(baseScale, targetScale, curved);
+
+        if (introToPulseBlendRemaining > 0f)
+        {
+            float blendDuration = Mathf.Max(0.0001f, introToPulseBlendDuration);
+            introToPulseBlendRemaining = Mathf.Max(0f, introToPulseBlendRemaining - dt);
+
+            float blendT = 1f - (introToPulseBlendRemaining / blendDuration);
+            blendT = blendT * blendT * (3f - (2f * blendT));
+
+            transform.localScale = Vector3.LerpUnclamped(introToPulseBlendStartScale, pulseScale, blendT);
+            return;
+        }
+
+        if (pulseSmoothingTime > 0f)
+        {
+            transform.localScale = Vector3.SmoothDamp(
+                transform.localScale,
+                pulseScale,
+                ref pulseScaleVelocity,
+                pulseSmoothingTime,
+                Mathf.Infinity,
+                dt);
+        }
+        else
+        {
+            transform.localScale = pulseScale;
+        }
     }
 
     public void Play()
@@ -91,6 +133,9 @@ public class ScaleDamping : MonoBehaviour
             StopCoroutine(introRoutine);
             introRoutine = null;
         }
+
+        introToPulseBlendRemaining = 0f;
+        pulseScaleVelocity = Vector3.zero;
 
         isPlaying = true;
     }
@@ -102,6 +147,9 @@ public class ScaleDamping : MonoBehaviour
             StopCoroutine(introRoutine);
             introRoutine = null;
         }
+
+        introToPulseBlendRemaining = 0f;
+        pulseScaleVelocity = Vector3.zero;
 
         isPlaying = false;
 
@@ -121,11 +169,17 @@ public class ScaleDamping : MonoBehaviour
         if (introRoutine != null)
             StopCoroutine(introRoutine);
 
+        introToPulseBlendRemaining = 0f;
+        pulseScaleVelocity = Vector3.zero;
+
         if (!useIntroScaleIn)
         {
             Play();
             return;
         }
+
+        // Ensure pulse starts from a deterministic phase after intro.
+        timer = 0f;
 
         introRoutine = StartCoroutine(PlayIntroScaleInThenPulse());
     }
@@ -154,6 +208,15 @@ public class ScaleDamping : MonoBehaviour
 
         transform.localScale = baseScale;
         introRoutine = null;
+        BeginPulseAfterIntro();
+    }
+
+    void BeginPulseAfterIntro()
+    {
         isPlaying = true;
+        pulseScaleVelocity = Vector3.zero;
+
+        introToPulseBlendStartScale = transform.localScale;
+        introToPulseBlendRemaining = Mathf.Max(0f, introToPulseBlendDuration);
     }
 }
