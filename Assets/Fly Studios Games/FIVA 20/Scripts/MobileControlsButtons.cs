@@ -64,6 +64,31 @@ public class MobileControlsButtons : MonoBehaviour
     [SerializeField]
     bool showJoystickTextOnlyDuringAutoPlay = true;
 
+    [Header("Desktop Action Hints")]
+    [SerializeField]
+    bool showDesktopActionHints = true;
+
+    [SerializeField]
+    GameObject desktopShootHint;
+
+    [SerializeField]
+    TMP_Text desktopShootHintText;
+
+    [SerializeField]
+    string desktopShootReadyText = "CAN SHOOT";
+
+    [SerializeField]
+    GameObject desktopDefendHint;
+
+    [SerializeField]
+    TMP_Text desktopDefendHintText;
+
+    [SerializeField]
+    string desktopDefendModeText = "DEFEND";
+
+    [SerializeField]
+    string desktopTakeModeText = "TAKE";
+
     float _nextRefreshTime;
     bool _lastShotButtonState;
     bool _lastDefendButtonState;
@@ -111,6 +136,12 @@ public class MobileControlsButtons : MonoBehaviour
         RefreshShotButton(force: true);
         RefreshDefendButton(force: true);
         SetAutoPlayActive(false, force: true);
+
+        if (desktopShootHint != null)
+            desktopShootHint.SetActive(false);
+
+        if (desktopDefendHint != null)
+            desktopDefendHint.SetActive(false);
     }
 
     void Update()
@@ -299,23 +330,35 @@ public class MobileControlsButtons : MonoBehaviour
     void RefreshShotButton(bool force)
     {
         if (shotButton == null)
+        {
+            UpdateDesktopShootHint(false);
             return;
+        }
 
         bool canShootNow = CanCurrentUserBallOwnerShoot();
         if (!force && canShootNow == _lastShotButtonState)
+        {
+            UpdateDesktopShootHint(canShootNow);
             return;
+        }
 
         shotButton.SetActive(canShootNow);
         _lastShotButtonState = canShootNow;
+        UpdateDesktopShootHint(canShootNow);
     }
 
     void RefreshDefendButton(bool force)
     {
         if (defendButton == null)
+        {
+            UpdateDesktopDefendHint(false, DefendButtonMode.None);
             return;
+        }
 
         bool canDefendNow = CanCurrentUserContestBall();
-        UpdateDefendButtonText(canDefendNow);
+        DefendButtonMode mode = canDefendNow ? ResolveDefendButtonMode() : DefendButtonMode.None;
+        UpdateDefendButtonText(canDefendNow, mode);
+        UpdateDesktopDefendHint(canDefendNow, mode);
 
         if (!force && canDefendNow == _lastDefendButtonState)
             return;
@@ -389,7 +432,7 @@ public class MobileControlsButtons : MonoBehaviour
         return false;
     }
 
-    void UpdateDefendButtonText(bool buttonVisible)
+    void UpdateDefendButtonText(bool buttonVisible, DefendButtonMode mode)
     {
         if (defendButton_Text == null)
             return;
@@ -400,13 +443,62 @@ public class MobileControlsButtons : MonoBehaviour
             return;
         }
 
-        DefendButtonMode mode = ResolveDefendButtonMode();
         if (mode == DefendButtonMode.Take)
             defendButton_Text.text = takeModeText;
         else if (mode == DefendButtonMode.Defend)
             defendButton_Text.text = defendModeText;
         else
             defendButton_Text.text = idleModeText;
+    }
+
+    void UpdateDesktopShootHint(bool canShootNow)
+    {
+        if (!ShouldShowDesktopHints())
+        {
+            if (desktopShootHint != null)
+                desktopShootHint.SetActive(false);
+            return;
+        }
+
+        if (desktopShootHint != null)
+            desktopShootHint.SetActive(canShootNow);
+
+        if (desktopShootHintText != null)
+            desktopShootHintText.text = canShootNow ? desktopShootReadyText : string.Empty;
+    }
+
+    void UpdateDesktopDefendHint(bool canDefendNow, DefendButtonMode mode)
+    {
+        if (!ShouldShowDesktopHints())
+        {
+            if (desktopDefendHint != null)
+                desktopDefendHint.SetActive(false);
+            return;
+        }
+
+        if (desktopDefendHint != null)
+            desktopDefendHint.SetActive(canDefendNow);
+
+        if (desktopDefendHintText == null)
+            return;
+
+        if (!canDefendNow)
+        {
+            desktopDefendHintText.text = string.Empty;
+            return;
+        }
+
+        if (mode == DefendButtonMode.Take)
+            desktopDefendHintText.text = desktopTakeModeText;
+        else if (mode == DefendButtonMode.Defend)
+            desktopDefendHintText.text = desktopDefendModeText;
+        else
+            desktopDefendHintText.text = string.Empty;
+    }
+
+    bool ShouldShowDesktopHints()
+    {
+        return showDesktopActionHints && !Application.isMobilePlatform;
     }
 
     DefendButtonMode ResolveDefendButtonMode()

@@ -23,9 +23,22 @@ public class ScaleDamping : MonoBehaviour
     [SerializeField]
     private AnimationCurve pulseCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Header("Intro Scale In")]
+    [SerializeField]
+    private bool useIntroScaleIn = true;
+
+    [SerializeField]
+    [Min(0.01f)]
+    private float introDuration = 0.25f;
+
+    [SerializeField]
+    [Min(1f)]
+    private float introBounceForce = 1.15f;
+
     private Vector3 baseScale;
     private float timer;
     private bool isPlaying;
+    private Coroutine introRoutine;
 
     private void Awake()
     {
@@ -41,7 +54,16 @@ public class ScaleDamping : MonoBehaviour
     {
         if (playOnEnable)
         {
-            Play();
+            StartPulseWithIntro();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (introRoutine != null)
+        {
+            StopCoroutine(introRoutine);
+            introRoutine = null;
         }
     }
 
@@ -64,11 +86,23 @@ public class ScaleDamping : MonoBehaviour
 
     public void Play()
     {
+        if (introRoutine != null)
+        {
+            StopCoroutine(introRoutine);
+            introRoutine = null;
+        }
+
         isPlaying = true;
     }
 
     public void Stop(bool resetToBaseScale = true)
     {
+        if (introRoutine != null)
+        {
+            StopCoroutine(introRoutine);
+            introRoutine = null;
+        }
+
         isPlaying = false;
 
         if (resetToBaseScale)
@@ -80,5 +114,46 @@ public class ScaleDamping : MonoBehaviour
     public void RefreshBaseScale()
     {
         baseScale = transform.localScale;
+    }
+
+    void StartPulseWithIntro()
+    {
+        if (introRoutine != null)
+            StopCoroutine(introRoutine);
+
+        if (!useIntroScaleIn)
+        {
+            Play();
+            return;
+        }
+
+        introRoutine = StartCoroutine(PlayIntroScaleInThenPulse());
+    }
+
+    System.Collections.IEnumerator PlayIntroScaleInThenPulse()
+    {
+        isPlaying = false;
+
+        float duration = Mathf.Max(0.01f, introDuration);
+        float elapsed = 0f;
+
+        transform.localScale = Vector3.zero;
+
+        while (elapsed < duration)
+        {
+            float dt = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+            elapsed += dt;
+
+            float percent = Mathf.Clamp01(elapsed / duration);
+            float bounce = Mathf.Sin(percent * Mathf.PI);
+            float scaleAmount = percent + (bounce * (Mathf.Max(1f, introBounceForce) - 1f));
+
+            transform.localScale = baseScale * scaleAmount;
+            yield return null;
+        }
+
+        transform.localScale = baseScale;
+        introRoutine = null;
+        isPlaying = true;
     }
 }

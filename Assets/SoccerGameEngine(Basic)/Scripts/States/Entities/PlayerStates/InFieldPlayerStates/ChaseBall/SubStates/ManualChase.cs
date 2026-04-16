@@ -83,7 +83,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                 && Ball.Instance.Owner != Owner
                 && Owner.IsBallWithinTacklableDistance())
             {
-                bool takePressed = Input.GetKeyDown(KeyCode.E)
+                bool defendKeyPressed = Input.GetKeyDown(KeyCode.M);
+                if (defendKeyPressed && MobileControlsInput.Instance != null)
+                    MobileControlsInput.Instance.PressDefend();
+
+                bool takePressed = defendKeyPressed
                     || MobileControlsInput.ConsumeDefendPressed();
 
                 if (takePressed)

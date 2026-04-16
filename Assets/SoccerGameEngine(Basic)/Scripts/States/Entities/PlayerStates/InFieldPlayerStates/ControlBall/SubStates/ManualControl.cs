@@ -158,6 +158,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
 
             bool canUseKickInput = !Owner.IsKickInputBlocked();
 
+            if (canUseKickInput && Input.GetKeyDown(KeyCode.M) && MobileControlsInput.Instance != null)
+                MobileControlsInput.Instance.PressDefend();
+
             bool passPressed = canUseKickInput
                 && (Input.GetKeyDown(KeyCode.N)
                     || MobileControlsInput.ConsumePassPressed());
@@ -173,7 +176,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.In
                     SuperMachine.ChangeState<KickBallMainState>();
                 }
             }
-            else if (canUseKickInput && (Input.GetKeyDown(KeyCode.L) || MobileControlsInput.ConsumeShootPressed()))
+            else if (canUseKickInput && (Input.GetKeyDown(KeyCode.Space) || MobileControlsInput.ConsumeShootPressed()))
             {
                 // check if I can score
                 bool canScore = Owner.CanScore(false, true);
