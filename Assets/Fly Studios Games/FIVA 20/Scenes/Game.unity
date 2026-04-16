@@ -1640,7 +1640,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 82a08eb2528a76b4c901bc33d5e5cba9, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -7821,8 +7821,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294952960
-  m_fontColor: {r: 0, g: 0.78541684, b: 1, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -11182,16 +11182,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   team_1: {fileID: 1860320940}
-  formation_team_1_Color: {r: 1, g: 1, b: 1, a: 1}
+  formation_team_1_Color: {r: 0.30980396, g: 0.7464288, b: 1, a: 1}
   team_1_materials:
     body: {fileID: 2100000, guid: 9d410b05e4762464d882db73377e3468, type: 2}
     boots: {fileID: 2100000, guid: 800c472907acd25448f4d66ade3377c4, type: 2}
     eyes: {fileID: 2100000, guid: fc9e376ba6ad63247b42fbcca56b4531, type: 2}
     gloaves: {fileID: 2100000, guid: 8e2c3467e3ab76443a3dd211aeadf2e2, type: 2}
     head: {fileID: 2100000, guid: 9b6dc15a7c634c040b1fbf2e7c4ac68e, type: 2}
-    kitbody: {fileID: 2100000, guid: 7a05a141cc68c744ea0f8609dc0e7763, type: 2}
-    socks: {fileID: 2100000, guid: 7a05a141cc68c744ea0f8609dc0e7763, type: 2}
-  formation_team_1_goalkeeper_Color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    kitbody: {fileID: 2100000, guid: b3926dc8284ce7d44957121f5c357a93, type: 2}
+    socks: {fileID: 2100000, guid: b3926dc8284ce7d44957121f5c357a93, type: 2}
+  formation_team_1_goalkeeper_Color: {r: 0.5707496, g: 0.30980396, b: 1, a: 1}
   team_1_goalkeeper_materials:
     body: {fileID: 2100000, guid: 9d410b05e4762464d882db73377e3468, type: 2}
     boots: {fileID: 2100000, guid: 800c472907acd25448f4d66ade3377c4, type: 2}
@@ -11201,16 +11201,16 @@ MonoBehaviour:
     kitbody: {fileID: 2100000, guid: 429558533953f5d409befa17389dd07c, type: 2}
     socks: {fileID: 2100000, guid: 429558533953f5d409befa17389dd07c, type: 2}
   team_2: {fileID: 1656146180}
-  formation_team_2_Color: {r: 1, g: 0.030960351, b: 0, a: 1}
+  formation_team_2_Color: {r: 1, g: 0.30980396, b: 0.32967043, a: 1}
   team_2_materials:
     body: {fileID: 2100000, guid: 9d410b05e4762464d882db73377e3468, type: 2}
     boots: {fileID: 2100000, guid: 800c472907acd25448f4d66ade3377c4, type: 2}
     eyes: {fileID: 2100000, guid: fc9e376ba6ad63247b42fbcca56b4531, type: 2}
     gloaves: {fileID: 2100000, guid: 8e2c3467e3ab76443a3dd211aeadf2e2, type: 2}
     head: {fileID: 2100000, guid: 9b6dc15a7c634c040b1fbf2e7c4ac68e, type: 2}
-    kitbody: {fileID: 2100000, guid: a45888cbe79f8f84f86fdd522c7f6666, type: 2}
-    socks: {fileID: 2100000, guid: a45888cbe79f8f84f86fdd522c7f6666, type: 2}
-  formation_team_2_goalkeeper_Color: {r: 1, g: 0.5, b: 0, a: 1}
+    kitbody: {fileID: 2100000, guid: 6b152992d3575454787892b72877a075, type: 2}
+    socks: {fileID: 2100000, guid: 6b152992d3575454787892b72877a075, type: 2}
+  formation_team_2_goalkeeper_Color: {r: 1, g: 0.51419, b: 0.30980396, a: 1}
   team_2_goalkeeper_materials:
     body: {fileID: 2100000, guid: 9d410b05e4762464d882db73377e3468, type: 2}
     boots: {fileID: 2100000, guid: 800c472907acd25448f4d66ade3377c4, type: 2}
@@ -13147,8 +13147,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279179002
-  m_fontColor: {r: 0.9811321, g: 0.086409, b: 0.06016379, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -13384,8 +13384,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279179002
-  m_fontColor: {r: 0.9811321, g: 0.086409, b: 0.06016379, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -13899,8 +13899,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294952960
-  m_fontColor: {r: 0, g: 0.78541684, b: 1, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

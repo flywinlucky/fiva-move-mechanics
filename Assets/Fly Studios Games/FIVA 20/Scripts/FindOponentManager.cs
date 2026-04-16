@@ -50,19 +50,6 @@ public class FindOponentManager : MonoBehaviour
     bool useCsvNicknames = true;
 
     [SerializeField]
-    string[] opponentNamePool =
-    {
-        "Thunder FC",
-        "Iron Wolves",
-        "Royal Strikers",
-        "Street Kings",
-        "Blue Titans",
-        "Red Comets",
-        "Shadow United",
-        "Rapid Eleven"
-    };
-
-    [SerializeField]
     [Range(0.05f, 0.40f)]
     float minTrophyVariancePercent = 0.10f;
 
@@ -154,10 +141,7 @@ public class FindOponentManager : MonoBehaviour
         if (useCsvNicknames && _csvNicknames.Count > 0)
             return _csvNicknames[Random.Range(0, _csvNicknames.Count)];
 
-        if (opponentNamePool == null || opponentNamePool.Length == 0)
-            return "Opponent";
-
-        return opponentNamePool[Random.Range(0, opponentNamePool.Length)];
+        return "Opponent";
     }
 
     void BuildCsvNicknameCache()

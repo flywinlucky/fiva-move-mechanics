@@ -263,7 +263,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         {
             //set the ui
             _matchOnPanel.TxtTime.text = string.Format("{0}:{1}",
-                minutes.ToString("00"),
+                minutes.ToString(),
                 seconds.ToString("00"));
         }
 

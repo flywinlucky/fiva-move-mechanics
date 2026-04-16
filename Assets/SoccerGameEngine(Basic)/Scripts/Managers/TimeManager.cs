@@ -71,7 +71,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             {
                 //prepare time
                 string formattedTime = string.Format("{0}:{1}",
-                    Minutes.ToString("00"),
+                    Minutes.ToString(),
                     Seconds.ToString("00"));
 
                 //return result
