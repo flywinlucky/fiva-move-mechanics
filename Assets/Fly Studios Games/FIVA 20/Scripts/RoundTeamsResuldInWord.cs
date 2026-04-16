@@ -96,6 +96,12 @@ public class RoundTeamsResuldInWord : MonoBehaviour
         }
     }
 
+    public void SetKickOffPanelTiming(float visibleSeconds, float fadeSeconds)
+    {
+        kickOffPanelVisibleSeconds = Mathf.Max(0f, visibleSeconds);
+        kickOffPanelFadeSeconds = Mathf.Max(0.01f, fadeSeconds);
+    }
+
     public IEnumerator PlayIntroSequence()
     {
         RefreshInfo();

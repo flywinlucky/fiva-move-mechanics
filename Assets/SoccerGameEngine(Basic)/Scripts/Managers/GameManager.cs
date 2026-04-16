@@ -25,6 +25,14 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             Unknown
         }
 
+        enum StartTimingPreset
+        {
+            Custom,
+            Rapid,
+            Medium,
+            BroadcastTVStyle
+        }
+
         [SerializeField]
         MatchInfoPanel _matchInfoPanel;
 
@@ -50,6 +58,37 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         [SerializeField]
         CinematicCameraSystem _cinematicCameraSystem;
+
+        [Header("Runtime Start Overrides")]
+        [SerializeField]
+        bool _overrideStartTimingsAtRuntime = true;
+
+        [SerializeField]
+        StartTimingPreset _startTimingPreset = StartTimingPreset.Medium;
+
+        [SerializeField]
+        [Min(0f)]
+        float _runtimeInitialKickOffDelaySeconds = 0f;
+
+        [SerializeField]
+        [Min(0f)]
+        float _runtimeMobileLeadInSeconds = 0f;
+
+        [SerializeField]
+        [Min(0f)]
+        float _runtimeMatchStartBroadcastSeconds = 0.35f;
+
+        [SerializeField]
+        [Min(0f)]
+        float _runtimeHalfStartBroadcastSeconds = 0.35f;
+
+        [SerializeField]
+        [Min(0f)]
+        float _runtimeKickOffPanelVisibleSeconds = 1.6f;
+
+        [SerializeField]
+        [Min(0.01f)]
+        float _runtimeKickOffPanelFadeSeconds = 0.2f;
 
         [Header("Mobile Controls")]
         public CanvasGroup mobileCanvasPanel;
@@ -113,13 +152,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         bool _matchRewardApplied;
         bool _teamsStagedForKickOff;
 
-        void LogStartFlow(string message)
-        {
-    #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log($"[StartFlow][GameManager][t={Time.realtimeSinceStartup:F3}] {message}", this);
-    #endif
-        }
-
         private void Awake()
         {
             SoundManager.Instance.PlayAmbienceLoop(false);
@@ -163,7 +195,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             MatchManager.Instance.OnMatchPlayStop += Instance_OnMatchPlayStop;
             MatchManager.Instance.OnTick += Instance_OnTick;
 
-            LogStartFlow($"Awake bootstrap. waitForCinematic={_waitForCinematicBeforeMatchStart}, initialKickOffDelay={_initialKickOffDelaySeconds:F2}, mobileLeadIn={_mobileControlsLeadInSeconds:F2}, mobileFade={_mobileControlsFadeDuration:F2}");
+            ApplyRuntimeStartTimingOverrides();
 
             Instance_OnMessageSwitchToMatchOn();
         }
@@ -319,7 +351,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         private void Instance_OnMessageSwitchToMatchOn()
         {
-            LogStartFlow("Instance_OnMessageSwitchToMatchOn called -> scheduling DelayedMatchStart coroutine.");
             SoundManager.Instance.PlayMatchStart();
 
             if (_delayedMatchStartCoroutine != null)
@@ -331,11 +362,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         IEnumerator DelayedMatchStart()
         {
             _teamsStagedForKickOff = false;
-            float delayedStartTime = Time.realtimeSinceStartup;
-            LogStartFlow("DelayedMatchStart BEGIN.");
 
             yield return FadeMobileControls(false);
-            LogStartFlow("FadeMobileControls(false) finished.");
 
             if (_waitForCinematicBeforeMatchStart)
             {
@@ -344,16 +372,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
                 if (_cinematicCameraSystem != null)
                 {
-                    LogStartFlow("Cinematic mode ON. Waiting for CinematicCameraSystem sequence.");
                     _cinematicCameraSystem.onTransitionToGoalCamera.AddListener(Instance_OnCinematicSwitchedToGoalCamera);
 
                     if (!_cinematicCameraSystem.IsPlaying)
                     {
-                        LogStartFlow("Cinematic was not playing -> PlaySequence().");
                         _cinematicCameraSystem.PlaySequence();
                     }
-
-                    float cinematicWaitStart = Time.realtimeSinceStartup;
 
                     while (_cinematicCameraSystem != null && _cinematicCameraSystem.IsPlaying)
                     {
@@ -366,31 +390,83 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                     if (_cinematicCameraSystem != null)
                         _cinematicCameraSystem.onTransitionToGoalCamera.RemoveListener(Instance_OnCinematicSwitchedToGoalCamera);
 
-                    LogStartFlow($"Cinematic wait finished in {(Time.realtimeSinceStartup - cinematicWaitStart):F3}s.");
-
                     if (!_teamsStagedForKickOff)
                         StageTeamsForKickOffWithoutStartingMatch();
-                }
-                else
-                {
-                    LogStartFlow("Cinematic flag ON but CinematicCameraSystem is null.");
                 }
             }
           
             yield return FadeMobileControls(true);
-            LogStartFlow("FadeMobileControls(true) finished.");
 
             float mobileLeadInDelay = Mathf.Max(0f, _mobileControlsLeadInSeconds);
             if (mobileLeadInDelay > 0f)
-            {
-                LogStartFlow($"Waiting mobile lead-in delay: {mobileLeadInDelay:F2}s.");
                 yield return new WaitForSeconds(mobileLeadInDelay);
+
+            ActionUtility.Invoke_Action(OnMessageSwitchToMatchOn);
+            _delayedMatchStartCoroutine = null;
+        }
+
+        void ApplyRuntimeStartTimingOverrides()
+        {
+            if (!_overrideStartTimingsAtRuntime)
+                return;
+
+            float initialKickOffDelay = Mathf.Max(0f, _runtimeInitialKickOffDelaySeconds);
+            float mobileLeadIn = Mathf.Max(0f, _runtimeMobileLeadInSeconds);
+            float matchBroadcast = Mathf.Max(0f, _runtimeMatchStartBroadcastSeconds);
+            float halfBroadcast = Mathf.Max(0f, _runtimeHalfStartBroadcastSeconds);
+            float kickOffPanelVisible = Mathf.Max(0f, _runtimeKickOffPanelVisibleSeconds);
+            float kickOffPanelFade = Mathf.Max(0.01f, _runtimeKickOffPanelFadeSeconds);
+
+            switch (_startTimingPreset)
+            {
+                case StartTimingPreset.Rapid:
+                    initialKickOffDelay = 0f;
+                    mobileLeadIn = 0f;
+                    matchBroadcast = 0.2f;
+                    halfBroadcast = 0.2f;
+                    kickOffPanelVisible = 1f;
+                    kickOffPanelFade = 0.15f;
+                    break;
+
+                case StartTimingPreset.Medium:
+                    initialKickOffDelay = 0f;
+                    mobileLeadIn = 0f;
+                    matchBroadcast = 0.35f;
+                    halfBroadcast = 0.35f;
+                    kickOffPanelVisible = 1.6f;
+                    kickOffPanelFade = 0.2f;
+                    break;
+
+                case StartTimingPreset.BroadcastTVStyle:
+                    initialKickOffDelay = 0.15f;
+                    mobileLeadIn = 0.2f;
+                    matchBroadcast = 0.9f;
+                    halfBroadcast = 0.9f;
+                    kickOffPanelVisible = 2.6f;
+                    kickOffPanelFade = 0.28f;
+                    break;
             }
 
-            LogStartFlow("Invoking OnMessageSwitchToMatchOn -> MatchManager starts MatchOn state flow.");
-            ActionUtility.Invoke_Action(OnMessageSwitchToMatchOn);
-            LogStartFlow($"DelayedMatchStart END. Total duration={(Time.realtimeSinceStartup - delayedStartTime):F3}s.");
-            _delayedMatchStartCoroutine = null;
+            _initialKickOffDelaySeconds = initialKickOffDelay;
+            _mobileControlsLeadInSeconds = mobileLeadIn;
+
+            if (MatchManager.Instance != null)
+            {
+                MatchManager.Instance.MatchStartBroadcastSeconds = matchBroadcast;
+                MatchManager.Instance.HalfStartBroadcastSeconds = halfBroadcast;
+            }
+
+            ApplyKickOffPanelRuntimeTimings(kickOffPanelVisible, kickOffPanelFade);
+        }
+
+        void ApplyKickOffPanelRuntimeTimings(float visibleSeconds, float fadeSeconds)
+        {
+            RoundTeamsResuldInWord panel = RoundTeamsResuldInWord.Instance;
+            if (panel == null)
+                panel = FindObjectOfType<RoundTeamsResuldInWord>();
+
+            if (panel != null)
+                panel.SetKickOffPanelTiming(visibleSeconds, fadeSeconds);
         }
 
         IEnumerator FadeMobileControls(bool show)
@@ -433,7 +509,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
         void Instance_OnCinematicSwitchedToGoalCamera()
         {
-            LogStartFlow("Cinematic switched to goal camera event received.");
             StageTeamsForKickOffWithoutStartingMatch();
         }
 
@@ -443,7 +518,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 return;
 
             _teamsStagedForKickOff = true;
-            LogStartFlow("StageTeamsForKickOffWithoutStartingMatch -> placing ball and players at kickoff positions.");
 
             PlaceBallAtCentreSpot();
             StageTeamAtKickOffPositions(MatchManager.Instance.TeamAway);

@@ -97,8 +97,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
                 Ball.Instance.Position = Owner.TransformCentreSpot.position;
             }
 
-            PrepareTeamForKickOff(Owner.TeamAway);
-            PrepareTeamForKickOff(Owner.TeamHome);
+            PrepareTeamForKickOffStaging(Owner.TeamAway);
+            PrepareTeamForKickOffStaging(Owner.TeamHome);
 
             _preKickOffDelayRemaining = 0f;
             if (!IsOpeningKickOff())
@@ -150,6 +150,15 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
 
             PrepareTeamForKickOff(Owner.TeamAway);
             PrepareTeamForKickOff(Owner.TeamHome);
+        }
+
+        void PrepareTeamForKickOffStaging(Team team)
+        {
+            if (team == null)
+                return;
+
+            team.ControllingPlayer = null;
+            ActionUtility.Invoke_Action(team.OnInstructPlayersToWait);
         }
 
         void StopListeningKickOffEvents()

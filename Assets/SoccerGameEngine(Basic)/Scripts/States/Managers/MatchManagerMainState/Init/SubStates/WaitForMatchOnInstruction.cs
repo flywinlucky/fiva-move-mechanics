@@ -4,7 +4,6 @@ using Assets.SoccerGameEngine_Basic_.Scripts.StateMachines.Managers;
 using Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMainState.MatchOn.MainState;
 using Assets.SoccerGameEngine_Basic_.Scripts.Utilities;
 using RobustFSM.Base;
-using UnityEngine;
 
 namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMainState.Init.SubStates
 {

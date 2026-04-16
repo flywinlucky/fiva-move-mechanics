@@ -918,9 +918,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         /// </summary>
         public void Instance_OnMessagedSwitchToMatchOn()
         {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log($"[StartFlow][MatchManager][t={Time.realtimeSinceStartup:F3}] Instance_OnMessagedSwitchToMatchOn -> invoking OnMesssagedToSwitchToMatchOn.", this);
-#endif
             ActionUtility.Invoke_Action(OnMesssagedToSwitchToMatchOn);
         }
 

@@ -36,7 +36,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Managers.MatchManagerMai
             waitTime -= Time.deltaTime;
 
             //go to wait-for-kick-to-complete if time is less than 0
-            if (waitTime <= 0f) Machine.ChangeState<BroadcastHalfStatus>();
+            if (waitTime <= 0f)
+            {
+                Machine.ChangeState<BroadcastHalfStatus>();
+            }
         }
 
         public override void Exit()
