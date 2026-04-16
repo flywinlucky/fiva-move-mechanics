@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Patterns.Singleton;
 using UnityEngine;
 
@@ -182,6 +183,52 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         [Range(0f, 0.5f)]
         float _postKickFrictionDelay = 0.12f;
 
+        [Header("Goal Net Damping")]
+        [SerializeField]
+        bool _applyGoalNetDamping = true;
+
+        [SerializeField]
+        [Range(0.05f, 1f)]
+        float _goalEntryVelocityMultiplier = 0.45f;
+
+        [SerializeField]
+        [Range(0.05f, 1f)]
+        float _goalEntryAngularMultiplier = 0.55f;
+
+        [SerializeField]
+        [Range(0.05f, 2f)]
+        float _goalNetDampingDuration = 1f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        float _goalNetCoastRatio = 0.32f;
+
+        [SerializeField]
+        [Range(0f, 8f)]
+        float _goalNetTemporaryDrag = 1.25f;
+
+        [SerializeField]
+        [Range(0f, 8f)]
+        float _goalNetTemporaryAngularDrag = 1.6f;
+
+        [SerializeField]
+        [Range(0f, 10f)]
+        float _goalVelocityDampingPerSecond = 2.8f;
+
+        [SerializeField]
+        [Range(0f, 12f)]
+        float _goalAngularDampingPerSecond = 3.8f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        float _goalOutwardVelocityRetention = 0.35f;
+
+        [SerializeField]
+        AnimationCurve _goalNetDampingRamp = new AnimationCurve(
+            new Keyframe(0f, 0.08f),
+            new Keyframe(0.55f, 0.45f),
+            new Keyframe(1f, 1f));
+
         bool _isGrounded;
         float _rayCastDistance;
         int _groundMask;
@@ -195,6 +242,10 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
         bool _isTrailFxActive;
         bool _isParticlesFxActive;
         bool _forceTrailUntilControlled;
+        Coroutine _goalNetDampingCoroutine;
+        bool _goalNetDragOverrideActive;
+        float _goalNetOriginalDrag;
+        float _goalNetOriginalAngularDrag;
 
         public float LastKickLaunchSpeed { get; private set; }
 
@@ -229,9 +280,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
                     SetTrailFxActive(false, false);
                     SetAirParticlesActive(false, false);
                 }
-
-                //if (_iconBallControlled != null)
-                    //_iconBallControlled.SetActive(_owner == null);
             }
         }
 
@@ -252,9 +300,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             SetTrailFxActive(false, true);
             SetAirParticlesActive(false, true);
 
-            //init some variables
-            //if (_iconBallControlled != null)
-                //_iconBallControlled.SetActive(true);
             _groundMask = LayerMask.GetMask(_groundMaskName);
             _rayCastDistance = SphereCollider.radius + 0.05f;
         }
@@ -652,12 +697,115 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
 
         public void Trap()
         {
+            StopGoalNetDampingRoutine();
             Rigidbody.angularVelocity = Vector3.zero;
             Rigidbody.velocity = Vector3.zero;
             _hasPreviousVisualPosition = false;
             _forceTrailUntilControlled = false;
             SetTrailFxActive(false, false);
             SetAirParticlesActive(false, false);
+        }
+
+        public void ApplyGoalNetDamping(Transform goalTransform)
+        {
+            if (!_applyGoalNetDamping || Rigidbody == null)
+                return;
+
+            Owner = null;
+            _ignoreFrictionUntilTime = Time.time;
+
+            Vector3 velocity = Rigidbody.velocity;
+            if (velocity.sqrMagnitude > 0.0001f)
+            {
+                float clampedEntryMultiplier = Mathf.Clamp(_goalEntryVelocityMultiplier, 0.05f, 1f);
+
+                if (goalTransform != null)
+                {
+                    Vector3 localVelocity = goalTransform.InverseTransformDirection(velocity);
+
+                    // Positive local Z points back toward the field for this goal setup.
+                    if (localVelocity.z > 0f)
+                        localVelocity.z *= Mathf.Lerp(1f, Mathf.Clamp01(_goalOutwardVelocityRetention), 0.85f);
+
+                    // Keep part of the original momentum so the ball still rolls naturally inside the net.
+                    localVelocity = Vector3.Lerp(localVelocity, localVelocity * clampedEntryMultiplier, 0.45f);
+                    velocity = goalTransform.TransformDirection(localVelocity);
+                }
+                else
+                {
+                    velocity = Vector3.Lerp(velocity, velocity * clampedEntryMultiplier, 0.45f);
+                }
+            }
+
+            Rigidbody.velocity = velocity;
+            float clampedAngularMultiplier = Mathf.Clamp(_goalEntryAngularMultiplier, 0.05f, 1f);
+            Rigidbody.angularVelocity = Vector3.Lerp(Rigidbody.angularVelocity,
+                Rigidbody.angularVelocity * clampedAngularMultiplier,
+                0.55f);
+
+            StopGoalNetDampingRoutine();
+            _goalNetDampingCoroutine = StartCoroutine(GoalNetDampingRoutine());
+        }
+
+        void StopGoalNetDampingRoutine()
+        {
+            if (_goalNetDampingCoroutine == null)
+            {
+                RestoreGoalNetDragOverride();
+                return;
+            }
+
+            StopCoroutine(_goalNetDampingCoroutine);
+            _goalNetDampingCoroutine = null;
+            RestoreGoalNetDragOverride();
+        }
+
+        void RestoreGoalNetDragOverride()
+        {
+            if (!_goalNetDragOverrideActive || Rigidbody == null)
+                return;
+
+            Rigidbody.drag = _goalNetOriginalDrag;
+            Rigidbody.angularDrag = _goalNetOriginalAngularDrag;
+            _goalNetDragOverrideActive = false;
+        }
+
+        IEnumerator GoalNetDampingRoutine()
+        {
+            float duration = Mathf.Max(0.05f, _goalNetDampingDuration);
+            float coastTime = duration * Mathf.Clamp01(_goalNetCoastRatio);
+            float elapsed = 0f;
+            _goalNetOriginalDrag = Rigidbody.drag;
+            _goalNetOriginalAngularDrag = Rigidbody.angularDrag;
+            _goalNetDragOverrideActive = true;
+
+            Rigidbody.drag = Mathf.Max(_goalNetOriginalDrag, _goalNetTemporaryDrag);
+            Rigidbody.angularDrag = Mathf.Max(_goalNetOriginalAngularDrag, _goalNetTemporaryAngularDrag);
+
+            while (elapsed < duration)
+            {
+                float dt = Time.fixedDeltaTime;
+                elapsed += dt;
+
+                float postCoastDuration = Mathf.Max(0.01f, duration - coastTime);
+                float progressAfterCoast = Mathf.Clamp01((elapsed - coastTime) / postCoastDuration);
+                float ramp = _goalNetDampingRamp != null && _goalNetDampingRamp.length > 0
+                    ? Mathf.Clamp01(_goalNetDampingRamp.Evaluate(progressAfterCoast))
+                    : progressAfterCoast;
+
+                // Keep very light damping during coast, then gradually increase.
+                float dampingWeight = Mathf.Lerp(0.2f, 1f, ramp);
+                float velocityFactor = Mathf.Exp(-Mathf.Max(0f, _goalVelocityDampingPerSecond) * dampingWeight * dt);
+                float angularFactor = Mathf.Exp(-Mathf.Max(0f, _goalAngularDampingPerSecond) * dampingWeight * dt);
+
+                Rigidbody.velocity *= velocityFactor;
+                Rigidbody.angularVelocity *= angularFactor;
+
+                yield return new WaitForFixedUpdate();
+            }
+
+            RestoreGoalNetDragOverride();
+            _goalNetDampingCoroutine = null;
         }
 
         public float HeightAbovePitch => Mathf.Max(0f, Position.y);
@@ -744,6 +892,23 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Entities
             _postKickFrictionDelay = Mathf.Clamp(_postKickFrictionDelay, 0f, 0.5f);
             _airFxMinSpeed = Mathf.Max(0f, _airFxMinSpeed);
             _airFxMinHeight = Mathf.Max(0f, _airFxMinHeight);
+            _goalEntryVelocityMultiplier = Mathf.Clamp(_goalEntryVelocityMultiplier, 0.05f, 1f);
+            _goalEntryAngularMultiplier = Mathf.Clamp(_goalEntryAngularMultiplier, 0.05f, 1f);
+            _goalNetDampingDuration = Mathf.Clamp(_goalNetDampingDuration, 0.05f, 2f);
+            _goalNetTemporaryDrag = Mathf.Clamp(_goalNetTemporaryDrag, 0f, 8f);
+            _goalNetTemporaryAngularDrag = Mathf.Clamp(_goalNetTemporaryAngularDrag, 0f, 8f);
+            _goalVelocityDampingPerSecond = Mathf.Clamp(_goalVelocityDampingPerSecond, 0f, 10f);
+            _goalAngularDampingPerSecond = Mathf.Clamp(_goalAngularDampingPerSecond, 0f, 12f);
+            _goalOutwardVelocityRetention = Mathf.Clamp01(_goalOutwardVelocityRetention);
+            _goalNetCoastRatio = Mathf.Clamp01(_goalNetCoastRatio);
+
+            if (_goalNetDampingRamp == null || _goalNetDampingRamp.length == 0)
+            {
+                _goalNetDampingRamp = new AnimationCurve(
+                    new Keyframe(0f, 0.08f),
+                    new Keyframe(0.55f, 0.45f),
+                    new Keyframe(1f, 1f));
+            }
 
             if (_distanceLiftCurve == null || _distanceLiftCurve.length == 0)
             {

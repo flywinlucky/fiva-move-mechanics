@@ -22,6 +22,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Triggers
                 && Ball.Instance.Owner.PlayerType == PlayerTypes.Goalkeeper)
                 return;
 
+            if (Ball.Instance != null)
+                Ball.Instance.ApplyGoalNetDamping(Goal != null ? Goal.transform : transform);
+
             //invoke that the wall has collided with the ball
             Action temp = OnCollidedWithBall;
             if (temp != null)
