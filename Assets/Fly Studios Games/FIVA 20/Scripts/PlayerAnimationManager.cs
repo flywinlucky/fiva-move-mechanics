@@ -108,6 +108,7 @@ public class PlayerAnimationManager : MonoBehaviour
     int shotTriggerHash;
     int passLayerIndex = -1;
     float passLayerHoldUntil;
+    bool _animatorCacheBuilt;
 
     void Awake()
     {
@@ -137,7 +138,10 @@ public class PlayerAnimationManager : MonoBehaviour
             return;
 
         AutoAssignReferences();
-        CacheAnimatorParameterAvailability();
+
+        // During validation Animator may exist but not be fully initialized yet.
+        // Runtime refresh/initialize paths rebuild the cache safely.
+        _animatorCacheBuilt = false;
     }
 
     // Player.cs calls this each LateUpdate. Update acts as fallback if not integrated.
@@ -169,6 +173,9 @@ public class PlayerAnimationManager : MonoBehaviour
         if (!HasValidAnimatorController())
             return;
 
+        if (!_animatorCacheBuilt)
+            CacheAnimatorParameterAvailability();
+
         float currentMoveSpeed = ResolveCurrentMoveSpeed();
         float runBlendValue = ResolveRunBlend(currentMoveSpeed);
 
@@ -198,6 +205,7 @@ public class PlayerAnimationManager : MonoBehaviour
         hasRunParameter = false;
         hasPassTrigger = false;
         hasShotTrigger = false;
+        _animatorCacheBuilt = false;
 
         runParameterHash = Animator.StringToHash(runParameterName);
         passTriggerHash = Animator.StringToHash(passTriggerName);
@@ -225,6 +233,8 @@ public class PlayerAnimationManager : MonoBehaviour
                 && parameter.name == shotTriggerName)
                 hasShotTrigger = true;
         }
+
+        _animatorCacheBuilt = true;
     }
 
     void UpdatePassLayerWeight(float deltaTime)
@@ -266,7 +276,8 @@ public class PlayerAnimationManager : MonoBehaviour
         float fallbackDelay)
     {
         AutoAssignReferences();
-        CacheAnimatorParameterAvailability();
+        if (!_animatorCacheBuilt)
+            CacheAnimatorParameterAvailability();
 
         float timingScale = Mathf.Clamp(kickReleaseTimeScale, 0.25f, 2f);
         float duration = Mathf.Max(0.1f, animationDuration) * timingScale;
@@ -377,6 +388,10 @@ public class PlayerAnimationManager : MonoBehaviour
 
     bool HasValidAnimatorController()
     {
-        return playerAnimator != null && playerAnimator.runtimeAnimatorController != null;
+        return playerAnimator != null
+            && playerAnimator.runtimeAnimatorController != null
+            && playerAnimator.isActiveAndEnabled
+            && playerAnimator.gameObject.activeInHierarchy
+            && playerAnimator.isInitialized;
     }
 }

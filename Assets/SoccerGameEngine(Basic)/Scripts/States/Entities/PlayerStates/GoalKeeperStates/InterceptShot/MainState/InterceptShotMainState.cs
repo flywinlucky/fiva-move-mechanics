@@ -58,8 +58,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             Owner.RPGMovement.SetMoveTarget(_steerTarget);
             Owner.RPGMovement.SetRotateFacePosition(BallInitialPosition);
             Owner.RPGMovement.SetTrackingOn();
-
-            LogGoalKeeperDebug("Enter InterceptShot -> target: " + _steerTarget + ", time: " + timeOfBallToInterceptPoint);
         }
 
         public override void Execute()
@@ -86,7 +84,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
             // if ball within control distance te deflect its path
             if (timeOfBallToInterceptPoint <= 0f)
             {
-                LogGoalKeeperDebug("Intercept timeout -> TendGoal");
                 SuperMachine.ChangeState<TendGoalMainState>();
             }
             else if (Owner.IsBallWithinControlableDistance()
@@ -118,25 +115,16 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
                 if (ForceRebound)
                 {
                     TriggerRebound(ballSpeed);
-                    LogGoalKeeperDebug("Ball reached keeper control distance -> Parried rebound");
                     Machine.ChangeState<TendGoalMainState>();
                     return true;
                 }
 
-                LogGoalKeeperDebug("Ball reached keeper control distance -> Caught (chance: "
-                    + catchChance.ToString("0.00") + ", adjusted: " + adjustedCatchChance.ToString("0.00")
-                    + ", speed: " + ballSpeed.ToString("0.00")
-                    + ") -> ControlBall");
                 Machine.ChangeState<ControlBallMainState>();
                 return true;
             }
 
             Owner.GoalKeeperPickupBlockedUntil = Mathf.Max(Owner.GoalKeeperPickupBlockedUntil,
                 Time.time + GoalKeeperCatchRetryDelay);
-
-            LogGoalKeeperDebug("Ball reached keeper control distance -> Missed catch (chance: "
-                + catchChance.ToString("0.00") + ", adjusted: " + adjustedCatchChance.ToString("0.00")
-                + ", speed: " + ballSpeed.ToString("0.00") + ")");
 
             return false;
         }
@@ -210,16 +198,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.States.Entities.PlayerStates.Go
 
             ForceRebound = false;
             SaveQuality = 0f;
-
-            LogGoalKeeperDebug("Exit InterceptShot");
-        }
-
-        void LogGoalKeeperDebug(string message)
-        {
-            if (MatchManager.Instance == null || !MatchManager.Instance.EnableGoalkeeperDebug)
-                return;
-
-            Debug.Log("[GK DEBUG] " + Owner.name + " :: " + message);
         }
 
         public Player Owner

@@ -19,6 +19,12 @@ MonoBehaviour:
     uniqueID: 000
     playerPhoto: demo image
     payingStatus: 0
+  InterstitialAdv:
+    showFirstAdv: 0
+    interAdvInterval: 60
+    postponeCallByFail: 0
+    postponeCallTimer: 10
+    labelAdvSimLabel: 0
   Localization:
     setLanguageMod: 1
   Storage:
@@ -39,9 +45,9 @@ MonoBehaviour:
     loadSceneIfSDKLate: 0
     loadSceneIndex: 0
     initDelaySimulation: 0
-    buildNumber: 29
+    buildNumber: 35
   Simulation:
-    device: 1
+    device: 0
     language: ru
     enableInterAdv: 1
     advIntervalSimulation: 60
@@ -82,6 +88,9 @@ MonoBehaviour:
   platformInfo:
     ownHost: 0
   platformToggles:
+    showFirstAdv: 0
+    interAdvInterval: 0
+    postponeCallByFail: 0
     setLanguageMod: 0
     saveLocal: 0
     saveCloud: 0
