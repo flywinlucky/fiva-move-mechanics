@@ -13,11 +13,13 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.UI
         [Header("References")]
         [SerializeField]
         RectTransform _minimapRect;
+
         public GameObject minimapObject;
         public Button minimapOpenAndCloseButton;
         public Image minimapBackgroundImage;
         public Color minimapOpenColor;
         public Color minimapClosedColor;
+
         [SerializeField]
         CanvasGroup _canvasGroup;
 
@@ -55,26 +57,30 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.UI
         float _alphaVelocity;
         Camera _worldCamera;
         Canvas _parentCanvas;
+        bool _isMinimapOpen;
 
         void Awake()
         {
-            if (_minimapRect == null)
-                _minimapRect = transform as RectTransform;
+            ResolveMiniMapReferences();
+            RegisterToggleButtonListener();
 
-            if (_canvasGroup == null)
-                _canvasGroup = GetComponent<CanvasGroup>();
-
-            if (_canvasGroup == null)
-                _canvasGroup = gameObject.AddComponent<CanvasGroup>();
-
-            _parentCanvas = GetComponentInParent<Canvas>();
+            _parentCanvas = _minimapRect != null ? _minimapRect.GetComponentInParent<Canvas>() : GetComponentInParent<Canvas>();
             _worldCamera = Camera.main;
 
-            _canvasGroup.alpha = Mathf.Clamp01(_visibleAlpha);
+            // Always start with minimap closed, regardless of any external bool/default state.
+            SetMinimapOpenState(false);
+        }
+
+        void OnDestroy()
+        {
+            UnregisterToggleButtonListener();
         }
 
         void LateUpdate()
         {
+            if (!_isMinimapOpen)
+                return;
+
             ResolveTrackedTargetIfNeeded();
             ResolveWorldCameraIfNeeded();
 
@@ -89,6 +95,86 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.UI
                 Mathf.Max(0.01f, _fadeSmoothTime),
                 Mathf.Infinity,
                 Time.unscaledDeltaTime);
+        }
+
+        void ResolveMiniMapReferences()
+        {
+            if (minimapObject == null)
+                minimapObject = gameObject;
+
+            if (_minimapRect == null)
+                _minimapRect = minimapObject.transform as RectTransform;
+
+            if (_minimapRect == null)
+                _minimapRect = transform as RectTransform;
+
+            if (_canvasGroup == null && minimapObject != null)
+                _canvasGroup = minimapObject.GetComponent<CanvasGroup>();
+
+            if (_canvasGroup == null)
+                _canvasGroup = GetComponent<CanvasGroup>();
+
+            if (_canvasGroup == null)
+            {
+                GameObject target = minimapObject != null ? minimapObject : gameObject;
+                _canvasGroup = target.AddComponent<CanvasGroup>();
+            }
+        }
+
+        void RegisterToggleButtonListener()
+        {
+            if (minimapOpenAndCloseButton == null)
+                return;
+
+            minimapOpenAndCloseButton.onClick.RemoveListener(ToggleMinimapOpenClose);
+            minimapOpenAndCloseButton.onClick.AddListener(ToggleMinimapOpenClose);
+        }
+
+        void UnregisterToggleButtonListener()
+        {
+            if (minimapOpenAndCloseButton == null)
+                return;
+
+            minimapOpenAndCloseButton.onClick.RemoveListener(ToggleMinimapOpenClose);
+        }
+
+        public void ToggleMinimapOpenClose()
+        {
+            SetMinimapOpenState(!_isMinimapOpen);
+        }
+
+        void SetMinimapOpenState(bool isOpen)
+        {
+            _isMinimapOpen = isOpen;
+
+            if (minimapObject != null && minimapObject != gameObject)
+                minimapObject.SetActive(isOpen);
+
+            if (_canvasGroup != null)
+            {
+                _canvasGroup.interactable = isOpen;
+                _canvasGroup.blocksRaycasts = isOpen;
+
+                if (!isOpen)
+                {
+                    _alphaVelocity = 0f;
+                    _canvasGroup.alpha = 0f;
+                }
+                else
+                {
+                    _canvasGroup.alpha = Mathf.Clamp01(_visibleAlpha);
+                }
+            }
+
+            UpdateMinimapArrowVisual();
+        }
+
+        void UpdateMinimapArrowVisual()
+        {
+            if (minimapBackgroundImage == null)
+                return;
+
+            minimapBackgroundImage.color = _isMinimapOpen ? minimapOpenColor : minimapClosedColor;
         }
 
         void ResolveTrackedTargetIfNeeded()
@@ -166,6 +252,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.UI
             _screenPaddingPixels = Mathf.Max(0f, _screenPaddingPixels);
             _preFadeOffsetPixels = Mathf.Max(0f, _preFadeOffsetPixels);
             _targetYOffset = Mathf.Max(0f, _targetYOffset);
+
+            if (Application.isPlaying)
+                UpdateMinimapArrowVisual();
         }
     }
 }

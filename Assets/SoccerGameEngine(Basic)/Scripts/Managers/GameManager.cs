@@ -34,9 +34,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         }
 
         [SerializeField]
-        MatchInfoPanel _matchInfoPanel;
-
-        [SerializeField]
         MatchOverPanel _matchOverPanel;
 
         [SerializeField]
@@ -180,13 +177,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             OnMessageSwitchToMatchOn += MatchManager.Instance.Instance_OnMessagedSwitchToMatchOn;
 
             //listen to match manager events
-            MatchManager.Instance.OnBroadcastHalfStart += Instance_OnBroadcastHalfStart;
-            MatchManager.Instance.OnBroadcastMatchStart += Instance_OnBroadcastMatchStart;
-            MatchManager.Instance.OnEnterWaitForMatchOnInstruction += Instance_OnEnterWaitForMatchOnInstruction;
             MatchManager.Instance.OnExitMatchOver += Instance_OnExitMatchOver;
             MatchManager.Instance.OnExitWaitForMatchOnInstruction += Instance_OnExitWaitForMatchOnInstruction;
-            MatchManager.Instance.OnFinishBroadcastHalfStart += _Instance_OnFinishBroadcastHalfStart;
-            MatchManager.Instance.OnFinishBroadcastMatchStart += Instance_OnFinishBroadcastMatchStart;
             MatchManager.Instance.OnGoalScored += Instance_OnGoalScored;
             MatchManager.Instance.OnPostHit += Instance_OnPostHit;
             MatchManager.Instance.OnEnterSuddenDeath += Instance_OnEnterSuddenDeath;
@@ -200,21 +192,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             Instance_OnMessageSwitchToMatchOn();
         }
 
-        private void Instance_OnBroadcastHalfStart(string message)
-        {
-            ShowInfoPanel(message);
-        }
-
-        private void Instance_OnBroadcastMatchStart(string message)
-        {
-            ShowInfoPanel(message);
-        }
-
-        private void Instance_OnEnterWaitForMatchOnInstruction()
-        {
-
-        }
-
         private void Instance_OnExitMatchOver()
         {
             _matchOverPanel.Root.gameObject.SetActive(false);
@@ -223,16 +200,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         private void Instance_OnExitWaitForMatchOnInstruction()
         {
 
-        }
-
-        private void _Instance_OnFinishBroadcastHalfStart()
-        {
-            HideInfoPanel();
-        }
-
-        private void Instance_OnFinishBroadcastMatchStart()
-        {
-            HideInfoPanel();
         }
 
         private void Instance_OnGoalScored(string message)
@@ -306,11 +273,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             _matchOnPanel.TxtTime.text = string.Format("{0}:{1}",
                 minutes.ToString(),
                 seconds.ToString("00"));
-        }
-
-        private void HideInfoPanel()
-        {
-            _matchInfoPanel.Root.gameObject.SetActive(false);
         }
 
         private void Instance_OnEnterSuddenDeath()
@@ -614,12 +576,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
-        private void ShowInfoPanel(string message)
-        {
-            _matchInfoPanel.TxtInfo.text = message;
-            _matchInfoPanel.Root.gameObject.SetActive(true);
-        }
-
         int ApplyMatchTrophyReward(string matchMessage)
         {
             if (_matchRewardApplied || !_enableTrophyRewards)
@@ -742,14 +698,6 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
     }
 
     [Serializable]
-    public struct MatchInfoPanel
-    {
-        public Text TxtInfo;
-
-        public Transform Root;
-    }
-
-    [Serializable]
     public struct MatchOnPanel
     {
         public TMP_Text TxtScores;
@@ -762,7 +710,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
     [Serializable]
     public struct MatchOverPanel
     {
-        public Text TxtInfo;
+        
+        public TMP_Text TxtInfo;
 
         public TMP_Text TxtTrophyReward;
 
@@ -772,7 +721,7 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
     [Serializable]
     public struct SuddenDeathPanel
     {
-        public Text TxtInfo;
+        public TMP_Text TxtInfo;
 
         public Transform Root;
     }
