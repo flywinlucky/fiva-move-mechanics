@@ -1,11 +1,11 @@
 {
-    "userPlayerName": "Player current",
-    "userTrophies": 122,
-    "userMatchesPlayed": 4,
-    "userMatchesWon": 1,
-    "userGoalsScored": 3,
-    "userSaveRevision": 158,
-    "userLastSaveUnixTime": 1777139537,
+    "userPlayerName": "Nicer32",
+    "userTrophies": 0,
+    "userMatchesPlayed": 0,
+    "userMatchesWon": 0,
+    "userGoalsScored": 0,
+    "userSaveRevision": 2,
+    "userLastSaveUnixTime": 1777145877,
     "intExample": 5,
     "strExample": "Hello!",
     "boolExample": [
@@ -14,5 +14,5 @@
         false,
         false
     ],
-    "idSave": 246
+    "idSave": 280
 }
