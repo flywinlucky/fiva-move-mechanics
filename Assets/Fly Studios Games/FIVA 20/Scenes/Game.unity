@@ -1546,7 +1546,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 2062f7b32449cde42ae6369011f0a828, type: 3}
+        m_Texture: {fileID: 2800000, guid: 77a803fcdaf21c94abd36437857c3b09, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -20431,7 +20431,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!222 &88380762415176014
 CanvasRenderer:
   m_ObjectHideFlags: 0
