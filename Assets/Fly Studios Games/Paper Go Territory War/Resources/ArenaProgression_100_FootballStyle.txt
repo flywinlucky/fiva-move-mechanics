@@ -1,0 +1,105 @@
+Arena progression proposal
+100 arenas, Football-themed progression.
+Pattern = +300, +300, +400 repeated.
+Threshold = minimum trophies required for that arena.
+
+001. Kickoff - 0
+002. Warm-Up - 300
+003. Training Ground - 600
+004. Street Match - 1000
+005. Academy - 1300
+006. Youth Squad - 1600
+007. Reserve Bench - 2000
+008. Sunday League - 2300
+009. Amateur Cup - 2600
+010. Local Derby - 3000
+011. District League - 3300
+012. City League - 3600
+013. County League - 4000
+014. Regional League - 4300
+015. National League - 4600
+016. Promotion Race - 5000
+017. Championship Hopeful - 5300
+018. Cup Challenger - 5600
+019. Pro Contract - 6000
+020. First Eleven - 6300
+021. Tactical Board - 6600
+022. Pressing Unit - 7000
+023. Counter Attack - 7300
+024. Midfield Maestro - 7600
+025. Wing Runner - 8000
+026. Box Defender - 8300
+027. Goal Hunter - 8600
+028. Playmaker - 9000
+029. Captain Band - 9300
+030. Derby Winner - 9600
+031. Golden Boots - 10000
+032. Clean Sheet - 10300
+033. Set Piece Master - 10600
+034. Penalty Specialist - 11000
+035. Free Kick Artist - 11300
+036. Corner Commander - 11600
+037. Passing Engine - 12000
+038. Possession King - 12300
+039. High Press - 12600
+040. Iron Defense - 13000
+041. Total Football - 13300
+042. Club Icon - 13600
+043. Rising Star - 14000
+044. Team Leader - 14300
+045. Big Match - 14600
+046. Continental Spot - 15000
+047. Europa Push - 15300
+048. Champions Push - 15600
+049. Elite Club - 16000
+050. Title Contender - 16300
+051. Super Cup - 16600
+052. National Champion - 17000
+053. Continental Quarterfinal - 17300
+054. Continental Semifinal - 17600
+055. Continental Final - 18000
+056. Continental Champion - 18300
+057. World Stage - 18600
+058. Intercontinental Clash - 19000
+059. Global Spotlight - 19300
+060. World Challenger - 19600
+061. Ballon Hopeful - 20000
+062. Legendary Number Ten - 20300
+063. Ultimate Captain - 20600
+064. Tactical Genius - 21000
+065. Stadium Hero - 21300
+066. Derby Legend - 21600
+067. Fan Favorite - 22000
+068. Club Dynasty - 22300
+069. Invincible Run - 22600
+070. Treble Dream - 23000
+071. Treble Winner - 23300
+072. Golden Generation - 23600
+073. Hall Of Fame - 24000
+074. Iconic Era - 24300
+075. Record Breaker - 24600
+076. Unstoppable XI - 25000
+077. Master Tactician - 25300
+078. Football Royalty - 25600
+079. Crowned Champion - 26000
+080. Elite Dynasty - 26300
+081. Global Superstar - 26600
+082. World Class - 27000
+083. Immortal Season - 27300
+084. Eternal Rivalry - 27600
+085. Mythic Club - 28000
+086. Legacy Builder - 28300
+087. Dynasty Prime - 28600
+088. Ultimate Glory - 29000
+089. Kings Of Football - 29300
+090. Planet Champion - 29600
+091. Galactic Derby - 30000
+092. Legendary Legacy - 30300
+093. Eternal Champion - 30600
+094. Supreme Maestro - 31000
+095. Infinite Streak - 31300
+096. Transcendent Team - 31600
+097. Football Immortal - 32000
+098. Universal Icon - 32300
+099. Apex Contender - 32600
+100. World Apex - 33000

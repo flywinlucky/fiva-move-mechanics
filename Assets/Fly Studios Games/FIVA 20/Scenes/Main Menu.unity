@@ -1592,6 +1592,291 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   aiName: Opponent
   aiTrophies: 0
+--- !u!1 &782886445
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 782886448}
+  - component: {fileID: 782886447}
+  - component: {fileID: 782886446}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &782886446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 782886445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 575061bbe24f9554b936e2a272bc60a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leaderboardName: 
+  leaderboardView: {fileID: 0}
+  autoFindLeaderboardView: 1
+  refreshLeaderboardOnEnable: 1
+  refreshLeaderboardAfterSubmit: 1
+  userData: {fileID: 0}
+  minSecondsBetweenSubmits: 1.1
+  refreshDelaySeconds: 0.75
+--- !u!114 &782886447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 782886445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02ca46c8896f6fb44b3650603978f99e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentProgressSlider: {fileID: 0}
+  currentArenaNameText: {fileID: 0}
+  currentArenaNumberText: {fileID: 0}
+  currentTrophyProgressText: {fileID: 0}
+  sliderSmoothTime: 0.18
+  trophyTextSmoothTime: 0.18
+  winTrophyChange: 30
+  lossTrophyChange: 25
+  useArenaGateProtection: 1
+  useCurrentTrophiesAsOpponentBase: 1
+  fixedOpponentTrophies: 0
+  opponentTrophyOffset: 0
+  arenaLevelsList: {fileID: 4900000, guid: a189a79a411b0ab498465b61cae5c989, type: 3}
+  arenas:
+  - arenaName: Beginner
+    requiredTrophies: 0
+  - arenaName: Pebble
+    requiredTrophies: 300
+  - arenaName: Slate
+    requiredTrophies: 600
+  - arenaName: Willow
+    requiredTrophies: 1000
+  - arenaName: Bamboo
+    requiredTrophies: 1300
+  - arenaName: Mist
+    requiredTrophies: 1600
+  - arenaName: Ember
+    requiredTrophies: 2000
+  - arenaName: Ripple
+    requiredTrophies: 2300
+  - arenaName: Jade
+    requiredTrophies: 2600
+  - arenaName: Quartz
+    requiredTrophies: 3000
+  - arenaName: Cedar
+    requiredTrophies: 3300
+  - arenaName: Lantern
+    requiredTrophies: 3600
+  - arenaName: Silver
+    requiredTrophies: 4000
+  - arenaName: Marble
+    requiredTrophies: 4300
+  - arenaName: Onyx
+    requiredTrophies: 4600
+  - arenaName: Gold
+    requiredTrophies: 5000
+  - arenaName: Harbor
+    requiredTrophies: 5300
+  - arenaName: Lotus
+    requiredTrophies: 5600
+  - arenaName: Horizon
+    requiredTrophies: 6000
+  - arenaName: Ironwood
+    requiredTrophies: 6300
+  - arenaName: Frost
+    requiredTrophies: 6600
+  - arenaName: Platinum
+    requiredTrophies: 7000
+  - arenaName: Aurora
+    requiredTrophies: 7300
+  - arenaName: Cobalt
+    requiredTrophies: 7600
+  - arenaName: Obsidian
+    requiredTrophies: 8000
+  - arenaName: Verdant
+    requiredTrophies: 8300
+  - arenaName: Sunstone
+    requiredTrophies: 8600
+  - arenaName: Crimson
+    requiredTrophies: 9000
+  - arenaName: Ivory
+    requiredTrophies: 9300
+  - arenaName: Tempest
+    requiredTrophies: 9600
+  - arenaName: Moonfall
+    requiredTrophies: 10000
+  - arenaName: Crown
+    requiredTrophies: 10300
+  - arenaName: Zenith
+    requiredTrophies: 10600
+  - arenaName: Rift
+    requiredTrophies: 11000
+  - arenaName: Eclipse
+    requiredTrophies: 11300
+  - arenaName: Polaris
+    requiredTrophies: 11600
+  - arenaName: Vanguard
+    requiredTrophies: 12000
+  - arenaName: Aether
+    requiredTrophies: 12300
+  - arenaName: Radiant
+    requiredTrophies: 12600
+  - arenaName: Titan
+    requiredTrophies: 13000
+  - arenaName: Summit
+    requiredTrophies: 13300
+  - arenaName: Meridian
+    requiredTrophies: 13600
+  - arenaName: Stratus
+    requiredTrophies: 14000
+  - arenaName: Runic
+    requiredTrophies: 14300
+  - arenaName: Solaris
+    requiredTrophies: 14600
+  - arenaName: Luminous
+    requiredTrophies: 15000
+  - arenaName: Sentinel
+    requiredTrophies: 15300
+  - arenaName: Atlas
+    requiredTrophies: 15600
+  - arenaName: Obelisk
+    requiredTrophies: 16000
+  - arenaName: Torrent
+    requiredTrophies: 16300
+  - arenaName: Glacier
+    requiredTrophies: 16600
+  - arenaName: Tundra
+    requiredTrophies: 17000
+  - arenaName: Equinox
+    requiredTrophies: 17300
+  - arenaName: Stellar
+    requiredTrophies: 17600
+  - arenaName: Dominion
+    requiredTrophies: 18000
+  - arenaName: Arcane
+    requiredTrophies: 18300
+  - arenaName: Gilded
+    requiredTrophies: 18600
+  - arenaName: Citadel
+    requiredTrophies: 19000
+  - arenaName: Dynasty
+    requiredTrophies: 19300
+  - arenaName: Nebula
+    requiredTrophies: 19600
+  - arenaName: Eon
+    requiredTrophies: 20000
+  - arenaName: Vortex
+    requiredTrophies: 20300
+  - arenaName: Bastion
+    requiredTrophies: 20600
+  - arenaName: Seraph
+    requiredTrophies: 21000
+  - arenaName: Pinnacle
+    requiredTrophies: 21300
+  - arenaName: Legacy
+    requiredTrophies: 21600
+  - arenaName: Mirage
+    requiredTrophies: 22000
+  - arenaName: Relic
+    requiredTrophies: 22300
+  - arenaName: Fable
+    requiredTrophies: 22600
+  - arenaName: Inferno
+    requiredTrophies: 23000
+  - arenaName: Cosmos
+    requiredTrophies: 23300
+  - arenaName: Triumph
+    requiredTrophies: 23600
+  - arenaName: Vertex
+    requiredTrophies: 24000
+  - arenaName: Empyrean
+    requiredTrophies: 24300
+  - arenaName: Astral
+    requiredTrophies: 24600
+  - arenaName: Lumina
+    requiredTrophies: 25000
+  - arenaName: Crest
+    requiredTrophies: 25300
+  - arenaName: Axiom
+    requiredTrophies: 25600
+  - arenaName: Evermore
+    requiredTrophies: 26000
+  - arenaName: Crownfall
+    requiredTrophies: 26300
+  - arenaName: Nexus
+    requiredTrophies: 26600
+  - arenaName: Prism
+    requiredTrophies: 27000
+  - arenaName: Monolith
+    requiredTrophies: 27300
+  - arenaName: Oracle
+    requiredTrophies: 27600
+  - arenaName: Nova
+    requiredTrophies: 28000
+  - arenaName: Halo
+    requiredTrophies: 28300
+  - arenaName: Omen
+    requiredTrophies: 28600
+  - arenaName: Prime
+    requiredTrophies: 29000
+  - arenaName: Valor
+    requiredTrophies: 29300
+  - arenaName: Regent
+    requiredTrophies: 29600
+  - arenaName: Exalted
+    requiredTrophies: 30000
+  - arenaName: Sanctum
+    requiredTrophies: 30300
+  - arenaName: Celestial
+    requiredTrophies: 30600
+  - arenaName: Immortal
+    requiredTrophies: 31000
+  - arenaName: Infinity
+    requiredTrophies: 31300
+  - arenaName: Ethereal
+    requiredTrophies: 31600
+  - arenaName: Ascension
+    requiredTrophies: 32000
+  - arenaName: Transcend
+    requiredTrophies: 32300
+  - arenaName: Eternal
+    requiredTrophies: 32600
+  - arenaName: Apex
+    requiredTrophies: 33000
+  enableDebugHotkeys: 1
+  addTrophyKey: 122
+  removeTrophyKey: 120
+  increaseTrophyButton: {fileID: 0}
+  decreaseTrophyButton: {fileID: 0}
+  resetDataButton: {fileID: 0}
+--- !u!4 &782886448
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 782886445}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 12.586141, z: -0.0000076293945}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 14
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &796644204
 GameObject:
   m_ObjectHideFlags: 0
