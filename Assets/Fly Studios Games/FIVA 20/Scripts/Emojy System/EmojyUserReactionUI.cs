@@ -12,6 +12,9 @@ public class EmojyUserReactionUI : MonoBehaviour
     public GameObject closeChatIcon;
 
     private Coroutine hideRoutine;
+    private bool hasPendingReaction;
+    private string pendingReactionText = string.Empty;
+    private float pendingReactionVisibleSeconds;
 
     private void Awake()
     {
@@ -19,8 +22,40 @@ public class EmojyUserReactionUI : MonoBehaviour
         SetChatToggleState(false);
     }
 
+    private void OnEnable()
+    {
+        if (!hasPendingReaction)
+            return;
+
+        string queuedText = pendingReactionText;
+        float queuedVisibleSeconds = pendingReactionVisibleSeconds;
+
+        hasPendingReaction = false;
+        pendingReactionText = string.Empty;
+        pendingReactionVisibleSeconds = 0f;
+
+        ShowReaction(queuedText, queuedVisibleSeconds);
+    }
+
+    private void OnDisable()
+    {
+        if (hideRoutine == null)
+            return;
+
+        StopCoroutine(hideRoutine);
+        hideRoutine = null;
+    }
+
     public void ShowReaction(string reactionText, float visibleSeconds = 3f)
     {
+        if (!isActiveAndEnabled || !gameObject.activeInHierarchy)
+        {
+            hasPendingReaction = true;
+            pendingReactionText = reactionText;
+            pendingReactionVisibleSeconds = Mathf.Max(0f, visibleSeconds);
+            return;
+        }
+
         if (emojyText != null)
             emojyText.text = reactionText;
 
