@@ -134,6 +134,20 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         [Range(0, 20)]
         int _maxDrawDelta = 12;
 
+        [Header("Emoji Context")]
+        [SerializeField]
+        bool _enableContextualEmojiReactions = true;
+
+        [SerializeField]
+        EmojySystem _emojySystem;
+
+        [SerializeField]
+        bool _autoFindEmojySystem = true;
+
+        [SerializeField]
+        [Min(0f)]
+        float _emojiPossessionNotifyDebounce = 0.35f;
+
         /// <summary>
         /// Event raised when continuing to second half
         /// </summary>
@@ -148,6 +162,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         Coroutine _suddenDeathPanelAutoHideCoroutine;
         bool _matchRewardApplied;
         bool _teamsStagedForKickOff;
+        bool _emojiSessionStarted;
+        int _lastKnownUserGoals;
+        int _lastKnownOpponentGoals;
+        bool _hasKnownPossessionState;
+        bool _lastKnownUserHasPossession;
+        float _lastPossessionNotifyTime = -999f;
 
         private void Awake()
         {
@@ -188,6 +208,9 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             MatchManager.Instance.OnTick += Instance_OnTick;
 
             ApplyRuntimeStartTimingOverrides();
+            ResolveEmojiSystem();
+            SyncEmojiScoreSnapshot();
+            _emojiSessionStarted = false;
 
             Instance_OnMessageSwitchToMatchOn();
         }
@@ -206,30 +229,43 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
         {
             //show the text
             _matchOnPanel.TxtScores.text = message;
+            NotifyEmojiGoalScored();
         }
 
         void Instance_OnTeamAwayLostPossession()
         {
             if (MatchManager.Instance.TeamAway != null && MatchManager.Instance.TeamAway.IsUserControlled)
+            {
                 SoundManager.Instance.PlayBallLost();
+                NotifyEmojiPossessionChanged(false);
+            }
         }
 
         void Instance_OnTeamHomeLostPossession()
         {
             if (MatchManager.Instance.TeamHome != null && MatchManager.Instance.TeamHome.IsUserControlled)
+            {
                 SoundManager.Instance.PlayBallLost();
+                NotifyEmojiPossessionChanged(false);
+            }
         }
 
         void Instance_OnTeamAwayGainPossession()
         {
             if (MatchManager.Instance.TeamAway != null && MatchManager.Instance.TeamAway.IsUserControlled)
+            {
                 SoundManager.Instance.PlayBallRecovered();
+                NotifyEmojiPossessionChanged(true);
+            }
         }
 
         void Instance_OnTeamHomeGainPossession()
         {
             if (MatchManager.Instance.TeamHome != null && MatchManager.Instance.TeamHome.IsUserControlled)
+            {
                 SoundManager.Instance.PlayBallRecovered();
+                NotifyEmojiPossessionChanged(true);
+            }
         }
 
         private void Instance_OnPostHit(Vector3 worldPoint)
@@ -249,6 +285,8 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
 
             int trophyDelta = ApplyMatchTrophyReward(message);
             UpdateMatchOverRewardText(trophyDelta);
+            NotifyEmojiMatchEnded(message);
+            _emojiSessionStarted = false;
 
             _matchOverPanel.Root.gameObject.SetActive(true);
         }
@@ -259,6 +297,12 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             SetSuddenDeathPanelActive(false);
             _matchOnPanel.Root.gameObject.SetActive(true);
             SoundManager.Instance.PlayAmbienceLoop(true);
+
+            if (!_emojiSessionStarted)
+            {
+                NotifyEmojiMatchStarted();
+                _emojiSessionStarted = true;
+            }
         }
 
         private void Instance_OnMatchPlayStop()
@@ -683,6 +727,149 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
                 return Mathf.Max(0, MatchManager.Instance.TeamAway.Goals);
 
             return 0;
+        }
+
+        int GetOpponentGoals()
+        {
+            if (MatchManager.Instance == null)
+                return 0;
+
+            if (MatchManager.Instance.TeamHome != null && MatchManager.Instance.TeamHome.IsUserControlled)
+                return MatchManager.Instance.TeamAway != null
+                    ? Mathf.Max(0, MatchManager.Instance.TeamAway.Goals)
+                    : 0;
+
+            if (MatchManager.Instance.TeamAway != null && MatchManager.Instance.TeamAway.IsUserControlled)
+                return MatchManager.Instance.TeamHome != null
+                    ? Mathf.Max(0, MatchManager.Instance.TeamHome.Goals)
+                    : 0;
+
+            return 0;
+        }
+
+        bool IsAgainstBotMatch()
+        {
+            if (MatchManager.Instance == null)
+                return false;
+
+            bool homeUser = MatchManager.Instance.TeamHome != null && MatchManager.Instance.TeamHome.IsUserControlled;
+            bool awayUser = MatchManager.Instance.TeamAway != null && MatchManager.Instance.TeamAway.IsUserControlled;
+            return homeUser ^ awayUser;
+        }
+
+        void ResolveEmojiSystem()
+        {
+            if (!_enableContextualEmojiReactions)
+                return;
+
+            if (_emojySystem == null && _autoFindEmojySystem)
+                _emojySystem = FindObjectOfType<EmojySystem>();
+        }
+
+        void SyncEmojiScoreSnapshot()
+        {
+            _lastKnownUserGoals = GetUserGoals();
+            _lastKnownOpponentGoals = GetOpponentGoals();
+        }
+
+        void NotifyEmojiMatchStarted()
+        {
+            if (!_enableContextualEmojiReactions)
+                return;
+
+            ResolveEmojiSystem();
+            if (_emojySystem == null)
+                return;
+
+            SyncEmojiScoreSnapshot();
+            _hasKnownPossessionState = false;
+            _lastPossessionNotifyTime = -999f;
+
+            _emojySystem.NotifyMatchStarted(IsAgainstBotMatch(), _lastKnownUserGoals, _lastKnownOpponentGoals);
+        }
+
+        void NotifyEmojiGoalScored()
+        {
+            if (!_enableContextualEmojiReactions)
+                return;
+
+            ResolveEmojiSystem();
+            if (_emojySystem == null)
+                return;
+
+            int userGoals = GetUserGoals();
+            int opponentGoals = GetOpponentGoals();
+
+            bool playerScored = userGoals > _lastKnownUserGoals;
+            bool opponentScored = opponentGoals > _lastKnownOpponentGoals;
+
+            if (!playerScored && !opponentScored)
+            {
+                SyncEmojiScoreSnapshot();
+                return;
+            }
+
+            if (playerScored == opponentScored)
+                playerScored = userGoals >= opponentGoals;
+
+            _emojySystem.NotifyGoalScored(playerScored, userGoals, opponentGoals);
+
+            _lastKnownUserGoals = userGoals;
+            _lastKnownOpponentGoals = opponentGoals;
+        }
+
+        void NotifyEmojiPossessionChanged(bool userHasPossession)
+        {
+            if (!_enableContextualEmojiReactions)
+                return;
+
+            ResolveEmojiSystem();
+            if (_emojySystem == null)
+                return;
+
+            if (_hasKnownPossessionState && _lastKnownUserHasPossession == userHasPossession)
+                return;
+
+            if (_hasKnownPossessionState
+                && Time.time - _lastPossessionNotifyTime < Mathf.Max(0f, _emojiPossessionNotifyDebounce))
+            {
+                return;
+            }
+
+            _hasKnownPossessionState = true;
+            _lastKnownUserHasPossession = userHasPossession;
+            _lastPossessionNotifyTime = Time.time;
+
+            _emojySystem.NotifyPossessionChanged(userHasPossession);
+        }
+
+        void NotifyEmojiMatchEnded(string matchMessage)
+        {
+            if (!_enableContextualEmojiReactions)
+                return;
+
+            ResolveEmojiSystem();
+            if (_emojySystem == null)
+                return;
+
+            MatchResultType result = ResolveResult(matchMessage);
+            bool isDraw;
+            bool playerWon;
+
+            if (result == MatchResultType.Unknown)
+            {
+                int userGoals = GetUserGoals();
+                int opponentGoals = GetOpponentGoals();
+                isDraw = userGoals == opponentGoals;
+                playerWon = userGoals > opponentGoals;
+            }
+            else
+            {
+                isDraw = result == MatchResultType.Draw;
+                playerWon = result == MatchResultType.Win;
+            }
+
+            _emojySystem.NotifyGameEnded(playerWon, isDraw);
         }
 
         public void ReturnToMainMenu(string sceneName)

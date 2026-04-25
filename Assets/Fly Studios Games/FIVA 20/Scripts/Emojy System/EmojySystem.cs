@@ -120,6 +120,12 @@ public class EmojySystem : MonoBehaviour
     [Min(1)] public int tiltEventsBeforeMute = 3;
     public bool bindPlayerButtonsOnEnable = true;
 
+    [Header("Football Context")]
+    [Range(0f, 1f)] public float goalReactionChance = 0.72f;
+    [Range(0f, 1f)] public float possessionSwingReactionChance = 0.26f;
+    [Min(0.5f)] public float possessionReactionMinInterval = 6f;
+    [Range(0f, 1f)] public float comebackReactionBonus = 0.18f;
+
     private readonly List<RuntimeButtonListener> runtimeButtonListeners = new List<RuntimeButtonListener>();
     private static readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>(16);
     private Coroutine botReactionCoroutine;
@@ -133,6 +139,14 @@ public class EmojySystem : MonoBehaviour
     private float lastPlayerEmojiTime = -999f;
     private bool botMatchActive;
     private EmojyMessageType? lastBotReaction;
+    private float matchStartedTime = -1f;
+    private int trackedPlayerGoals;
+    private int trackedOpponentGoals;
+    private bool hasTrackedScore;
+    private bool hasTrackedPossession;
+    private bool lastKnownPlayerPossession;
+    private float lastPossessionReactionTime = -999f;
+    private float profileMood;
 
     private void OnEnable()
     {
@@ -159,6 +173,8 @@ public class EmojySystem : MonoBehaviour
         }
 
         queuedReactionPriority = int.MinValue;
+        hasTrackedScore = false;
+        hasTrackedPossession = false;
     }
 
     private void LateUpdate()
@@ -193,7 +209,7 @@ public class EmojySystem : MonoBehaviour
         SyncChatToggleState(isOpen);
     }
 
-    public void NotifyMatchStarted(bool againstBot)
+    public void NotifyMatchStarted(bool againstBot, int playerGoals = 0, int opponentGoals = 0)
     {
         botMatchActive = againstBot;
         playerEmojiSpamCount = 0;
@@ -203,11 +219,104 @@ public class EmojySystem : MonoBehaviour
         lastBotReaction = null;
         ChooseBotProfile();
 
+        matchStartedTime = Time.time;
+        trackedPlayerGoals = Mathf.Max(0, playerGoals);
+        trackedOpponentGoals = Mathf.Max(0, opponentGoals);
+        hasTrackedScore = true;
+        hasTrackedPossession = false;
+        lastKnownPlayerPossession = false;
+        lastPossessionReactionTime = -999f;
+        profileMood = GetInitialMoodForProfile(activeProfile.profile);
+
         if (!botMatchActive)
             return;
 
         EmojyMessageType? message = SelectMessageForEvent(ReactionEventType.MatchStart, 0, 0, false, false, null);
         QueueBotReaction(message, baseReactionChance + 0.20f, 10);
+    }
+
+    public void NotifyGoalScored(bool playerScored, int playerGoals, int opponentGoals)
+    {
+        if (!botMatchActive)
+            return;
+
+        int safePlayerGoals = Mathf.Max(0, playerGoals);
+        int safeOpponentGoals = Mathf.Max(0, opponentGoals);
+
+        if (!hasTrackedScore)
+        {
+            trackedPlayerGoals = safePlayerGoals;
+            trackedOpponentGoals = safeOpponentGoals;
+            hasTrackedScore = true;
+        }
+
+        int beforeDiff = trackedPlayerGoals - trackedOpponentGoals;
+        int afterDiff = safePlayerGoals - safeOpponentGoals;
+
+        bool equalizer = beforeDiff != 0 && afterDiff == 0;
+        bool leadSwing = (beforeDiff <= 0 && afterDiff > 0) || (beforeDiff >= 0 && afterDiff < 0);
+        bool scoreGapGrowing = Mathf.Abs(afterDiff) >= 2 && Mathf.Abs(afterDiff) > Mathf.Abs(beforeDiff);
+        bool openingGoal = safePlayerGoals + safeOpponentGoals <= 1;
+        bool lateMoment = IsLateMatchMoment();
+
+        AdjustMoodAfterGoal(playerScored, afterDiff);
+
+        EmojyMessageType? goalMessage = SelectGoalReactionMessage(playerScored, afterDiff, equalizer, leadSwing, lateMoment, scoreGapGrowing);
+
+        float eventChance = goalReactionChance + (playerScored ? 0.05f : 0.10f);
+        if (equalizer)
+            eventChance += 0.12f;
+        if (leadSwing)
+            eventChance += comebackReactionBonus;
+        if (scoreGapGrowing)
+            eventChance += 0.08f;
+        if (openingGoal)
+            eventChance -= 0.08f;
+        if (lateMoment)
+            eventChance += 0.08f;
+
+        eventChance += Mathf.Clamp(profileMood * 0.08f, -0.05f, 0.08f);
+
+        int priority = playerScored ? 82 : 88;
+        QueueBotReaction(goalMessage, eventChance, priority, true);
+
+        trackedPlayerGoals = safePlayerGoals;
+        trackedOpponentGoals = safeOpponentGoals;
+    }
+
+    public void NotifyPossessionChanged(bool playerHasPossession)
+    {
+        if (!botMatchActive)
+            return;
+
+        if (!hasTrackedPossession)
+        {
+            hasTrackedPossession = true;
+            lastKnownPlayerPossession = playerHasPossession;
+            return;
+        }
+
+        if (lastKnownPlayerPossession == playerHasPossession)
+            return;
+
+        lastKnownPlayerPossession = playerHasPossession;
+
+        if (Time.time - lastPossessionReactionTime < Mathf.Max(0.5f, possessionReactionMinInterval))
+            return;
+
+        lastPossessionReactionTime = Time.time;
+
+        if (playerHasPossession)
+        {
+            RegisterBotNegativeEvent();
+            float chance = possessionSwingReactionChance + (activeProfile.apologyBias * 0.12f);
+            QueueBotReaction(SelectMessageForEvent(ReactionEventType.OpponentMistake, 0, 0, false, false, null), chance, 28);
+            return;
+        }
+
+        ClearBotNegativeEventStreak();
+        float tauntBonus = GetSpamTauntBonus() + (activeProfile.tauntBias * 0.10f);
+        QueueBotReaction(SelectMessageForEvent(ReactionEventType.PlayerMistake, 0, 0, false, false, null), possessionSwingReactionChance + tauntBonus, 32);
     }
 
     public void NotifyPlayerMoveResolved(int moveScore, int capturedCount)
@@ -547,6 +656,105 @@ public class EmojySystem : MonoBehaviour
     private void ClearBotNegativeEventStreak()
     {
         botNegativeEventStreak = 0;
+    }
+
+    private float GetInitialMoodForProfile(BotProfile profile)
+    {
+        switch (profile)
+        {
+            case BotProfile.Pro:
+                return -0.1f;
+            case BotProfile.Troll:
+                return 0.25f;
+            case BotProfile.Noob:
+                return 0.05f;
+            case BotProfile.Silent:
+                return 0f;
+            default:
+                return 0.1f;
+        }
+    }
+
+    private bool IsLateMatchMoment()
+    {
+        if (matchStartedTime < 0f)
+            return false;
+
+        return Time.time - matchStartedTime >= 95f;
+    }
+
+    private void AdjustMoodAfterGoal(bool playerScored, int scoreDiffAfterGoal)
+    {
+        float pressure = Mathf.Clamp01(Mathf.Abs(scoreDiffAfterGoal) / 3f);
+        float swing = 0.16f + (pressure * 0.08f);
+
+        if (playerScored)
+            profileMood -= swing;
+        else
+            profileMood += swing;
+
+        profileMood = Mathf.Clamp(profileMood, -1f, 1f);
+    }
+
+    private EmojyMessageType? SelectGoalReactionMessage(bool playerScored, int scoreDiffAfterGoal, bool equalizer, bool leadSwing, bool lateMoment, bool scoreGapGrowing)
+    {
+        if (playerScored)
+        {
+            if (activeProfile.profile == BotProfile.Pro)
+                return equalizer || leadSwing
+                    ? PickMessage(EmojyMessageType.WellPlayed, EmojyMessageType.Wow)
+                    : PickMessage(EmojyMessageType.WellPlayed, EmojyMessageType.NiceMove);
+
+            if (activeProfile.profile == BotProfile.Noob)
+                return scoreDiffAfterGoal <= -2
+                    ? PickMessage(EmojyMessageType.Sorry, EmojyMessageType.Wow, EmojyMessageType.Oops)
+                    : PickMessage(EmojyMessageType.Wow, EmojyMessageType.Sorry, EmojyMessageType.WellPlayed);
+
+            if (activeProfile.profile == BotProfile.Troll)
+            {
+                if (scoreDiffAfterGoal >= 1 && !equalizer)
+                    return PickMessage(EmojyMessageType.Thanks, EmojyMessageType.Oops, EmojyMessageType.NiceMove);
+                if (scoreDiffAfterGoal <= -2 || leadSwing)
+                    return PickMessage(EmojyMessageType.Oops, EmojyMessageType.Wow, EmojyMessageType.Sorry);
+                return PickMessage(EmojyMessageType.Oops, EmojyMessageType.Thanks, EmojyMessageType.WellPlayed);
+            }
+
+            if (scoreGapGrowing || leadSwing)
+                return PickMessage(EmojyMessageType.Wow, EmojyMessageType.WellPlayed, EmojyMessageType.Oops);
+
+            return activeProfile.praiseBias >= activeProfile.tauntBias
+                ? PickMessage(EmojyMessageType.WellPlayed, EmojyMessageType.NiceMove, EmojyMessageType.Wow)
+                : PickMessage(EmojyMessageType.Oops, EmojyMessageType.Thanks, EmojyMessageType.WellPlayed);
+        }
+
+        if (activeProfile.profile == BotProfile.Pro)
+            return lateMoment
+                ? PickMessage(EmojyMessageType.GoodGame, EmojyMessageType.WellPlayed)
+                : PickMessage(EmojyMessageType.WellPlayed, EmojyMessageType.GoodGame);
+
+        if (activeProfile.profile == BotProfile.Noob)
+            return scoreDiffAfterGoal >= 2
+                ? PickMessage(EmojyMessageType.Wow, EmojyMessageType.Thanks, EmojyMessageType.Oops)
+                : PickMessage(EmojyMessageType.Thanks, EmojyMessageType.Wow, EmojyMessageType.GoodGame);
+
+        if (activeProfile.profile == BotProfile.Troll)
+        {
+            if (scoreDiffAfterGoal >= 2 || scoreGapGrowing)
+                return PickMessage(EmojyMessageType.Thanks, EmojyMessageType.Oops, EmojyMessageType.GoodGame);
+
+            if (equalizer || leadSwing)
+                return PickMessage(EmojyMessageType.Thanks, EmojyMessageType.Wow, EmojyMessageType.Oops);
+
+            return PickMessage(EmojyMessageType.Thanks, EmojyMessageType.Oops, EmojyMessageType.NiceMove);
+        }
+
+        if (equalizer || leadSwing)
+            return PickMessage(EmojyMessageType.Thanks, EmojyMessageType.WellPlayed, EmojyMessageType.Wow);
+
+        if (scoreDiffAfterGoal >= 2)
+            return PickMessage(EmojyMessageType.Thanks, EmojyMessageType.GoodGame, EmojyMessageType.Oops);
+
+        return PickMessage(EmojyMessageType.Thanks, EmojyMessageType.WellPlayed, EmojyMessageType.GoodGame);
     }
 
     private float GetSpamTauntBonus()
