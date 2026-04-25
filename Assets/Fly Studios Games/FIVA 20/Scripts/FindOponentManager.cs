@@ -16,10 +16,6 @@ public class FindOponentManager : MonoBehaviour
     [SerializeField]
     TMP_Text searchOpponentText;
 
-    [FormerlySerializedAs("tips_Text")]
-    [SerializeField]
-    TMP_Text tipsText;
-
     [Header("Fake Matchmaking")]
     [SerializeField]
     [Min(0.1f)]
@@ -79,7 +75,6 @@ public class FindOponentManager : MonoBehaviour
             findOpponentPanel.SetActive(false);
 
         UpdateSearchMessage(string.Empty);
-        UpdateTipMessage(string.Empty);
     }
 
     public void BeginFindOpponent()
@@ -92,7 +87,6 @@ public class FindOponentManager : MonoBehaviour
 
         IsSearching = true;
         UpdateSearchMessage(searchingMessage);
-        ShowRandomTip();
 
         if (_searchRoutine != null)
             StopCoroutine(_searchRoutine);
@@ -107,7 +101,6 @@ public class FindOponentManager : MonoBehaviour
             findOpponentPanel.SetActive(false);
 
         UpdateSearchMessage(string.Empty);
-        UpdateTipMessage(string.Empty);
     }
 
     IEnumerator FakeFindRoutine()
@@ -200,24 +193,6 @@ public class FindOponentManager : MonoBehaviour
         return Mathf.Max(0, result);
     }
 
-    void ShowRandomTip()
-    {
-        if (tipsText == null)
-            return;
-
-        if (searchTips == null || searchTips.Length == 0)
-        {
-            UpdateTipMessage(string.Empty);
-            return;
-        }
-
-        int tipIndex = Random.Range(0, searchTips.Length);
-        if (searchTips.Length > 1 && tipIndex == _lastTipIndex)
-            tipIndex = (tipIndex + Random.Range(1, searchTips.Length)) % searchTips.Length;
-
-        _lastTipIndex = tipIndex;
-        UpdateTipMessage(searchTips[tipIndex]);
-    }
 
     void StopCurrentSearch()
     {
@@ -234,12 +209,6 @@ public class FindOponentManager : MonoBehaviour
     {
         if (searchOpponentText != null)
             searchOpponentText.text = message;
-    }
-
-    void UpdateTipMessage(string message)
-    {
-        if (tipsText != null)
-            tipsText.text = message;
     }
 
     public void LoadGameScene()
