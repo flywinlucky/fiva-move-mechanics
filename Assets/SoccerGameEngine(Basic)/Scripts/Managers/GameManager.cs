@@ -596,7 +596,11 @@ namespace Assets.SoccerGameEngine_Basic_.Scripts.Managers
             int trophyDelta = CalculateTrophyDelta(result, userTrophies, opponentTrophies);
 
             if (trophyDelta > 0)
+            {
                 userData.AddTrophies(trophyDelta);
+                // Trigger arena trophy gain FX only when returning from an actual match reward.
+                ArenaSystem.SetPendingTrophyGainAnimation(trophyDelta);
+            }
             else if (trophyDelta < 0)
                 userData.SpendTrophies(-trophyDelta);
 

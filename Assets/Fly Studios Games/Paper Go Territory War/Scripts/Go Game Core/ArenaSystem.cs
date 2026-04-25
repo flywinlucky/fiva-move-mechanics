@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using AssetKits.ParticleImage;
 
 [System.Serializable]
 public class ArenaDefinition
@@ -13,10 +14,13 @@ public class ArenaDefinition
 
 public class ArenaSystem : MonoBehaviour
 {
+    private const string PendingTrophyGainPrefsKey = "ArenaSystem.PendingTrophyGain";
+
     public const int DefaultWinTrophyChange = 30;
     public const int DefaultLossTrophyChange = 25;
 
     [Header("UI")]
+    public ParticleImage trophyParticleImage;
     public Slider currentProgressSlider;
     public TMP_Text currentArenaNameText;
     public TMP_Text currentArenaNumberText;
@@ -60,6 +64,17 @@ public class ArenaSystem : MonoBehaviour
     private bool hasPendingMatchedOpponentTrophies;
     private int pendingMatchedOpponentTrophies;
     private bool warnedInvalidArenaLevelsList;
+
+    public static void SetPendingTrophyGainAnimation(int gainedTrophies)
+    {
+        int sanitizedGain = Mathf.Max(0, gainedTrophies);
+        if (sanitizedGain <= 0)
+            return;
+
+        int existingGain = Mathf.Max(0, PlayerPrefs.GetInt(PendingTrophyGainPrefsKey, 0));
+        PlayerPrefs.SetInt(PendingTrophyGainPrefsKey, existingGain + sanitizedGain);
+        PlayerPrefs.Save();
+    }
 
     private struct ArenaProgress
     {
@@ -151,7 +166,11 @@ public class ArenaSystem : MonoBehaviour
 
     private void IncreaseTrophies()
     {
+        int trophiesBefore = GetCurrentTrophies();
         ApplyBattleResult(true);
+
+        if (GetCurrentTrophies() > trophiesBefore)
+            PlayTrophyGainEffect();
     }
 
     private void DecreaseTrophies()
@@ -419,9 +438,15 @@ public class ArenaSystem : MonoBehaviour
 
         int trophies = GetCurrentTrophies();
 
-        if (!Application.isPlaying || !animationInitialized)
+        if (!Application.isPlaying)
         {
             ApplyImmediateArenaState(trophies);
+            return;
+        }
+
+        if (!animationInitialized)
+        {
+            ApplyInitialArenaStateWithPossibleGainAnimation(trophies);
             return;
         }
 
@@ -480,6 +505,40 @@ public class ArenaSystem : MonoBehaviour
         currentDisplayedArenaRequirement = progress.currentArenaRequirement;
         animationInitialized = true;
         ApplyArenaState(trophies, progress.progress01);
+    }
+
+    private void ApplyInitialArenaStateWithPossibleGainAnimation(int currentTrophies)
+    {
+        int startTrophies = currentTrophies;
+        int pendingGain = ConsumePendingTrophyGainAnimation();
+
+        if (pendingGain > 0)
+        {
+            startTrophies = Mathf.Max(0, currentTrophies - pendingGain);
+            PlayTrophyGainEffect();
+        }
+
+        ApplyImmediateArenaState(startTrophies);
+    }
+
+    private int ConsumePendingTrophyGainAnimation()
+    {
+        int pendingGain = Mathf.Max(0, PlayerPrefs.GetInt(PendingTrophyGainPrefsKey, 0));
+        if (pendingGain <= 0)
+            return 0;
+
+        PlayerPrefs.DeleteKey(PendingTrophyGainPrefsKey);
+        PlayerPrefs.Save();
+        return pendingGain;
+    }
+
+    private void PlayTrophyGainEffect()
+    {
+        if (trophyParticleImage == null)
+            return;
+
+        trophyParticleImage.Stop(true);
+        trophyParticleImage.Play();
     }
 
     private void ApplyArenaState(int trophies, float sliderValue)
