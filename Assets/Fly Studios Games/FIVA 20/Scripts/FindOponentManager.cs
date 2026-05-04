@@ -34,10 +34,6 @@ public class FindOponentManager : MonoBehaviour
     [SerializeField]
     string foundMessage = "Opponent found!";
 
-    [Header("Tips")]
-    [SerializeField]
-    string[] searchTips;
-
     [Header("Generated Opponent")]
     [SerializeField]
     TextAsset namesCsvFile;
@@ -62,7 +58,6 @@ public class FindOponentManager : MonoBehaviour
     int maxTrophiesIfNoUserData = 180;
 
     Coroutine _searchRoutine;
-    int _lastTipIndex = -1;
     readonly List<string> _csvNicknames = new List<string>();
 
     public bool IsSearching { get; private set; }
