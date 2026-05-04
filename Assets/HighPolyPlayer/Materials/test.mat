@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: test
-  m_Shader: {fileID: 10703, guid: 0000000000000000f000000000000000, type: 0}
+  m_Shader: {fileID: 4800000, guid: 2745cc389a18b5745afe887c2d2a1552, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -21,10 +21,20 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: d6843a1cae174554eb5ac954b81cfd4a, type: 3}
+        m_Texture: {fileID: 2800000, guid: 1a1476f8178c8974fa5523576901424c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _TemplateTex:
+        m_Texture: {fileID: 2800000, guid: 1a1476f8178c8974fa5523576901424c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _Metallic: 0.424
+    - _OverlayStrength: 1
+    - _Smoothness: 0.46
+    - _TemplateAffectsBase: 0
+    m_Colors:
+    - _BaseColor: {r: 0.11320752, g: 0.11267352, b: 0.11267352, a: 1}
+    - _OverlayTint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
