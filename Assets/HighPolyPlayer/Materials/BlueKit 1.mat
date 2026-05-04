@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: BlueKit 1
-  m_Shader: {fileID: 10703, guid: 0000000000000000f000000000000000, type: 0}
+  m_Shader: {fileID: 4800000, guid: 2745cc389a18b5745afe887c2d2a1552, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -24,7 +24,15 @@ Material:
         m_Texture: {fileID: 2800000, guid: 3ae9bf958def7c64c951753ba3ac60e2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _TemplateTex:
+        m_Texture: {fileID: 2800000, guid: 1a1476f8178c8974fa5523576901424c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _OverlayStrength: 1
+    - _TemplateAffectsBase: 0
+    m_Colors:
+    - _BaseColor: {r: 0, g: 0.2992219, b: 0.9254902, a: 1}
+    - _OverlayTint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
