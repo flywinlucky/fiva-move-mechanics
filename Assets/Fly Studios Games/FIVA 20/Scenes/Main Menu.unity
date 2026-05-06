@@ -2538,7 +2538,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 575061bbe24f9554b936e2a272bc60a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  leaderboardName: Fifa20Leaderboard
+  leaderboardName: test
   leaderboardView: {fileID: 8193007627911133118}
   autoFindLeaderboardView: 1
   refreshLeaderboardOnEnable: 1
@@ -2546,6 +2546,7 @@ MonoBehaviour:
   userData: {fileID: 1689385347}
   minSecondsBetweenSubmits: 1.1
   refreshDelaySeconds: 0.75
+  minimumTrophiesToSubmit: 2
 --- !u!114 &782886447
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12023,6 +12024,11 @@ PrefabInstance:
         type: 3}
       propertyPath: advanced
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 427125380090051075, guid: f40a236569a66c344b68a9feb3f86a18,
+        type: 3}
+      propertyPath: playerPhoto
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 1705290334077199572, guid: f40a236569a66c344b68a9feb3f86a18,
         type: 3}

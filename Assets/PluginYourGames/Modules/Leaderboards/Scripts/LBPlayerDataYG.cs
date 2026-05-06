@@ -1,9 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
-#if TMP_YG2
 using TMPro;
-#endif
 
 namespace YG
 {
@@ -18,14 +16,12 @@ namespace YG
         }
         public TextLegasy textLegasy;
 
-#if TMP_YG2
         [Serializable]
         public struct TextMP
         {
-            public TextMeshProUGUI rank, name, score;
+            public TMP_Text rank, name, score;
         }
         public TextMP textMP;
-#endif
         [Space(10)]
         public MonoBehaviour[] topPlayerActivityComponents = new MonoBehaviour[0];
         public MonoBehaviour[] currentPlayerActivityComponents = new MonoBehaviour[0];
@@ -44,17 +40,29 @@ namespace YG
         [HideInInspector]
         public Data data = new Data();
 
+        private void Awake()
+        {
+            ResolveTextBindings();
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            ResolveTextBindings();
+        }
+#endif
+
         public void UpdateEntries()
         {
+            ResolveTextBindings();
+
             if (textLegasy.rank && data.rank != null) textLegasy.rank.text = data.rank.ToString();
             if (textLegasy.name && data.name != null) textLegasy.name.text = data.name;
             if (textLegasy.score && data.score != null) textLegasy.score.text = data.score.ToString();
 
-#if TMP_YG2
             if (textMP.rank && data.rank != null) textMP.rank.text = data.rank.ToString();
             if (textMP.name && data.name != null) textMP.name.text = data.name;
             if (textMP.score && data.score != null) textMP.score.text = data.score.ToString();
-#endif
             if (imageLoad)
             {
                 if (data.photoSprite)
@@ -102,6 +110,53 @@ namespace YG
                     objects[i].enabled = activity;
                 }
             }
+        }
+
+        private void ResolveTextBindings()
+        {
+            TryBindLegacy(ref textLegasy.rank, "Rank");
+            TryBindLegacy(ref textLegasy.name, "Name");
+            TryBindLegacy(ref textLegasy.score, "Score");
+
+            TryBindTMP(ref textMP.rank, "Rank");
+            TryBindTMP(ref textMP.name, "Name");
+            TryBindTMP(ref textMP.score, "Score");
+        }
+
+        private void TryBindLegacy(ref Text target, string markerName)
+        {
+            if (target != null)
+                return;
+
+            Transform marker = FindChildRecursive(transform, markerName);
+            if (marker != null)
+                target = marker.GetComponentInChildren<Text>(true);
+        }
+
+        private void TryBindTMP(ref TMP_Text target, string markerName)
+        {
+            if (target != null)
+                return;
+
+            Transform marker = FindChildRecursive(transform, markerName);
+            if (marker != null)
+                target = marker.GetComponentInChildren<TMP_Text>(true);
+        }
+
+        private Transform FindChildRecursive(Transform parent, string childName)
+        {
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform child = parent.GetChild(i);
+                if (string.Equals(child.name, childName, StringComparison.OrdinalIgnoreCase))
+                    return child;
+
+                Transform nested = FindChildRecursive(child, childName);
+                if (nested != null)
+                    return nested;
+            }
+
+            return null;
         }
     }
 }
