@@ -71,6 +71,16 @@ namespace YG
 #endif
         public int decimalSize = 1;
 
+#if UNITY_EDITOR
+    [NestedYG(nameof(advanced))]
+#endif
+    public bool hideScoresBelowMinimum = true;
+
+#if UNITY_EDITOR
+    [NestedYG(nameof(advanced)), Min(0)]
+#endif
+    public int minimumVisibleScore = 2;
+
         public UnityEvent onUpdateData;
 
         private LBPlayerDataYG[] players = new LBPlayerDataYG[0];
@@ -126,21 +136,19 @@ namespace YG
 
                 if (lbData.entries == InfoYG.NO_DATA)
                 {
-                    players = new LBPlayerDataYG[1];
-                    GameObject playerObj = Instantiate(playerDataPrefab, rootSpawnPlayersData);
-
-                    players[0] = playerObj.GetComponent<LBPlayerDataYG>();
-                    players[0].data.name = noData;
-                    players[0].data.photoUrl = null;
-                    players[0].data.rank = null;
-                    players[0].data.score = null;
-                    players[0].data.inTop = false;
-                    players[0].data.currentPlayer = false;
-                    players[0].data.photoSprite = null;
-                    players[0].UpdateEntries();
+                    SpawnNoDataEntry(noData);
                 }
                 else
                 {
+                    FilterPlayersByMinimumScore(lbData);
+
+                    if (lbData.players == null || lbData.players.Length == 0)
+                    {
+                        SpawnNoDataEntry(noData);
+                        onUpdateData?.Invoke();
+                        return;
+                    }
+
 #if UNITY_EDITOR
                     lbData = LBMethods.SortLB(lbData, maxQuantityPlayers, quantityTop, quantityAround);
 #else
@@ -181,10 +189,50 @@ namespace YG
                         }
                     }
 #endif
-                    SpawnPlayersList(lbData);
+                    if (lbData.players == null || lbData.players.Length == 0)
+                        SpawnNoDataEntry(noData);
+                    else
+                        SpawnPlayersList(lbData);
                 }
             }
             onUpdateData?.Invoke();
+        }
+
+        private void FilterPlayersByMinimumScore(LBData lbData)
+        {
+            if (!hideScoresBelowMinimum || lbData == null || lbData.players == null)
+                return;
+
+            int minScore = Mathf.Max(0, minimumVisibleScore);
+            if (minScore <= 0)
+                return;
+
+            List<LBPlayerData> filteredPlayers = new List<LBPlayerData>(lbData.players.Length);
+            for (int i = 0; i < lbData.players.Length; i++)
+            {
+                if (lbData.players[i] != null && lbData.players[i].score >= minScore)
+                    filteredPlayers.Add(lbData.players[i]);
+            }
+
+            lbData.players = filteredPlayers.ToArray();
+        }
+
+        private void SpawnNoDataEntry(string noData)
+        {
+            string displayText = string.IsNullOrWhiteSpace(noData) ? "No data" : noData;
+
+            players = new LBPlayerDataYG[1];
+            GameObject playerObj = Instantiate(playerDataPrefab, rootSpawnPlayersData);
+
+            players[0] = playerObj.GetComponent<LBPlayerDataYG>();
+            players[0].data.name = displayText;
+            players[0].data.photoUrl = null;
+            players[0].data.rank = null;
+            players[0].data.score = null;
+            players[0].data.inTop = false;
+            players[0].data.currentPlayer = false;
+            players[0].data.photoSprite = null;
+            players[0].UpdateEntries();
         }
 
         private void DestroyLBList()

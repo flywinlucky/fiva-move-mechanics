@@ -20,6 +20,9 @@ public class TrophyLeaderboardController : MonoBehaviour
     [SerializeField] [Min(1f)] private float minSecondsBetweenSubmits = 1.1f;
     [SerializeField] [Min(0f)] private float refreshDelaySeconds = 0.75f;
 
+    [Header("Score Rules")]
+    [SerializeField] [Min(0)] private int minimumTrophiesToSubmit = 2;
+
     private Coroutine submitCoroutine;
     private Coroutine refreshCoroutine;
     private int lastSubmittedScore = int.MinValue;
@@ -73,6 +76,7 @@ public class TrophyLeaderboardController : MonoBehaviour
     {
         minSecondsBetweenSubmits = Mathf.Max(1f, minSecondsBetweenSubmits);
         refreshDelaySeconds = Mathf.Max(0f, refreshDelaySeconds);
+        minimumTrophiesToSubmit = Mathf.Max(0, minimumTrophiesToSubmit);
     }
 
     public void SubmitCurrentTrophies()
@@ -223,6 +227,13 @@ public class TrophyLeaderboardController : MonoBehaviour
     {
         int sanitizedScore = Mathf.Max(0, score);
 
+        if (sanitizedScore < minimumTrophiesToSubmit)
+        {
+            hasPendingScore = false;
+            pendingScore = 0;
+            return;
+        }
+
         if (sanitizedScore == lastSubmittedScore && !hasPendingScore)
             return;
 
@@ -245,6 +256,9 @@ public class TrophyLeaderboardController : MonoBehaviour
 
             int scoreToSubmit = pendingScore;
             hasPendingScore = false;
+
+            if (scoreToSubmit < minimumTrophiesToSubmit)
+                continue;
 
             string targetLeaderboardName = GetEffectiveLeaderboardName();
             if (string.IsNullOrWhiteSpace(targetLeaderboardName))
@@ -295,7 +309,11 @@ public class TrophyLeaderboardController : MonoBehaviour
             return false;
 #endif
 
-        return userData != null;
+        // YG2.SetLeaderboard internally requires auth even when Authorization_yg symbol is absent.
+        if (!YG2.player.auth)
+            return false;
+
+        return userData != null && userData.Data != null;
     }
 
     private void RequestLeaderboardRefresh(float delaySeconds)
