@@ -2538,7 +2538,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 575061bbe24f9554b936e2a272bc60a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  leaderboardName: test
+  leaderboardName: Fifa20Leaderboard
   leaderboardView: {fileID: 8193007627911133118}
   autoFindLeaderboardView: 1
   refreshLeaderboardOnEnable: 1
